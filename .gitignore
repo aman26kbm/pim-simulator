@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Everything inside build
+build/
+
+# Everything inside .vscode
+.vscode/
