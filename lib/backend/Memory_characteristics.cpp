@@ -133,8 +133,10 @@ double MemoryCharacteristics::getTiming(Request req) {
 }
 
 
-double MemoryCharacteristics::getEnergy(int idx) {
+//double MemoryCharacteristics::getEnergy(int idx) {
+double MemoryCharacteristics::getEnergy(Request req) {
     double energy = 0.0;
+    int idx = int(req.type);
     switch (idx) {
         case 0: //RowSet
         case 1: //ColSet

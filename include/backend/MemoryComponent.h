@@ -47,7 +47,7 @@ public:
     std::string level_str[int(Level::MAX)] = {"Chip", "Tile", "Block"};
 
     //TimeT _timing[int(Request::Type::MAX)];
-    double _energy[int(Request::Type::MAX)];
+    //double _energy[int(Request::Type::MAX)];
 
     /* parent memory */
     MemoryComponent* _parent;
@@ -72,6 +72,7 @@ public:
     void setEnergy();
 
     double getReqTiming(Request req);
+    double getReqEnergy(Request req);
 
     double getTotalEnergy();
 

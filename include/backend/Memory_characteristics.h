@@ -113,7 +113,8 @@ public:
 
 	//double getTiming(int idx);
 	double getTiming(Request req);
-	double getEnergy(int idx);
+	//double getEnergy(int idx);
+	double getEnergy(Request req);
     double getTotalLeakageEnergy(int cycles, int ntiles, int nblocks);
     double getTotalLeakageEnergy(int ntiles, int nblocks);
 };

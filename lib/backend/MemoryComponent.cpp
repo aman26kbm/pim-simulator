@@ -36,6 +36,10 @@ double MemoryComponent::getReqTiming(Request req) {
     return _values->getTiming(req);
 }
 
+double MemoryComponent::getReqEnergy(Request req) {
+    return _values->getEnergy(req);
+}
+
 void
 MemoryComponent::setTiming()
 {
@@ -56,7 +60,7 @@ MemoryComponent::setEnergy()
 {
     for (int i = 0; i < int(Request::Type::MAX); i++) {
         // calculate 1,000,000fj = 1,000 pj = nj
-        _energy[i] = _values->getEnergy(i);
+        //_energy[i] = _values->getEnergy(i);
     }
 }
 
@@ -211,11 +215,13 @@ MemoryComponent::finishReq(Request& req)
         case Request::Type::RowBitwise:
         case Request::Type::ColBitwise:
             block_decoder_energy += (double) (req.finish_time - req.arrive_time) / _values->_freq * (_values->E_internal_decoder+_values->E_switching_decoder);
-            req_energy[int(req.type)] += _energy[int(req.type)] * req.size_list[0];
+            //req_energy[int(req.type)] += _energy[int(req.type)] * req.size_list[0];
+            req_energy[int(req.type)] += getReqEnergy(req);
             break;
         default:
             block_decoder_energy += (double) (req.finish_time - req.arrive_time) / _values->_freq * (_values->E_internal_decoder+_values->E_switching_decoder);
-            req_energy[int(req.type)] += _energy[int(req.type)];
+            //req_energy[int(req.type)] += _energy[int(req.type)];
+            req_energy[int(req.type)] += getReqEnergy(req);
             break;
     }
 }
