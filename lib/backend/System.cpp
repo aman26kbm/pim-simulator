@@ -1451,6 +1451,7 @@ void System<T>::broadcast_row_z_pattern(int src_row, int dst_start_row, int src_
     }
 }
 
+/*
 template <class T>
 void System<T>::multi_element_compute_div_velocity_and_grad_pressure_3d()
 {
@@ -4913,7 +4914,7 @@ void System<T>::load_data_flux() {
     sendRequest(*request);
 
 }
-
+*/
 
 template <class T>
 void System<T>::broadcast_row_x_y_z_pattern(int x_src_row, int x_dst_start_row, int x_src_col, int x_dst_col,
@@ -4969,6 +4970,7 @@ void System<T>::broadcast_row_x_y_z_pattern(int x_src_row, int x_dst_start_row, 
 }
 
 
+/*
 template <class T>
 void System<T>::multi_element_compute_div_velocity_and_grad_pressure_3d_4()
 {
@@ -5268,9 +5270,10 @@ void System<T>::multi_element_compute_div_velocity_and_grad_pressure_3d_4()
 
     }
 }
+*/
 
 
-
+/*
 template <class T>
 void System<T>::multi_element_compute_volume_acoustic_3d_4()
 {
@@ -5513,6 +5516,7 @@ void System<T>::multi_element_compute_volume_acoustic_3d_4()
 //        delete request;
     }
 }
+*/
 
 
 // Begin Compute Flux Section
@@ -5604,7 +5608,7 @@ int System<T>::getNeighborsID(int axis, int direction, int ElementID)
     return neighbor_id;
 }
 
-
+/*
 template <class T>
 void System<T>::multi_element_compute_flux_elastic_3d() {
     // Define column
@@ -13831,3 +13835,4 @@ void System<T>::IntegrationLSRK4_level5(int current_stage)
         }
     }
 }
+*/
