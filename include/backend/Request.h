@@ -61,7 +61,7 @@ public:
         SystemColWrite,
         MAX
     } type;
-    
+
 //    static constexpr const std::string req_str[int(Type::MAX)] = {
 //        "RowSet",
 //        "ColSet",
@@ -112,6 +112,7 @@ public:
     TimeT arrive_time, process_time, finish_time, net_overhead = 0;
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list
+    std::vector<PrecisionT> precision_list;
     int chip, tile, block, row, col;
     int src_chip, src_tile, src_block, src_row, src_col;
     int dst_chip, dst_tile, dst_block, dst_row, dst_col;
@@ -161,6 +162,12 @@ public:
         dst_block = block_id;
         dst_row = row_id;
         dst_col = col_id;
+    }
+
+    void addAddr(AddrT addr, int size, PrecisionT precision) {
+        addr_list.push_back(addr);
+        size_list.push_back(size);
+        precision_list.push_back(precision);
     }
 
     void addAddr(AddrT addr, int size) {

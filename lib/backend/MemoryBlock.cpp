@@ -48,12 +48,14 @@ MemoryBlock::issueReq(Request& req)
     TimeT cur_time = _ctrl->getTime();
     if (req.isPIM()) {
         req.process_time = cur_time;
-        req.finish_time = cur_time + _timing[int(req.type)];
-        if (req.type == Request::Type::RowBitwise || req.type == Request::Type::ColBitwise ||
-            req.type == Request::Type::RowSet || req.type == Request::Type::ColSet ||
-            req.type == Request::Type::RowReset || req.type == Request::Type::ColReset) {
-            req.finish_time = cur_time + _timing[int(req.type)] * req.size_list[0];
-        }
+        //req.finish_time = cur_time + _timing[int(req.type)];
+        req.finish_time = cur_time + getReqTiming(req);
+        //The timing will be all included in getReqTiming
+        //if (req.type == Request::Type::RowBitwise || req.type == Request::Type::ColBitwise ||
+        //    req.type == Request::Type::RowSet || req.type == Request::Type::ColSet ||
+        //    req.type == Request::Type::RowReset || req.type == Request::Type::ColReset) {
+        //    req.finish_time = cur_time + _timing[int(req.type)] * req.size_list[0];
+        //}
 
         _next_available = req.finish_time;
 

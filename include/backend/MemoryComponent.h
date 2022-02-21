@@ -35,7 +35,7 @@ public:
     int _ntiles, _nblocks, _nrows, _ncols, _blocksize;
     int _id;
 
-    int bus_conuter = 0; // counter for bus congestion ----
+    int bus_counter = 0; // counter for bus congestion ----
 
     std::vector<int> htree_counters;
 
@@ -46,7 +46,7 @@ public:
 
     std::string level_str[int(Level::MAX)] = {"Chip", "Tile", "Block"};
 
-    TimeT _timing[int(Request::Type::MAX)];
+    //TimeT _timing[int(Request::Type::MAX)];
     double _energy[int(Request::Type::MAX)];
 
     /* parent memory */
@@ -70,6 +70,8 @@ public:
     void setParent(MemoryComponent* p) {_parent = p;}
     void setTiming();
     void setEnergy();
+
+    double getReqTiming(Request req);
 
     double getTotalEnergy();
 

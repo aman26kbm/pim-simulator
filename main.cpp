@@ -82,9 +82,23 @@ int main(int argc, char *argv[]) {
     System<float>* system = new System<float>(config);
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    int level = config_file.at(22) - '0';
-    std::cout << "level: " << level << std::endl;
+    //int level = config_file.at(22) - '0';
+    //std::cout << "level: " << level << std::endl;
 
+
+    //Simple program to perform a RowMul
+    AddrT pim_start_address = 0;
+
+    std::vector<Request> requests;
+    Request *request;
+
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(pim_start_address, 2*32, PrecisionT::INT8); // Calculating temp1 = A * B
+    request->addAddr(pim_start_address + 1, 2*32, PrecisionT::INT8); // Calculating temp2 =  C * D
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        system->sendRequest(requests[i]);
 
 //    if (atoi(argv[3]) == 0) { // acoustic
 //        NUM_VARS = 4;
@@ -227,37 +241,37 @@ int main(int argc, char *argv[]) {
 //    }
 
 
-    if (atoi(argv[3]) == 1) { // elastic
-        NUM_VARS = 9;
-        NUMBER_OF_MATERIALS = 3;
-        if (level == 5) {
-            REFINEMENT_LEVEL = 5;
-            MAX_AXIS_VALUE = (1 << REFINEMENT_LEVEL);
-            if (atoi(argv[2]) == 512) {
-                NUM_ELEMENT_DATABASE = (16*256/4);
-            } else if (atoi(argv[2]) == 2048) {
-                NUM_ELEMENT_DATABASE = (64*256/4);
-            } else if (atoi(argv[2]) == 8192) {
-                NUM_ELEMENT_DATABASE = (256*256/4);
-            } else if (atoi(argv[2]) == 16384) {
-                NUM_ELEMENT_DATABASE = (512*256/4);
-            }
-        } else if (level == 4) {
-            REFINEMENT_LEVEL = 4;
-            MAX_AXIS_VALUE = (1 << REFINEMENT_LEVEL);
-            if (atoi(argv[2]) == 512) {
-                NUM_ELEMENT_DATABASE = (16*256/4);
-            } else {
-                NUM_ELEMENT_DATABASE = (64*256/4);
-            }
-        }
+    //if (atoi(argv[3]) == 1) { // elastic
+    //    NUM_VARS = 9;
+    //    NUMBER_OF_MATERIALS = 3;
+    //    if (level == 5) {
+    //        REFINEMENT_LEVEL = 5;
+    //        MAX_AXIS_VALUE = (1 << REFINEMENT_LEVEL);
+    //        if (atoi(argv[2]) == 512) {
+    //            NUM_ELEMENT_DATABASE = (16*256/4);
+    //        } else if (atoi(argv[2]) == 2048) {
+    //            NUM_ELEMENT_DATABASE = (64*256/4);
+    //        } else if (atoi(argv[2]) == 8192) {
+    //            NUM_ELEMENT_DATABASE = (256*256/4);
+    //        } else if (atoi(argv[2]) == 16384) {
+    //            NUM_ELEMENT_DATABASE = (512*256/4);
+    //        }
+    //    } else if (level == 4) {
+    //        REFINEMENT_LEVEL = 4;
+    //        MAX_AXIS_VALUE = (1 << REFINEMENT_LEVEL);
+    //        if (atoi(argv[2]) == 512) {
+    //            NUM_ELEMENT_DATABASE = (16*256/4);
+    //        } else {
+    //            NUM_ELEMENT_DATABASE = (64*256/4);
+    //        }
+    //    }
 
-        if (atoi(argv[5]) == 0) { // no expansion
-            system->multi_element_compute_flux_elastic_riemann_3d();
-        } else { // expansion
-            system->multi_element_compute_flux_elastic_riemann_3d_4();
-        }
-    }
+    //    if (atoi(argv[5]) == 0) { // no expansion
+    //        system->multi_element_compute_flux_elastic_riemann_3d();
+    //    } else { // expansion
+    //        system->multi_element_compute_flux_elastic_riemann_3d_4();
+    //    }
+    //}
 
 
 

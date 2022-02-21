@@ -15,7 +15,10 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wo
 }
 
 
-double MemoryCharacteristics::getTiming(int idx) {
+
+//double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {
+double MemoryCharacteristics::getTiming(Request req) {
+    int idx = int(req.type);
     double time = 0.0;
     switch (idx) {
         case 0: //RowSet
@@ -43,17 +46,65 @@ double MemoryCharacteristics::getTiming(int idx) {
         case 12: //RowSub
         case 13: //ColSub
 
-            time = (12 * N + 1) * T_NOR; //fixed-32 --- 385
-            time = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * T_NOR + (2 * N_m + 1) * T_SEARCH; // float-32 --- 1191
+            //time = (12 * N + 1) * T_NOR; //fixed-32 --- 385
+            //time = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * T_NOR + (2 * N_m + 1) * T_SEARCH; // float-32 --- 1191
+            //TODO: For now just looking at precision of the first operand
+            switch(req.precision_list[0]) {
+                case 0:  //fp8_e3m4
+                    time = 13 * T_COMPUTE;
+                    break;
+                case 1:  //fp16_e8m7
+                    time = 14 * T_COMPUTE;
+                    break;
+                case 2:  //fp32_e8m23
+                    time = 15 * T_COMPUTE;
+                    break;
+                case 3:  //INT4
+                    time = 4 + 1;
+                    break;
+                case 4:  //INT8
+                    time = 8 + 1;
+                    break;
+                case 5:  //INT16
+                    time = 16 + 1;
+                    break;
+                case 6:  //MAX
+                    time = -1; 
+                    break;
+            } 
             break;
         case 14: //RowMul
         case 15: //RowDiv
         case 16: //ColMul
         case 17: //ColDiv
 
-            time = (13 * N * N - 14 * N + 6) * T_NOR; // fixed-32 (full precision)
-            time = (6.5 * N * N - 7.5 * N - 2) * T_NOR; // fixed-32 (half precision) --- 6414 3400
-            time = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * T_NOR; // float-32 --- 3360 2276
+            //time = (13 * N * N - 14 * N + 6) * T_NOR; // fixed-32 (full precision)
+            //time = (6.5 * N * N - 7.5 * N - 2) * T_NOR; // fixed-32 (half precision) --- 6414 3400
+            //time = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * T_NOR; // float-32 --- 3360 2276
+            //TODO: For now just looking at precision of the first operand
+            switch(req.precision_list[0]) {
+                case 0:  //fp8_e3m4
+                    time = 13 * T_COMPUTE;
+                    break;
+                case 1:  //fp16_e8m7
+                    time = 14 * T_COMPUTE;
+                    break;
+                case 2:  //fp32_e8m23
+                    time = 15 * T_COMPUTE;
+                    break;
+                case 3:  //INT4
+                    time = 4*4 + 3*4 - 2;
+                    break;
+                case 4:  //INT8
+                    time = 8*8 + 3*8 - 2;
+                    break;
+                case 5:  //INT16
+                    time = 16*16 + 3*16 - 2;
+                    break;
+                case 6:  //MAX
+                    time = -1; 
+                    break;
+            } 
             break;
         case 18: //RowBitwise
         case 19: //ColBitwise

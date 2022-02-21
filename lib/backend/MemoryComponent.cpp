@@ -20,6 +20,7 @@ MemoryComponent::setController(Controller* ctrl)
     _ctrl = ctrl;
 }
 
+//Note: This is defunct
 void
 MemoryComponent::setValues(MemoryCharacteristics* values) 
 {
@@ -31,6 +32,10 @@ MemoryComponent::setValues(MemoryCharacteristics* values)
     setEnergy();
 }
 
+double MemoryComponent::getReqTiming(Request req) {
+    return _values->getTiming(req);
+}
+
 void
 MemoryComponent::setTiming()
 {
@@ -40,7 +45,8 @@ MemoryComponent::setTiming()
 //        _timing[i] = int(fclk + 0.5);
 
 //        double fclk = _values->getTiming(i)  /  (1000.0 / float(_freq));
-        _timing[i] = _values->getTiming(i);
+       //_timing is being deprecated
+       // _timing[i] = _values->getTiming(i);
 
     }
 }
@@ -142,8 +148,8 @@ MemoryComponent::tick()
         htree_counters[i] = 0;
     }
 
-    total_counters += bus_conuter;
-    bus_conuter = 0;
+    total_counters += bus_counter;
+    bus_counter = 0;
 
 //    if (_level == MemoryComponent::Level::Chip || _level == MemoryComponent::Level::Tile)
 //        cout << "total_counters: " << total_counters << endl;

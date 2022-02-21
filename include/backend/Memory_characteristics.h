@@ -42,6 +42,9 @@ public:
 
 	const double T_WRITE = T_ROW_DECODER + T_CHARGE + T_SET + T_RESET;
 
+    //Time taken for a compute operation
+    const double T_COMPUTE = 1.1; 
+
 
 	const double E_SET = 23.8;
 	const double E_RESET = 0.32;
@@ -108,7 +111,8 @@ public:
     const double E_switching_bus[6] = {E_switching_bus_32, E_switching_bus_64, E_switching_bus_ratio * 2, E_switching_bus_ratio * 4, E_switching_bus_ratio * 8, E_switching_bus_ratio * 16};
 
 
-	double getTiming(int idx);
+	//double getTiming(int idx);
+	double getTiming(Request req);
 	double getEnergy(int idx);
     double getTotalLeakageEnergy(int cycles, int ntiles, int nblocks);
     double getTotalLeakageEnergy(int ntiles, int nblocks);

@@ -11,6 +11,16 @@ typedef uint64_t TimeT;
 typedef uint64_t CountT;
 typedef uint64_t AddrT;
 
+enum PrecisionT {
+    FP8_e3m4,
+    FP16_e8m7,
+    FP32_e8m23,
+    INT4,
+    INT8,
+    INT16,
+    MAX
+};
+
 }
 
 //#define BACK_DEBUG_OUTPUT

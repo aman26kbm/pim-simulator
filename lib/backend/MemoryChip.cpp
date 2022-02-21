@@ -75,8 +75,9 @@ MemoryChip::issueReq(Request& req)
         req.process_time = cur_time;
         int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
-            bus_conuter += words;
-            req.finish_time = cur_time + _timing[int(req.type)] * (bus_conuter + 1);
+            bus_counter += words;
+            //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
+            req.finish_time = cur_time + getReqTiming(req) * (bus_counter + 1);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
             std::vector<int> switch_list;
 
@@ -95,7 +96,8 @@ MemoryChip::issueReq(Request& req)
 //                cout << switch_list[i] << ", ";
             }
 //            cout << "jump: " << jump << endl;
-            req.finish_time = cur_time + _timing[int(req.type)] * jump;
+            //req.finish_time = cur_time + _timing[int(req.type)] * jump;
+            req.finish_time = cur_time + getReqTiming(req) * jump;
             switch_list.clear();
         }
 

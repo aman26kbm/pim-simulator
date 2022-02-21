@@ -169,8 +169,8 @@ int System<T>::sendPIM_two_operands(Request& req)
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[0], req.size_list[i]);
-        pim_req->addAddr(req.addr_list[1], req.size_list[i+1]);
+        pim_req->addAddr(req.addr_list[0], req.size_list[i], req.precision_list[i]);
+        pim_req->addAddr(req.addr_list[1], req.size_list[i+1], req.precision_list[i+1]);
         pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
