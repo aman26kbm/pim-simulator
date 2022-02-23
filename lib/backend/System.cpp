@@ -146,8 +146,8 @@ int System<T>::sendPIM_one_operand(Request& req)
             _chips[src_chip]->tick();
             res = _chips[src_chip]->receiveReq(*pim_req);
         }
-	delete pim_req;
-//        _chips[src_chip]->setDecoderTime(_chips[src_chip]->getDecoderTime() + 1);
+	    delete pim_req;
+        //  _chips[src_chip]->setDecoderTime(_chips[src_chip]->getDecoderTime() + 1);
     }
     return tot_clks;
 }
@@ -160,8 +160,11 @@ int System<T>::sendPIM_two_operands(Request& req)
     for (int i = 0; i < n_ops; i+=2) {
         int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
         int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
+      
+        // First address is considered as src1.
+        // Second address is the dst.
+        // src2 isn't specified because it isn't required to model performance (time) and power (energy)
+        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col); 
         getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
@@ -169,8 +172,8 @@ int System<T>::sendPIM_two_operands(Request& req)
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[0], req.size_list[i], req.precision_list[i]);
-        pim_req->addAddr(req.addr_list[1], req.size_list[i+1], req.precision_list[i+1]);
+        pim_req->addAddr(req.addr_list[i], req.size_list[i], req.precision_list[i]);
+        pim_req->addAddr(req.addr_list[i+1], req.size_list[i+1], req.precision_list[i+1]);
         pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -182,9 +185,9 @@ int System<T>::sendPIM_two_operands(Request& req)
             _chips[src_chip]->tick();
             res = _chips[src_chip]->receiveReq(*pim_req);
         }
-//	std::cout << i << std::endl;
-	delete pim_req;
-//        _chips[src_chip]->setDecoderTime(_chips[src_chip]->getDecoderTime() + 1);
+        //	std::cout << i << std::endl;
+	    delete pim_req;
+        //  _chips[src_chip]->setDecoderTime(_chips[src_chip]->getDecoderTime() + 1);
     }
     return tot_clks;
 }

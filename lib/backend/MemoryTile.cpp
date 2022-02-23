@@ -67,6 +67,7 @@ MemoryTile::issueReq(Request& req)
         req.process_time = cur_time;
         int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
+            //bus_counter is reset after each tick in the MemoryComponent::tick() method
             bus_counter += words;
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
             req.finish_time = cur_time + getReqTiming(req) * (bus_counter + 1);
