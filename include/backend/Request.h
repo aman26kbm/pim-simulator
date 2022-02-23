@@ -45,7 +45,7 @@ public:
                   //where X includes the cycles required to fully add multi-bit numbers (precision fixed to 32 in the MemoryCharacteristics file)
                   //The "size" argument is unused.
                   //There is implicit parallellism here. The add operation happens across all columns.
-        ColAdd,
+        ColAdd,  
         RowSub,
         ColSub,
 
@@ -68,27 +68,30 @@ public:
                    //That means "M" operations (M = the size argument) are done.
         ColBitwise,
 
-        RowSearch,
+        RowSearch, //Ignoring this for now, coz PIMRA doesn't support the search operation
         ColSearch,
 
         BlockSend, //Doesn't mean send an entire block. Means send some bits (rows/columns not specified) from one block to another within a tile. 
                    //Number of bits to transfer is specified by size argument. Number of words transferred = Number of bits / precision.
                    //Precision of the words is specified in memory characteristics (_wordsize).
-                   //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying thie unit time
-                   //with number of words to transfer (in the bus interconnect case).
-                   //So, this is a macro-op API.
+                   //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
+                   //with number of words to transfer (in the bus interconnect case) and with number of words + number of hops (in the htree interconnect case)
+                   //So, multiple rows could be sent by specifying size to be more bits than in 1 row. Correct?
+                   //The "addr" argument will specify the row ID of row0.
         BlockReceive, //Same as above; just for receive
         BlockSend_Receive, //Same as above; but for both send and receive
         TileSend, //Doesn't mean send some bits from a block in one tile to another block in another tile.
                   //This only seems to be accounting for transfer between tiles (transfer from block to tile and tile to block is not included).
                   //For the H-tree interconnect, this involves some hops. So, there are some extra cycles to be added.
-                  //But for the bus interconnect, this shouldn't cause any extra delay, right? 
+                  //But for the bus interconnect, this shouldn't cause any extra delay (there is only like 1 bus structure in the entire chip), right? 
+                  //size and addr arguments have the same meaning as BlockSend.
         TileReceive, //Same as above; just for receive
         TileSend_Receive,//Same as above; but for both send and receive
         ChipSend_Receive,//This does not transfer some bits from one block to another in a different chip. 
                          //This only accounts for the transfer from a chip to another chip. 
                          //So, network delay is added.
                          //The transfer time from block to tile, tile to chip boundary is not included.
+                         //size and addr arguments have the same meaning as BlockSend.
 
 
         //The following request types form a higher level API. They just wrap the lower level types above.
@@ -98,6 +101,8 @@ public:
                        //RowRead, BlockSend, TileSend, ChipSend_Receive, TileReceive, BlockReceive, RowWrite
                        //If the chips are the same, then it invokes fewer of these.
                        //If the tiles are the same, then it invokes even fewer of these.
+                       //In the case of PIMRA, we have only 1 chip. So, we will always use this API
+                       //with the same src and dst chip
         SystemRow2Col,
         SystemCol2Row,
         SystemCol2Col,
