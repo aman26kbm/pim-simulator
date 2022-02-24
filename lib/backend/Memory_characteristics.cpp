@@ -14,7 +14,31 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wo
     _freq = freq;
 }
 
-
+//Helper function to find the number of clocks for a given operation and datatype
+int getClocks(string op, string dtype, int exponent, int mantissa) {
+    int clocks;
+    if (op=="add") {
+        if (dtype=="float") {
+            clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
+        }
+        else {
+            clocks = mantissa + 1;
+        }
+    }
+    else if (op=="mul") {
+        if (dtype=="float") {
+            clocks = mantissa * mantissa + 7 * mantissa + 3 * exponent + 5;
+        }
+        else {
+            clocks = mantissa * mantissa + 3 * mantissa - 2;
+        }
+    }
+    else {
+        //unsopported operation
+        clocks = -1;
+    }
+    return clocks;
+}
 
 //double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {
 double MemoryCharacteristics::getTiming(Request req) {
@@ -31,7 +55,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case 4: //RowMv
         case 5: //ColMv
-            time = T_NOR;
+            time = T_CLK;
             break;
         case 6: //RowRead
         case 7: //ColRead
@@ -46,69 +70,67 @@ double MemoryCharacteristics::getTiming(Request req) {
         case 12: //RowSub
         case 13: //ColSub
 
-            //time = (12 * N + 1) * T_NOR; //fixed-32 --- 385
-            //time = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * T_NOR + (2 * N_m + 1) * T_SEARCH; // float-32 --- 1191
+            //time = (12 * N + 1) * T_CLK; //fixed-32 --- 385
+            //time = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * T_CLK + (2 * N_m + 1) * T_SEARCH; // float-32 --- 1191
             //TODO: For now just looking at precision of the first operand
             switch(req.precision_list[0]) {
                 case 0:  //fp8_e3m4
-                    time = 13 * T_COMPUTE;
+                    time = getClocks("add", "float", 3, 4) * T_CLK; 
                     break;
                 case 1:  //fp16_e8m7
-                    time = 14 * T_COMPUTE;
+                    time = getClocks("add", "float", 8, 7) * T_CLK;
                     break;
                 case 2:  //fp32_e8m23
-                    time = 15 * T_COMPUTE;
+                    time = getClocks("add", "float", 8, 23) * T_CLK;
                     break;
                 case 3:  //INT4
-                    time = 4 + 1;
+                    time = getClocks("add", "int", 0, 4) * T_CLK;
                     break;
                 case 4:  //INT8
-                    time = 8 + 1;
+                    time = getClocks("add", "int", 0, 8) * T_CLK;
                     break;
                 case 5:  //INT16
-                    time = 16 + 1;
+                    time = getClocks("add", "int", 0, 16) * T_CLK;
                     break;
                 case 6:  //MAX
                     time = -1; 
                     break;
             } 
-            break;
         case 14: //RowMul
         case 15: //RowDiv
         case 16: //ColMul
         case 17: //ColDiv
 
-            //time = (13 * N * N - 14 * N + 6) * T_NOR; // fixed-32 (full precision)
-            //time = (6.5 * N * N - 7.5 * N - 2) * T_NOR; // fixed-32 (half precision) --- 6414 3400
-            //time = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * T_NOR; // float-32 --- 3360 2276
+            //time = (13 * N * N - 14 * N + 6) * T_CLK; // fixed-32 (full precision)
+            //time = (6.5 * N * N - 7.5 * N - 2) * T_CLK; // fixed-32 (half precision) --- 6414 3400
+            //time = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * T_CLK; // float-32 --- 3360 2276
             //TODO: For now just looking at precision of the first operand
             switch(req.precision_list[0]) {
                 case 0:  //fp8_e3m4
-                    time = 13 * T_COMPUTE;
+                    time = getClocks("mul", "float", 3, 4) * T_CLK; 
                     break;
                 case 1:  //fp16_e8m7
-                    time = 14 * T_COMPUTE;
+                    time = getClocks("mul", "float", 8, 7) * T_CLK;
                     break;
                 case 2:  //fp32_e8m23
-                    time = 15 * T_COMPUTE;
+                    time = getClocks("mul", "float", 8, 23) * T_CLK;
                     break;
                 case 3:  //INT4
-                    time = 4*4 + 3*4 - 2;
+                    time = getClocks("mul", "int", 0, 4) * T_CLK;
                     break;
                 case 4:  //INT8
-                    time = 8*8 + 3*8 - 2;
+                    time = getClocks("mul", "int", 0, 8) * T_CLK;
                     break;
                 case 5:  //INT16
-                    time = 16*16 + 3*16 - 2;
+                    time = getClocks("mul", "int", 0, 16) * T_CLK;
                     break;
                 case 6:  //MAX
                     time = -1; 
                     break;
             } 
-            break;
         case 18: //RowBitwise
         case 19: //ColBitwise
-            time = T_NOR;
+            time = T_CLK;
             break;
         case 20: //RowSearch
         case 21: //ColSearch
@@ -121,10 +143,10 @@ double MemoryCharacteristics::getTiming(Request req) {
         case 26: //TileReceive
         case 27: //TileSend_Receive
         case 28: //ChipSend_Receive
-            time = T_NOR; // Assuming the global clock frequency is 1/T_NOR.
+            time = T_CLK; // Assuming the global clock frequency is 1/T_CLK.
             break;
         default:
-            time = T_NOR;
+            time = T_CLK;
             break;
     }
     double fclk = time / (1000000000.0 / float(_freq));
@@ -163,18 +185,64 @@ double MemoryCharacteristics::getEnergy(Request req) {
         case 12: //RowSub
         case 13: //ColSub
 
-            energy = (12 * N + 1) * E_NOR; //fixed-32
-            energy = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * E_NOR + (2 * N_m + 1) * E_SEARCH; //float-32
-            break;
+            //energy = (12 * N + 1) * E_NOR; //fixed-32
+            //energy = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * E_NOR + (2 * N_m + 1) * E_SEARCH; //float-32
+            switch(req.precision_list[0]) {
+                case 0:  //fp8_e3m4
+                    energy = getClocks("add", "float", 3, 4) * E_CLK; 
+                    break;
+                case 1:  //fp16_e8m7
+                    energy = getClocks("add", "float", 8, 7) * E_CLK;
+                    break;
+                case 2:  //fp32_e8m23
+                    energy = getClocks("add", "float", 8, 23) * E_CLK;
+                    break;
+                case 3:  //INT4
+                    energy = getClocks("add", "int", 0, 4) * E_CLK;
+                    break;
+                case 4:  //INT8
+                    energy = getClocks("add", "int", 0, 8) * E_CLK;
+                    break;
+                case 5:  //INT16
+                    energy = getClocks("add", "int", 0, 16) * E_CLK;
+                    break;
+                case 6:  //MAX
+                    energy = -1; 
+                    break;
+            } 
+
         case 14: //RowMul
         case 15: //RowDiv
         case 16: //ColMul
         case 17: //ColDiv
 
-            energy = (13 * N * N - 14 * N + 6) * E_NOR; // fixed-32 (full precision)
-            energy = (6.5 * N * N - 7.5 * N - 2) * E_NOR; // fixed-32 (half precision)
-            energy = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * E_NOR; // float-32
-            break;
+            //energy = (13 * N * N - 14 * N + 6) * E_NOR; // fixed-32 (full precision)
+            //energy = (6.5 * N * N - 7.5 * N - 2) * E_NOR; // fixed-32 (half precision)
+            //energy = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * E_NOR; // float-32
+
+            switch(req.precision_list[0]) {
+                case 0:  //fp8_e3m4
+                    energy = getClocks("mul", "float", 3, 4) * E_CLK; 
+                    break;
+                case 1:  //fp16_e8m7
+                    energy = getClocks("mul", "float", 8, 7) * E_CLK;
+                    break;
+                case 2:  //fp32_e8m23
+                    energy = getClocks("mul", "float", 8, 23) * E_CLK;
+                    break;
+                case 3:  //INT4
+                    energy = getClocks("mul", "int", 0, 4) * E_CLK;
+                    break;
+                case 4:  //INT8
+                    energy = getClocks("mul", "int", 0, 8) * E_CLK;
+                    break;
+                case 5:  //INT16
+                    energy = getClocks("mul", "int", 0, 16) * E_CLK;
+                    break;
+                case 6:  //MAX
+                    energy = -1; 
+                    break;
+            } 
         case 18: //RowBitwise
         case 19: //ColBitwise
             energy = E_NOR;

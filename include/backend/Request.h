@@ -16,24 +16,23 @@ namespace pimsim {
 class Request {
 public:
     enum class Type : int {
-        RowSet,   //Sets (to 1) a chunk of M rows in a block. M is specified by "size" argument.
-                  //The address of the first row in the chunk is specified by the "addr" argument.
+        RowSet,   //Sets (to 1) 1 row in a block. 
+                  //"size" argument is not used.
+                  //The address of the row is specified by the "addr" argument.
                   //Entire row is set. No way to set a few columns in the chunk of rows.
                   //It'd take the same time if either all columns or a few columns of the chunk of rows was needed to be set. 
-                  //So setting a few columns of the chunk of rows is not modelled.
-                  //The unit time taken is specified to be 1 cycle in MemoryCharacteristics.
-                  //The total time for setting a chunk of rows is obtained by multiplying by "size". This is done in
-                  //MemoryBlock.cpp
+                  //So setting a few columns of the chunk of rows is not modelled/supported.
         ColSet,   //Same as above, but for column
-        RowReset, //Resets (to 0) a chunk of M rows in a block. Same as above.
+        RowReset, //Resets (to 0) a row in a block.
         ColReset, //Same as above, but for row
-        RowMv,    //Moves row (number of bits to move specified by "size" argument) from one location to another in the same block
+        RowMv,    //Moves a row in a block from src to dst. 
+                  //"size" argument is not used.
+                  //The address of the row is specified by the "addr" argument.
         ColMv,    //Same as above, but for column
 
         RowRead,  //Read 1 row in a block and bring its contents into the row buffer of the block.
-                  //The addr argument specifies the row ID. The size argument is unused.
-                  //The unit time taken is specified to be 1 cycle in MemoryCharacteristics.
-                  //There is no parallelism. Just 1 row is read.
+                  //The addr argument specifies the row ID. 
+                  //"size" argument is not used.
                   //Can't specify a few columns within the row to read. Read all columns in the row.
         ColRead,  //Same as above, but for column
         RowWrite, //Write a row in a block; rest same as above 
@@ -41,49 +40,56 @@ public:
 
         RowAdd,   //Add multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
-                  //The unit time taken is specified to be X cycles in MemoryCharacteristics
-                  //where X includes the cycles required to fully add multi-bit numbers (precision fixed to 32 in the MemoryCharacteristics file)
+                  //The time taken is specified to be X cycles in MemoryCharacteristics
+                  //where X includes the cycles required to fully add multi-bit numbers. 
+                  //The "precision" argument specifies precision.
                   //The "size" argument is unused.
-                  //There is implicit parallellism here. The add operation happens across all columns.
+                  //There is implicit parallellism here. This instruction involves multiple rows.
+                  //Also, the add operation happens across all columns.
         ColAdd,  
-        RowSub,
+        RowSub,   //Same as above, but for Sub instead of Add
         ColSub,
 
         RowMul,   //Multiply multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
-                  //The unit time taken is specified to be X cycles in MemoryCharacteristics
-                  //where X includes the cycles required to fully add multi-bit numbers (precision fixed to 32 in the MemoryCharacteristics file)
+                  //The time taken is specified to be X cycles in MemoryCharacteristics
+                  //where X includes the cycles required to fully add multi-bit numbers.
+                  //The "precision" argument specifies precision.
                   //The "size" argument is unused.
-                  //There is implicit parallellism here. The add operation happens across all columns.
+                  //There is implicit parallellism here. This instruction involves multiple rows.
+                  //Also, the add operation happens across all columns.
         ColMul,
         RowDiv,
         ColDiv,
 
-        RowBitwise,//Perform a bitwise operation between bits stored in two rows.
+        RowBitwise,//Perform a bitwise operation between multi-bit values stored over multiple rows.
                    //The entire row participates. Can't specify a few columns that will participate.
                    //The "addr" argument specifies the row ID.
-                   //The unit time taken is specified to be 1 cycle in MemoryCharacteristics.
-                   //The total time for setting a chunk of rows is obtained by multiplying by "size". This is done in
-                   //MemoryBlock.cpp. 
-                   //That means "M" operations (M = the size argument) are done.
+                   //The "precision" argument specifies precision.
+                   //The time taken is specified to be X cycles in MemoryCharacteristics
+                   //where X includes the cycles required to fully add multi-bit numbers.
+                   //The "size" argument is unused.
         ColBitwise,
 
         RowSearch, //Ignoring this for now, coz PIMRA doesn't support the search operation
         ColSearch,
 
-        BlockSend, //Doesn't mean send an entire block. Means send some bits (rows/columns not specified) from one block to another within a tile. 
-                   //Number of bits to transfer is specified by size argument. Number of words transferred = Number of bits / precision.
-                   //Precision of the words is specified in memory characteristics (_wordsize).
+        BlockSend, //Doesn't mean send a whole block from one place to another.
+                   //Send a row from one block to another within a tile. 
+                   //Bandwidth of the block-to-block interconnect is specified in memory characteristics (_wordsize).
                    //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
-                   //with number of words to transfer (in the bus interconnect case) and with number of words + number of hops (in the htree interconnect case)
-                   //So, multiple rows could be sent by specifying size to be more bits than in 1 row. Correct?
+                   //with number of transfer bursts (in the bus interconnect case) and with number of bursts + number of hops (in the htree interconnect case)
+                   //The number of bursts = number of bits in a row / interconnect bandwidth
                    //The "addr" argument will specify the row ID of row0.
+                   //The "size" argument is unused.
         BlockReceive, //Same as above; just for receive
         BlockSend_Receive, //Same as above; but for both send and receive
-        TileSend, //Doesn't mean send some bits from a block in one tile to another block in another tile.
-                  //This only seems to be accounting for transfer between tiles (transfer from block to tile and tile to block is not included).
+        TileSend, //Doesn't mean send a whole tile from one place to another.
+                  //Doesn't mean send some bits from a block in one tile to another block in another tile.
+                  //This only accounts for transfer between tiles (transfer from block to tile and tile to block is not included).
                   //For the H-tree interconnect, this involves some hops. So, there are some extra cycles to be added.
-                  //But for the bus interconnect, this shouldn't cause any extra delay (there is only like 1 bus structure in the entire chip), right? 
+                  //But for the bus interconnect, this involves the delay in the tile-to-tile interconnect (the bus structure
+                  //isn't global across the entire chip; there is a hierarchy)
                   //size and addr arguments have the same meaning as BlockSend.
         TileReceive, //Same as above; just for receive
         TileSend_Receive,//Same as above; but for both send and receive
@@ -93,10 +99,8 @@ public:
                          //The transfer time from block to tile, tile to chip boundary is not included.
                          //size and addr arguments have the same meaning as BlockSend.
 
-
         //The following request types form a higher level API. They just wrap the lower level types above.
         //So, there is no "time taken" mentioned for the following in Memorycharacteristics.cpp.
-
         SystemRow2Row, //Invokes system_sendRow_receiveRow, which if invokes:
                        //RowRead, BlockSend, TileSend, ChipSend_Receive, TileReceive, BlockReceive, RowWrite
                        //If the chips are the same, then it invokes fewer of these.
@@ -106,7 +110,6 @@ public:
         SystemRow2Col,
         SystemCol2Row,
         SystemCol2Col,
-
         SystemLookUpTable,
         SystemRowRead, 
         SystemColRead,
