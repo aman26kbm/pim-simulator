@@ -51,7 +51,7 @@ public:
     GlobalConnection* _conn;
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
-    int _nchips, _ntiles, _nblocks, _nrows, _ncols, _wordsize, _datatype;
+    int _nchips, _ntiles, _nblocks, _nrows, _ncols, _wordsize;
     AddrT _chipsize, _tilesize, _blocksize;
     int _clock_rate = 0;
     bool _blockctrl, _tilectrl, _chipctrl;

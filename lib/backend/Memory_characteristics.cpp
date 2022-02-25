@@ -22,7 +22,7 @@ int getClocks(string op, string dtype, int exponent, int mantissa) {
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
         else {
-            clocks = mantissa + 1;
+            clocks = mantissa; //Not using +1 because the precision supplied already includes the carry bit
         }
     }
     else if (op=="mul") {
@@ -37,6 +37,39 @@ int getClocks(string op, string dtype, int exponent, int mantissa) {
         //unsopported operation
         clocks = -1;
     }
+    return clocks;
+}
+
+//Helper function to find the number of clocks for a given request's precision and op type
+int getClocksForReq(PrecisionT precision, string op) {
+    int clocks;
+
+    switch(precision) { 
+        case 0:  //fp8_e3m4
+            clocks = getClocks(op, "float", 3, 4); 
+            break;
+        case 1:  //fp16_e8m7
+            clocks = getClocks(op, "float", 8, 7);
+            break;
+        case 2:  //fp32_e8m23
+            clocks = getClocks(op, "float", 8, 23);
+            break;
+        case 3:  //INT4
+            clocks = getClocks(op, "int", 0, 4);
+            break;
+        case 4:  //INT8
+            clocks = getClocks(op, "int", 0, 8);
+            break;
+        case 5:  //INT16
+            clocks = getClocks(op, "int", 0, 16);
+            break;
+        case 6:  //INT32
+            clocks = getClocks(op, "int", 0, 32);
+            break;
+        case 7:  //MAX
+            clocks = -1; 
+            break;
+    } 
     return clocks;
 }
 
@@ -72,30 +105,13 @@ double MemoryCharacteristics::getTiming(Request req) {
 
             //time = (12 * N + 1) * T_CLK; //fixed-32 --- 385
             //time = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * T_CLK + (2 * N_m + 1) * T_SEARCH; // float-32 --- 1191
-            //TODO: For now just looking at precision of the first operand
-            switch(req.precision_list[0]) {
-                case 0:  //fp8_e3m4
-                    time = getClocks("add", "float", 3, 4) * T_CLK; 
-                    break;
-                case 1:  //fp16_e8m7
-                    time = getClocks("add", "float", 8, 7) * T_CLK;
-                    break;
-                case 2:  //fp32_e8m23
-                    time = getClocks("add", "float", 8, 23) * T_CLK;
-                    break;
-                case 3:  //INT4
-                    time = getClocks("add", "int", 0, 4) * T_CLK;
-                    break;
-                case 4:  //INT8
-                    time = getClocks("add", "int", 0, 8) * T_CLK;
-                    break;
-                case 5:  //INT16
-                    time = getClocks("add", "int", 0, 16) * T_CLK;
-                    break;
-                case 6:  //MAX
-                    time = -1; 
-                    break;
-            } 
+
+           //Looking the precision of the second item in the list (the destination) for calculating the
+           //number of cycles consumed.
+           //Number of destination bits tells the right value for addition because it could be more
+           //than the operands. (Eg. in case where accumulator is wider)
+            time = getClocksForReq(req.precision_list[1], "add") * T_CLK;
+            break;
         case 14: //RowMul
         case 15: //RowDiv
         case 16: //ColMul
@@ -104,30 +120,12 @@ double MemoryCharacteristics::getTiming(Request req) {
             //time = (13 * N * N - 14 * N + 6) * T_CLK; // fixed-32 (full precision)
             //time = (6.5 * N * N - 7.5 * N - 2) * T_CLK; // fixed-32 (half precision) --- 6414 3400
             //time = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * T_CLK; // float-32 --- 3360 2276
-            //TODO: For now just looking at precision of the first operand
-            switch(req.precision_list[0]) {
-                case 0:  //fp8_e3m4
-                    time = getClocks("mul", "float", 3, 4) * T_CLK; 
-                    break;
-                case 1:  //fp16_e8m7
-                    time = getClocks("mul", "float", 8, 7) * T_CLK;
-                    break;
-                case 2:  //fp32_e8m23
-                    time = getClocks("mul", "float", 8, 23) * T_CLK;
-                    break;
-                case 3:  //INT4
-                    time = getClocks("mul", "int", 0, 4) * T_CLK;
-                    break;
-                case 4:  //INT8
-                    time = getClocks("mul", "int", 0, 8) * T_CLK;
-                    break;
-                case 5:  //INT16
-                    time = getClocks("mul", "int", 0, 16) * T_CLK;
-                    break;
-                case 6:  //MAX
-                    time = -1; 
-                    break;
-            } 
+
+           //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
+           //number of cycles consumed.
+           //Number of src bits gives the right value for multiplication cycles.
+            time = getClocksForReq(req.precision_list[0], "mul") * T_CLK;
+            break;
         case 18: //RowBitwise
         case 19: //ColBitwise
             time = T_CLK;
@@ -187,30 +185,8 @@ double MemoryCharacteristics::getEnergy(Request req) {
 
             //energy = (12 * N + 1) * E_NOR; //fixed-32
             //energy = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * E_NOR + (2 * N_m + 1) * E_SEARCH; //float-32
-            switch(req.precision_list[0]) {
-                case 0:  //fp8_e3m4
-                    energy = getClocks("add", "float", 3, 4) * E_CLK; 
-                    break;
-                case 1:  //fp16_e8m7
-                    energy = getClocks("add", "float", 8, 7) * E_CLK;
-                    break;
-                case 2:  //fp32_e8m23
-                    energy = getClocks("add", "float", 8, 23) * E_CLK;
-                    break;
-                case 3:  //INT4
-                    energy = getClocks("add", "int", 0, 4) * E_CLK;
-                    break;
-                case 4:  //INT8
-                    energy = getClocks("add", "int", 0, 8) * E_CLK;
-                    break;
-                case 5:  //INT16
-                    energy = getClocks("add", "int", 0, 16) * E_CLK;
-                    break;
-                case 6:  //MAX
-                    energy = -1; 
-                    break;
-            } 
-
+            energy = getClocksForReq(req.precision_list[1], "add") * E_CLK;
+            break;
         case 14: //RowMul
         case 15: //RowDiv
         case 16: //ColMul
@@ -219,30 +195,8 @@ double MemoryCharacteristics::getEnergy(Request req) {
             //energy = (13 * N * N - 14 * N + 6) * E_NOR; // fixed-32 (full precision)
             //energy = (6.5 * N * N - 7.5 * N - 2) * E_NOR; // fixed-32 (half precision)
             //energy = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * E_NOR; // float-32
-
-            switch(req.precision_list[0]) {
-                case 0:  //fp8_e3m4
-                    energy = getClocks("mul", "float", 3, 4) * E_CLK; 
-                    break;
-                case 1:  //fp16_e8m7
-                    energy = getClocks("mul", "float", 8, 7) * E_CLK;
-                    break;
-                case 2:  //fp32_e8m23
-                    energy = getClocks("mul", "float", 8, 23) * E_CLK;
-                    break;
-                case 3:  //INT4
-                    energy = getClocks("mul", "int", 0, 4) * E_CLK;
-                    break;
-                case 4:  //INT8
-                    energy = getClocks("mul", "int", 0, 8) * E_CLK;
-                    break;
-                case 5:  //INT16
-                    energy = getClocks("mul", "int", 0, 16) * E_CLK;
-                    break;
-                case 6:  //MAX
-                    energy = -1; 
-                    break;
-            } 
+            energy = getClocksForReq(req.precision_list[0], "mul") * E_CLK;
+            break;
         case 18: //RowBitwise
         case 19: //ColBitwise
             energy = E_NOR;

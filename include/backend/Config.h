@@ -16,7 +16,8 @@ class Config {
 private:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
-    int _wordsize, _datatype;
+    //int _wordsize, _datatype;
+    int _wordsize;
     int _clock_rate;
     std::string _rst_file = "STDOUT";
     bool _compact_alloc = false, _blockctrl = false, _tilectrl = false, _chipctrl = false, _sync = false;
@@ -64,7 +65,7 @@ public:
     int get_nrows() const {return _nrows;}
     int get_ncols() const {return _ncols;}
     int get_wordsize() const {return _wordsize;}
-    int get_datatype() const {return _datatype;}
+    //int get_datatype() const {return _datatype;}
     int get_clock_rate() const {return _clock_rate;}
     bool get_compact() const {return _compact_alloc;}
     bool get_blockctrl() const {return _blockctrl;}

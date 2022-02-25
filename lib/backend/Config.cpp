@@ -55,8 +55,8 @@ void Config::parse(const string& fname) {
             _ncols = atoi(tokens[1].c_str());
         } else if (tokens[0] == "wordsize") {
             _wordsize = atoi(tokens[1].c_str());
-        } else if (tokens[0] == "datatype") {
-            _datatype = atoi(tokens[1].c_str());
+        //} else if (tokens[0] == "datatype") {
+        //    _datatype = atoi(tokens[1].c_str());
         } else if (tokens[0] == "clock_rate") {
             _clock_rate = atoi(tokens[1].c_str());
         } else if (tokens[0] == "rst_file") {

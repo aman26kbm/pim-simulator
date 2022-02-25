@@ -18,6 +18,7 @@ enum PrecisionT {
     INT4,
     INT8,
     INT16,
+    INT32,
     MAX
 };
 

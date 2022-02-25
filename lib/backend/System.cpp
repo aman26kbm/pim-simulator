@@ -17,7 +17,7 @@ System<T>::System(Config* config) : _config(config)
     _tilectrl = config->get_tilectrl();
     _chipctrl = config->get_chipctrl();
     _wordsize = config->get_wordsize();
-    _datatype = config->get_datatype();
+    //_datatype = config->get_datatype();
     if (!(_blockctrl || _tilectrl || _chipctrl))
         _blockctrl = true;
     _blocksize = _nrows * _ncols; // set the blocksize based on columns and rows
@@ -55,7 +55,7 @@ System<T>::System(Config* config) : _config(config)
     }
 
     _conn = new GlobalConnection(this, nt);
-    _lookUpTable = new LookUpTable(_nchips, _ntiles, _nblocks, _nrows, _ncols, _datatype);
+    //_lookUpTable = new LookUpTable(_nchips, _ntiles, _nblocks, _nrows, _ncols, _datatype);
 }
 
 template <class T>
@@ -1110,11 +1110,10 @@ int System<T>::system_ColWrite(Request& req) {
     return tot_clks;
 }
 
-
+/*
 template <class T>
 void System<T>::matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col)
 {
-/*Write your code here*/
 }
 
 template <class T>
@@ -1211,18 +1210,17 @@ void System<T>::matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B
 template <class T>
 void System<T>::matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col)
 {
-/*Write your code here*/
 }
 
 
-/*
- * This is the example showing how to use look up table
- * We are doing DIMENSION * 2 vector multiplications
- * S[i] = Sum j=0 to (A[i][j] * B[i][j] + C[j])
- *
- * each element of B are stored in the neighbor look up tale (stored in the last memory tile)
- * each element of C are stored in the index look up table (have copies in each memory tile)
- */
+//
+//This is the example showing how to use look up table
+//We are doing DIMENSION * 2 vector multiplications
+//S[i] = Sum j=0 to (A[i][j] * B[i][j] + C[j])
+//
+//each element of B are stored in the neighbor look up tale (stored in the last memory tile)
+//each element of C are stored in the index look up table (have copies in each memory tile)
+//
 template <class T>
 void System<T>::lookUpTable_example()
 {
@@ -1323,7 +1321,7 @@ void System<T>::lookUpTable_example()
     }
 
 }
-
+*/
 
 template <class T>
 void System<T>::broadcast_row(int src_row, int dst_start_row, int stride, int times, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy)
