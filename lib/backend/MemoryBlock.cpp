@@ -106,6 +106,7 @@ MemoryBlock::commitReq(Request& req)
     case Request::Type::ColDiv:
     case Request::Type::RowBitwise:
     case Request::Type::ColBitwise:
+    case Request::Type::RowReduce:
         n_writes++;
         break;
     case Request::Type::BlockSend:

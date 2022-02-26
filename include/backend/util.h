@@ -13,7 +13,8 @@ typedef uint64_t AddrT;
 
 enum PrecisionT {
     FP8_e3m4,
-    FP16_e8m7,
+    BF16_e8m7,
+    FP16_e5m10,
     FP32_e8m23,
     INT4,
     INT8,

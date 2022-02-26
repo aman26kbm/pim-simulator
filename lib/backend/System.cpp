@@ -344,6 +344,7 @@ int System<T>::sendPimReq(Request& req)
         case Request::Type::RowReset:
         case Request::Type::ColSet:
         case Request::Type::ColReset:
+        case Request::Type::RowReduce:
             return_value =  sendPIM_one_operand(req);
             break;
         case Request::Type::RowMv:
@@ -400,6 +401,7 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::ColBitwise:
         case Request::Type::RowSearch:
         case Request::Type::ColSearch:
+        case Request::Type::RowReduce:
             ticks = sendPimReq(req);
             break;
         case Request::Type::BlockSend:
@@ -512,6 +514,7 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::ColBitwise:
             case Request::Type::RowSearch:
             case Request::Type::ColSearch:
+            case Request::Type::RowReduce:
                 ticks = sendPimReq(reqs[i]);
                 break;
             case Request::Type::BlockSend:

@@ -115,6 +115,14 @@ public:
         SystemColRead,
         SystemRowWrite,
         SystemColWrite,
+        RowReduce,  //Reduce internally within the array. Multi-bit elements present in multiple columns are reduced.
+                    //"Precision" argument specifies the precision of the data ([0] will be for src, [1] will be for destination).
+                    //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
+                    //The time taken is specified to be X cycles in MemoryCharacteristics
+                    //where X includes the cycles required to fully reduce multi-bit numbers.
+                    //The "precision" argument specifies precision.
+                    //The "size" argument specifies how many levels to stop after.
+                    //There is implicit parallellism here. This instruction involves multiple rows.
         MAX
     } type;
 

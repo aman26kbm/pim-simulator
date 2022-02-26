@@ -92,12 +92,12 @@ public:
     int system_ColRead(Request& req); // add by Ruihao Li
     int system_ColWrite(Request& req); // add by Ruihao Li
 
-    void lookUpTable_example();  // add by Ruihao Li
+    //void lookUpTable_example();  // add by Ruihao Li
 
 
-    void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-    void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-    void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
+    //void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
+    //void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
+    //void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
 
 
     void broadcast_row(int src_row, int dst_start_row, int stride, int times, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);

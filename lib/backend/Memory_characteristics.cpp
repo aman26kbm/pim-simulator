@@ -4,6 +4,7 @@
 
 #include "Memory_characteristics.h"
 #include <iostream>
+#include <cmath>
 
 using namespace pimsim;
 using namespace std;
@@ -14,9 +15,44 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wo
     _freq = freq;
 }
 
-//Helper function to find the number of clocks for a given operation and datatype
-int getClocks(string op, string dtype, int exponent, int mantissa) {
+
+//Helper function to find the number of clocks for a given request's precision and op type
+int getClocksForReq(PrecisionT precision, string op, int levels=0) {
     int clocks;
+    string dtype;
+    int mantissa;
+    int exponent;
+
+    switch(precision) { 
+        case 0:  //fp8_e3m4
+            dtype = "float"; exponent = 3; mantissa = 4;
+            break;
+        case 1:  //bf16_e8m7
+            dtype = "float"; exponent = 8; mantissa = 7;
+            break;
+        case 2:  //fp16_e5m10
+            dtype = "float"; exponent = 5; mantissa = 10;
+            break;
+        case 3:  //fp32_e8m23
+            dtype = "float"; exponent = 8; mantissa = 23;
+            break;
+        case 4:  //INT4
+            dtype = "int"; exponent = 0; mantissa = 4;
+            break;
+        case 5:  //INT8
+            dtype = "int"; exponent = 0; mantissa = 8;
+            break;
+        case 6:  //INT16
+            dtype = "int"; exponent = 0; mantissa = 16;
+            break;
+        case 7:  //INT32
+            dtype = "int"; exponent = 0; mantissa = 32;
+            break;
+        default: 
+            dtype = "-"; exponent = -1; mantissa = -1;
+            break;
+    } 
+
     if (op=="add") {
         if (dtype=="float") {
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
@@ -33,43 +69,32 @@ int getClocks(string op, string dtype, int exponent, int mantissa) {
             clocks = mantissa * mantissa + 3 * mantissa - 2;
         }
     }
+    else if (op=="reduce") {
+        if (dtype=="float") {
+            clocks = 0;
+            for (int i=1; i<=levels; i++) {
+                int powi2 = pow(i-1,2);
+                int cycles_to_add = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
+                clocks += cycles_to_add; //add
+                clocks += cycles_to_add * powi2; //shift
+            }
+        }
+        else {
+            clocks = 0;
+            for (int i=1; i<=levels; i++) {
+                int powi2 = pow(i-1,2);
+                int cycles_to_add = mantissa + i;
+                clocks += cycles_to_add; //add
+                clocks += cycles_to_add * powi2; //shift
+            }
+        }
+    
+    }
     else {
         //unsopported operation
         clocks = -1;
     }
-    return clocks;
-}
 
-//Helper function to find the number of clocks for a given request's precision and op type
-int getClocksForReq(PrecisionT precision, string op) {
-    int clocks;
-
-    switch(precision) { 
-        case 0:  //fp8_e3m4
-            clocks = getClocks(op, "float", 3, 4); 
-            break;
-        case 1:  //fp16_e8m7
-            clocks = getClocks(op, "float", 8, 7);
-            break;
-        case 2:  //fp32_e8m23
-            clocks = getClocks(op, "float", 8, 23);
-            break;
-        case 3:  //INT4
-            clocks = getClocks(op, "int", 0, 4);
-            break;
-        case 4:  //INT8
-            clocks = getClocks(op, "int", 0, 8);
-            break;
-        case 5:  //INT16
-            clocks = getClocks(op, "int", 0, 16);
-            break;
-        case 6:  //INT32
-            clocks = getClocks(op, "int", 0, 32);
-            break;
-        case 7:  //MAX
-            clocks = -1; 
-            break;
-    } 
     return clocks;
 }
 
@@ -143,6 +168,10 @@ double MemoryCharacteristics::getTiming(Request req) {
         case 28: //ChipSend_Receive
             time = T_CLK; // Assuming the global clock frequency is 1/T_CLK.
             break;
+        case 29: //RowReduce
+            // precision_list[0] tells the number of bits in the operand
+            // size_list[0] tells the number of levels
+            time = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * T_CLK;
         default:
             time = T_CLK;
             break;
@@ -220,6 +249,10 @@ double MemoryCharacteristics::getEnergy(Request req) {
 //                energy = E_internal_htree[(int) log(_wordsize / 32)] + E_switching_htree[(int) log(_wordsize / 32)];
             energy = 0;
             break;
+        case 29: //RowReduce
+            // precision_list[0] tells the number of bits in the operand
+            // size_list[0] tells the number of levels
+            energy = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * E_CLK;
         default:
             energy = E_NOR;
             break;
