@@ -25,7 +25,7 @@ class MemoryComponent;
 class MemoryBlock : public MemoryComponent {
 public:
     /* Per-block statistics */
-    uint64_t n_writes = 0, n_unexpected_reqs = 0;
+    uint64_t n_reads = 0, n_writes = 0, n_unexpected_reqs = 0;
 
     MemoryBlock(int n_rows, int n_cols);
 

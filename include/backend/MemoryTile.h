@@ -24,8 +24,10 @@ class MemoryComponent;
 
 class MemoryTile : public MemoryComponent {
 public:
-    MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
+    /* Per-tile statistics */
+    uint64_t n_transfers = 0, n_unexpected_reqs = 0;
 
+    MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);
     bool isReady(Request& req);
@@ -33,6 +35,7 @@ public:
     void finishReq(Request& req);
     void commitReq(Request& req);
 
+    virtual void outputStats(FILE* rstFile);
 };
 
 }

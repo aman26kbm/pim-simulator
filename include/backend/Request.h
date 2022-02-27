@@ -126,51 +126,101 @@ public:
         MAX
     } type;
 
-//    static constexpr const std::string req_str[int(Type::MAX)] = {
-//        "RowSet",
-//        "ColSet",
-//        "RowReset",
-//        "ColReset",
-//        "RowMv",
-//        "ColMv",
-//
-//        "RowRead",
-//        "ColRead",
-//        "RowWrite",
-//        "ColWrite",
-//
-//        "RowAdd",
-//        "ColAdd",
-//        "RowSub",
-//        "ColSub",
-//        "RowMul",
-//        "ColMul",
-//        "RowDiv",
-//        "ColDiv",
-//        "RowBitwise",
-//        "ColBitwise",
-//        "RowSearch",
-//        "ColSearch",
-//
-//        "BlockSend",
-//        "BlockReceive",
-//        "BlockSend_Receive",
-//        "TileSend",
-//        "TileReceive",
-//        "TileSend_Receive",
-//        "ChipSend_Receive",
-//
-//        "SystemRow2Row",
-//        "SystemRow2Col",
-//        "SystemCol2Row",
-//        "SystemCol2Col",
-//
-//        "SystemLookUpTable",
-//        "SystemRowRead",
-//        "SystemColRead",
-//        "SystemRowWrite",
-//        "SystemColWrite",
-//    };
+
+    static std::string print_name(int type) {
+        switch(type) {
+            case 0: return        "RowSet";
+            case 1: return        "ColSet";
+            case 2: return        "RowReset";
+            case 3: return        "ColReset";
+            case 4: return        "RowMv";
+            case 5: return        "ColMv";
+            case 6: return        "RowRead";
+            case 7: return        "ColRead";
+            case 8: return        "RowWrite";
+            case 9: return        "ColWrite";
+            case 10: return        "RowAdd";
+            case 11: return        "ColAdd";
+            case 12: return        "RowSub";
+            case 13: return        "ColSub";
+            case 14: return        "RowMul";
+            case 15: return        "ColMul";
+            case 16: return        "RowDiv";
+            case 17: return        "ColDiv";
+            case 18: return        "RowBitwise";
+            case 19: return        "ColBitwise";
+            case 20: return        "RowSearch";
+            case 21: return        "ColSearch";
+            case 22: return        "BlockSend";
+            case 23: return        "BlockReceive";
+            case 24: return        "BlockSend_Receive";
+            case 25: return        "TileSend";
+            case 26: return        "TileReceive";
+            case 27: return        "TileSend_Receive";
+            case 28: return        "ChipSend_Receive";
+            case 29: return        "SystemRow2Row";
+            case 30: return        "SystemRow2Col";
+            case 31: return        "SystemCol2Row";
+            case 32: return        "SystemCol2Col";
+            case 33: return        "SystemLookUpTable";
+            case 34: return        "SystemRowRead";
+            case 35: return        "SystemColRead";
+            case 36: return        "SystemRowWrite";
+            case 37: return        "SystemColWrite";
+            case 38: return        "RowReduce";
+            default: return       "Help";
+        };
+
+    }
+
+    /*
+    static constexpr const std::string req_str[int(Type::MAX)] = {
+        "RowSet",
+        "ColSet",
+        "RowReset",
+        "ColReset",
+        "RowMv",
+        "ColMv",
+
+        "RowRead",
+        "ColRead",
+        "RowWrite",
+        "ColWrite",
+
+        "RowAdd",
+        "ColAdd",
+        "RowSub",
+        "ColSub",
+        "RowMul",
+        "ColMul",
+        "RowDiv",
+        "ColDiv",
+        "RowBitwise",
+        "ColBitwise",
+        "RowSearch",
+        "ColSearch",
+
+        "BlockSend",
+        "BlockReceive",
+        "BlockSend_Receive",
+        "TileSend",
+        "TileReceive",
+        "TileSend_Receive",
+        "ChipSend_Receive",
+
+        "SystemRow2Row",
+        "SystemRow2Col",
+        "SystemCol2Row",
+        "SystemCol2Col",
+
+        "SystemLookUpTable",
+        "SystemRowRead",
+        "SystemColRead",
+        "SystemRowWrite",
+        "SystemColWrite",
+        "RowReduce"
+    };
+    */
     
     bool first_arrive = true;
     TimeT arrive_time, process_time, finish_time, net_overhead = 0;
@@ -228,15 +278,10 @@ public:
         dst_col = col_id;
     }
 
-    void addAddr(AddrT addr, int size, PrecisionT precision) {
+    void addAddr(AddrT addr, int size, PrecisionT precision=PrecisionT::INT8) {
         addr_list.push_back(addr);
         size_list.push_back(size);
         precision_list.push_back(precision);
-    }
-
-    void addAddr(AddrT addr, int size) {
-        addr_list.push_back(addr);
-        size_list.push_back(size);
     }
 
     bool isSystem() {

@@ -26,6 +26,9 @@ class MemoryComponent;
 
 class MemoryChip : public MemoryComponent {
 public:
+    /* Per-tile statistics */
+    uint64_t n_transfers = 0, n_unexpected_reqs = 0;
+
     MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);
@@ -35,6 +38,8 @@ public:
     void commitReq(Request& req);
     double getTotalEnergy();
     double getTotalLeakageEnergy();
+
+    virtual void outputStats(FILE* rstFile);
 };
 
 }

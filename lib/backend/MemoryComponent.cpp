@@ -119,18 +119,23 @@ MemoryComponent::outputStats(FILE* rstFile)
     fprintf(rstFile, "%s#%d\n", level_str[int(_level)].c_str(), _id);
 
     fprintf(rstFile, "Request Type Breakdown:\nType, Cnt, Latency(clk), WaitTime(clk), Energy(nj)\n");
-//    for (int i = 0; i < int(Request::Type::MAX); i++) {
-//        fprintf(rstFile, "%s, %lu, %.4lf, %.4lf, %.4lf\n",
-//                req.typeStr(i).c_str(), req_cnt[i], req_latency[i], req_waittime[i], req_energy[i]);
-//    }
+    for (int i = 0; i < int(Request::Type::MAX); i++) {
+        if (req_cnt[i] != 0) {
+            fprintf(rstFile, "%s, %lu, %.4lf, %.4lf, %.4lf\n",
+                Request::print_name(i).c_str(), req_cnt[i], req_latency[i], req_waittime[i], req_energy[i]);
+        }
+    }
 
-//    for (int i = 0; i < int(Request::Type::MAX); i++) {
-//        fprintf(rstFile, " %lu, %.4lf, %.4lf, %.4lf\n",
-//                 req_cnt[i], req_latency[i], req_waittime[i], req_energy[i]);
-//    }
+    //for (int i = 0; i < int(Request::Type::MAX); i++) {
+    //    if (req_cnt[i] != 0) {
+    //        fprintf(rstFile, " %lu, %.4lf, %.4lf, %.4lf\n",
+    //             req_cnt[i], req_latency[i], req_waittime[i], req_energy[i]);
+    //    }
+    //}
 
     for (int i = 0; i < _nchildren; i++) {
         _children[i]->outputStats(rstFile);
+        fprintf(rstFile, "\n----------------------------------------\n");
     }
 }
 

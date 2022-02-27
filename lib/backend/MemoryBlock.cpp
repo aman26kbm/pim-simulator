@@ -87,6 +87,7 @@ MemoryBlock::commitReq(Request& req)
     case Request::Type::ColRead:
     case Request::Type::RowSearch:
     case Request::Type::ColSearch:
+        n_reads++;
         break;
     case Request::Type::RowWrite:
     case Request::Type::ColWrite:
@@ -127,6 +128,6 @@ void
 MemoryBlock::outputStats(FILE* rstFile)
 {
     MemoryComponent::outputStats(rstFile);
-    fprintf(rstFile, "Bank-level statistics: #Writes(%lu), #UNEXPECT(%lu)\n", 
-            n_writes, n_unexpected_reqs);
+    fprintf(rstFile, "Block-level statistics: #Reads(%lu), #Writes(%lu), #UNEXPECT(%lu)\n", 
+            n_reads, n_writes, n_unexpected_reqs);
 }

@@ -127,10 +127,13 @@ void
 MemoryChip::commitReq(Request& req)
 {
     if (req.type == Request::Type::TileSend) {
+        n_transfers++;
     } else if (req.type == Request::Type::TileReceive) {
-        dynamic_cast<MemoryBlock *>(_children[req.dst_tile]->_children[req.dst_block])->n_writes++;
+        n_transfers++;
+        //dynamic_cast<MemoryBlock *>(_children[req.dst_tile]->_children[req.dst_block])->n_writes++;
     } else if (req.type == Request::Type::TileSend_Receive) {
-        dynamic_cast<MemoryBlock *>(_children[req.dst_tile]->_children[req.dst_block])->n_writes++;
+        n_transfers++;
+        //dynamic_cast<MemoryBlock *>(_children[req.dst_tile]->_children[req.dst_block])->n_writes++;
     } else {
         _children[req.tile]->commitReq(req);
     }
@@ -164,3 +167,11 @@ MemoryChip::getTotalLeakageEnergy()
     return cur_energy;
 }
 
+
+void
+MemoryChip::outputStats(FILE* rstFile)
+{
+    MemoryComponent::outputStats(rstFile);
+    fprintf(rstFile, "Chip-level statistics: #Transfers(%lu)\n", 
+            n_transfers);
+}

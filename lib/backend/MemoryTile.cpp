@@ -120,11 +120,22 @@ void
 MemoryTile::commitReq(Request& req)
 {
     if (req.type == Request::Type::BlockSend) {
+        n_transfers++;
     } else if (req.type == Request::Type::BlockReceive) {
-        dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
+        n_transfers++;
+        //dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
     } else if (req.type == Request::Type::BlockSend_Receive) {
-        dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
+        n_transfers++;
+        //dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
     } else {
         _children[req.block]->commitReq(req);
     }
+}
+
+void
+MemoryTile::outputStats(FILE* rstFile)
+{
+    MemoryComponent::outputStats(rstFile);
+    fprintf(rstFile, "Tile-level statistics: #Transfers(%lu)\n", 
+            n_transfers);
 }
