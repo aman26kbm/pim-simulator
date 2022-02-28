@@ -53,8 +53,10 @@ void Config::parse(const string& fname) {
             _nrows = atoi(tokens[1].c_str());
         } else if (tokens[0] == "n_cols") {
             _ncols = atoi(tokens[1].c_str());
-        } else if (tokens[0] == "wordsize") {
-            _wordsize = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "wordsize_block2block") {
+            _wordsize_block2block = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "wordsize_tile2tile") {
+            _wordsize_tile2tile = atoi(tokens[1].c_str());
         //} else if (tokens[0] == "datatype") {
         //    _datatype = atoi(tokens[1].c_str());
         } else if (tokens[0] == "clock_rate") {

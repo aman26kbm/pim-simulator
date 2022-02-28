@@ -9,9 +9,10 @@
 using namespace pimsim;
 using namespace std;
 
-MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wordsize, int freq) {
+MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int freq) {
     _configuration = configuration;
-    _wordsize = wordsize;
+    _wordsize_block2block = wordsize_block2block;
+    _wordsize_tile2tile = wordsize_tile2tile;
     _freq = freq;
 }
 
@@ -282,12 +283,15 @@ double MemoryCharacteristics::getTotalLeakageEnergy(int cycles, int ntiles, int 
     bus_numbers = ntiles + 1;
     cout << "bus_numbers: " << bus_numbers << endl;
 
-    if (_configuration == Configuration::Bus)
-        energy += E_leakage_bus[(int) log(_wordsize / 32)] * bus_numbers * ((float) cycles / _freq);
-    else if (_configuration == Configuration::HTree)
-        energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers * ((float) cycles / _freq);
-    else
-        energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers * ((float) cycles / _freq);
+    //TODO: Commenting this out for not, until we focus on energy.
+    //Need to update the following code, _wordsize has been split into 
+    //_wordsize_block2block and _wordsize_tile2tile.
+    //if (_configuration == Configuration::Bus)
+    //    energy += E_leakage_bus[(int) log(_wordsize / 32)] * bus_numbers * ((float) cycles / _freq);
+    //else if (_configuration == Configuration::HTree)
+    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers * ((float) cycles / _freq);
+    //else
+    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers * ((float) cycles / _freq);
 
     energy += E_leakage_per_block * ntiles * nblocks * ((float) cycles / _freq);
 
@@ -316,12 +320,15 @@ double MemoryCharacteristics::getTotalLeakageEnergy(int ntiles, int nblocks) {
     bus_numbers = ntiles + 1;
     cout << "bus_numbers: " << bus_numbers << endl;
 
-    if (_configuration == Configuration::Bus)
-        energy += E_leakage_bus[(int) log(_wordsize / 32)] * bus_numbers;
-    else if (_configuration == Configuration::HTree)
-        energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers;
-    else
-        energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers;
+    //TODO: Commenting this out for not, until we focus on energy.
+    //Need to update the following code, _wordsize has been split into 
+    //_wordsize_block2block and _wordsize_tile2tile.
+    //if (_configuration == Configuration::Bus)
+    //    energy += E_leakage_bus[(int) log(_wordsize / 32)] * bus_numbers;
+    //else if (_configuration == Configuration::HTree)
+    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers;
+    //else
+    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers;
 
     energy += E_leakage_per_block * ntiles * nblocks;
 

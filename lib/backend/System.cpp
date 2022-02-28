@@ -16,7 +16,8 @@ System<T>::System(Config* config) : _config(config)
     _blockctrl = config->get_blockctrl();
     _tilectrl = config->get_tilectrl();
     _chipctrl = config->get_chipctrl();
-    _wordsize = config->get_wordsize();
+    _wordsize_block2block = config->get_wordsize_block2block();
+    _wordsize_tile2tile = config->get_wordsize_tile2tile();
     //_datatype = config->get_datatype();
     if (!(_blockctrl || _tilectrl || _chipctrl))
         _blockctrl = true;
@@ -28,11 +29,11 @@ System<T>::System(Config* config) : _config(config)
 
 
     if (config->get_mem_configuration() == "h_tree") {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _wordsize, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _wordsize_block2block, _wordsize_tile2tile, _clock_rate);
     } else if (config->get_mem_configuration() == "bus") {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _wordsize, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _wordsize_block2block, _wordsize_tile2tile, _clock_rate);
     } else {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _wordsize, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _wordsize_block2block, _wordsize_tile2tile, _clock_rate);
     }
 
     for (int i = 0; i < _nchips; i++) {

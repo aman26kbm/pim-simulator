@@ -163,12 +163,23 @@ MemoryComponent::tick()
 //    if (_level == MemoryComponent::Level::Chip || _level == MemoryComponent::Level::Tile)
 //        cout << "total_counters: " << total_counters << endl;
 
-    if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
-        inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize / 32)]);
-    else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
-        inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize / 32)]);
-    else
-        inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize / 32)]);
+    if (_level == MemoryComponent::Level::Chip) {
+        if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
+            inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_tile2tile / 32)]);
+        else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
+            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_tile2tile / 32)]);
+        else
+            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_tile2tile / 32)]);
+    } 
+    else if (_level == MemoryComponent::Level::Tile) {
+        if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
+            inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_block2block / 32)]);
+        else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
+            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
+        else
+            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
+    }
+
 }
 
 bool 

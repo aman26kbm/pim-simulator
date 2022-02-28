@@ -74,7 +74,7 @@ MemoryChip::issueReq(Request& req)
     if (req.isChip()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-        int words = _ncols / _values->_wordsize;
+        int words = _ncols / _values->_wordsize_tile2tile;
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             bus_counter += words;
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);

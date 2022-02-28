@@ -13,13 +13,16 @@ public:
         Ideal
     } _configuration;
 
-    //This is the inter block and inter tile bandwidth.
+    //This is the inter block bandwidth.
     //This is overridden from the config file.
-    int _wordsize = 32;
+    int _wordsize_block2block = 32;
+    //This is the inter tile bandwidth.
+    //This is overridden from the config file.
+    int _wordsize_tile2tile = 32;
     int _freq;
 
 	MemoryCharacteristics() {}
-    MemoryCharacteristics(Configuration configuration, int wordsize, int freq);
+    MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int freq);
 
     //const double T_NOR = 1.1;
 	const double T_SEARCH = 1.5;

@@ -17,7 +17,8 @@ private:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     //int _wordsize, _datatype;
-    int _wordsize;
+    int _wordsize_block2block;
+    int _wordsize_tile2tile;
     int _clock_rate;
     std::string _rst_file = "STDOUT";
     bool _compact_alloc = false, _blockctrl = false, _tilectrl = false, _chipctrl = false, _sync = false;
@@ -64,7 +65,8 @@ public:
     int get_blocksize() const {return _blocksize;}
     int get_nrows() const {return _nrows;}
     int get_ncols() const {return _ncols;}
-    int get_wordsize() const {return _wordsize;}
+    int get_wordsize_block2block() const {return _wordsize_block2block;}
+    int get_wordsize_tile2tile() const {return _wordsize_tile2tile;}
     //int get_datatype() const {return _datatype;}
     int get_clock_rate() const {return _clock_rate;}
     bool get_compact() const {return _compact_alloc;}
