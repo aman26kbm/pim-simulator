@@ -113,6 +113,8 @@ public:
     int getNodeIDonElement(const int faceID, const int nodeIDonFace);
     int getNeighborsID(int axis, int direction, int ElementID);
 
+    //PIMRA
+    void gemv();
 
 };
 
