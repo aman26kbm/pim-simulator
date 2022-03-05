@@ -57,6 +57,8 @@ void Config::parse(const string& fname) {
             _wordsize_block2block = atoi(tokens[1].c_str());
         } else if (tokens[0] == "wordsize_tile2tile") {
             _wordsize_tile2tile = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "wordsize_dram") {
+            _wordsize_dram = atoi(tokens[1].c_str());
         //} else if (tokens[0] == "datatype") {
         //    _datatype = atoi(tokens[1].c_str());
         } else if (tokens[0] == "clock_rate") {

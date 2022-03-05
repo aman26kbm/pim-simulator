@@ -123,6 +123,18 @@ public:
                     //The "precision" argument specifies precision.
                     //The "size" argument specifies how many levels to stop after.
                     //There is implicit parallellism here. This instruction involves multiple rows.
+        RowLoad,    //Load multiple rows from DRAM into a CRAM block.
+                    //The "size" argument is ignored.
+                    //The "precision" argument tells the number of rows to load
+                    //DRAM bandwidth is specified in memory characteristics (_wordsize_dram).
+                    //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
+                    //with number of transfer bursts.
+                    //The number of bursts = number of rows / dram bandwidth
+                    //The "addr" argument will specify the row ID of row0.
+        RowStore,   //Store multiple rows from a CRAM block to DRAM
+                    //Rest of the details are the same as RowLoad
+        SystemDramLoad,  //TODO: Implement this
+        SystemDramStore, //TODO: Implement this
         MAX
     } type;
 
@@ -168,6 +180,10 @@ public:
             case 36: return        "SystemRowWrite";
             case 37: return        "SystemColWrite";
             case 38: return        "RowReduce";
+            case 39: return        "RowLoad";
+            case 40: return        "RowStore";
+            case 41: return        "SystemDramLoad";
+            case 42: return        "SystemDramStore";
             default: return       "Help";
         };
 
@@ -287,9 +303,9 @@ public:
     bool isSystem() {
         if ((type == Type::SystemRow2Row) || (type == Type::SystemRow2Col)
         || (type == Type::SystemCol2Row) || (type == Type::SystemCol2Col)
-        || (type == Type::SystemLookUpTable)
-           || (type == Type::SystemRowRead) || (type == Type::SystemColRead)
-           || (type == Type::SystemRowWrite) || (type == Type::SystemColWrite) ) {
+        || (type == Type::SystemLookUpTable) || (type == Type::SystemDramLoad) || (type == Type::SystemDramStore)
+        || (type == Type::SystemRowRead) || (type == Type::SystemColRead)
+        || (type == Type::SystemRowWrite) || (type == Type::SystemColWrite) ) {
             return true;
         } else {
             return false;
@@ -303,8 +319,15 @@ public:
             return false;
     }
 
+    bool isChipDram() {
+        if (type == Type::RowLoad || type == Type::RowStore)
+            return true;
+        else
+            return false;
+    }
+
     bool isChip() {
-        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_Receive)
+        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_Receive || type == Type::RowLoad || type == Type::RowStore)
             return true;
         else
             return false;

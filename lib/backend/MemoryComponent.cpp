@@ -159,6 +159,7 @@ MemoryComponent::tick()
 
     total_counters += bus_counter;
     bus_counter = 0;
+    dram_counter = 0;
 
 //    if (_level == MemoryComponent::Level::Chip || _level == MemoryComponent::Level::Tile)
 //        cout << "total_counters: " << total_counters << endl;

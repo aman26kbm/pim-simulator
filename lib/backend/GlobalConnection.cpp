@@ -19,7 +19,7 @@ GlobalConnection::GlobalConnection(System<float >* sys, Type type)
     // TODO: current only support 16 chip scheme
     if (_type == Type::Ideal) {
 #ifdef NET_DEBUG_OUTPUT
-        cout << "here is a Idea network!\n";
+        cout << "here is a Ideal network!\n";
 #endif
         for (int i = 0; i < NCHIPS; i++) {
             for (int j = 0; j < NCHIPS; j++) {

@@ -39,6 +39,8 @@ public:
 
     std::vector<int> htree_counters;
 
+    int dram_counter = 0; //counter for dram accesses
+
     Controller* _ctrl;
     Scheduler* _sched;
     MemoryCharacteristics* _values;

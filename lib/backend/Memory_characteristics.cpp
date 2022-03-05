@@ -9,10 +9,11 @@
 using namespace pimsim;
 using namespace std;
 
-MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int freq) {
+MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int wordsize_dram, int freq) {
     _configuration = configuration;
     _wordsize_block2block = wordsize_block2block;
     _wordsize_tile2tile = wordsize_tile2tile;
+    _wordsize_dram = wordsize_dram;
     _freq = freq;
 }
 
@@ -169,10 +170,23 @@ double MemoryCharacteristics::getTiming(Request req) {
         case 28: //ChipSend_Receive
             time = T_CLK; // Assuming the global clock frequency is 1/T_CLK.
             break;
-        case 29: //RowReduce
+
+        //cases 29-37 are System commands
+
+        case 38: //RowReduce
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
             time = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * T_CLK;
+            break;
+        case 39: //RowLoad
+            time = DramLatency;
+            break;
+        case 40: //RowStore
+            time = DramLatency;
+            break;
+
+        //cases 41-42 are System commands
+
         default:
             time = T_CLK;
             break;

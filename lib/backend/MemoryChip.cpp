@@ -72,37 +72,51 @@ MemoryChip::issueReq(Request& req)
     TimeT cur_time = _ctrl->getTime();
 
     if (req.isChip()) {
-        req.process_time = cur_time;
-        //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-        int words = _ncols / _values->_wordsize_tile2tile;
-        if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
-            bus_counter += words;
-            //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
-            req.finish_time = cur_time + getReqTiming(req) * (bus_counter + 1);
-        } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-            std::vector<int> switch_list;
-
-            if (req.type == Request::Type::TileSend)
-                switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
-            else if (req.type == Request::Type::TileReceive)
-                switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
-            else if (req.type == Request::Type::TileSend_Receive)
-                switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
-
-            int jump = 1;
-//            cout << "chip_switches: ";
-            for (int i = 0; i < switch_list.size(); i++) {
-                htree_counters[switch_list[i]] += words;
-                jump += htree_counters[switch_list[i]];
-//                cout << switch_list[i] << ", ";
-            }
-//            cout << "jump: " << jump << endl;
-            //req.finish_time = cur_time + _timing[int(req.type)] * jump;
-            req.finish_time = cur_time + getReqTiming(req) * jump;
-            switch_list.clear();
+        
+        //if this chip-level request is for a DRAM access, then we call a different set of functions
+        if (req.isChipDram()) {
+            req.process_time = cur_time;
+            //precision_list[0] contains the number of rows to transfer
+            int words = req.precision_list[0] / _values->_wordsize_dram;
+            dram_counter += words;
+            req.finish_time = cur_time + getReqTiming(req) * dram_counter;
+            _next_available = req.finish_time;
+            finishReq(req);
+            commitReq(req);
         }
 
-        _next_available = req.finish_time;
+        else {
+            req.process_time = cur_time;
+            //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
+            int words = _ncols / _values->_wordsize_tile2tile;
+            if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
+                bus_counter += words;
+                //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
+                req.finish_time = cur_time + getReqTiming(req) * (bus_counter + 1);
+            } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
+                std::vector<int> switch_list;
+
+                if (req.type == Request::Type::TileSend)
+                    switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
+                else if (req.type == Request::Type::TileReceive)
+                    switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
+                else if (req.type == Request::Type::TileSend_Receive)
+                    switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
+
+                int jump = 1;
+//                cout << "chip_switches: ";
+                for (int i = 0; i < switch_list.size(); i++) {
+                    htree_counters[switch_list[i]] += words;
+                    jump += htree_counters[switch_list[i]];
+//                    cout << switch_list[i] << ", ";
+                }
+//                cout << "jump: " << jump << endl;
+                //req.finish_time = cur_time + _timing[int(req.type)] * jump;
+                req.finish_time = cur_time + getReqTiming(req) * jump;
+                switch_list.clear();
+            }
+
+            _next_available = req.finish_time;
 
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
@@ -111,6 +125,7 @@ MemoryChip::issueReq(Request& req)
 #endif
             finishReq(req);
             commitReq(req);
+        }
     } else {
         _children[req.tile]->issueReq(req);
     }

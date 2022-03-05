@@ -35,8 +35,17 @@ std::vector<int> h_tree_switches(int index_A, int index_B, int total_size) {
     std::vector<int> switch_list_A;
     std::vector<int> switch_list_B;
 
+    //For total_size=64, tree_height is 4.
+    //tree_size represents how many levels of hierarchy there are.
+    //the lowest level is a group of 4 blocks.
     int tree_height = h_tree_height(total_size);
 
+    //for index_a = 23, index_list is 3,1,1,0
+    //for index_b = 12, index_list is 0,3,0,0
+    //Basically index list gives us the location coordinates of the block given its index.
+    //in each chunk of 4 blocks, there are 4 blocks numbered 0,1,2,3.
+    //Say 0 is the top left, 1 is the top right, 2 is the bottom left, 3 is the bottom right.
+    //So a block with index list 3,1,1,0 can be easily located.
     std::vector<int> index_list_A = get_index_list(index_A, tree_height);
     std::vector<int> index_list_B = get_index_list(index_B, tree_height);
 

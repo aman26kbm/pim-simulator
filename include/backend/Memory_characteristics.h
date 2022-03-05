@@ -19,10 +19,16 @@ public:
     //This is the inter tile bandwidth.
     //This is overridden from the config file.
     int _wordsize_tile2tile = 32;
+    //This is the bandwidth between DRAM chip and the CRAM chip
+    int _wordsize_dram = 1024;
+
     int _freq;
 
 	MemoryCharacteristics() {}
-    MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int freq);
+    MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int wordsize_dram, int freq);
+
+    //Assume DRAM latency is 100 cycles
+    int DramLatency = 100;
 
     //const double T_NOR = 1.1;
 	const double T_SEARCH = 1.5;

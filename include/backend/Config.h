@@ -19,6 +19,7 @@ private:
     //int _wordsize, _datatype;
     int _wordsize_block2block;
     int _wordsize_tile2tile;
+    int _wordsize_dram;
     int _clock_rate;
     std::string _rst_file = "STDOUT";
     bool _compact_alloc = false, _blockctrl = false, _tilectrl = false, _chipctrl = false, _sync = false;
@@ -67,6 +68,7 @@ public:
     int get_ncols() const {return _ncols;}
     int get_wordsize_block2block() const {return _wordsize_block2block;}
     int get_wordsize_tile2tile() const {return _wordsize_tile2tile;}
+    int get_wordsize_dram() const {return _wordsize_dram;}
     //int get_datatype() const {return _datatype;}
     int get_clock_rate() const {return _clock_rate;}
     bool get_compact() const {return _compact_alloc;}
