@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 include_directories(include)
 include_directories(include/frontend)
 include_directories(include/backend)
+include_directories(include/tclap)
 include_directories(lib/backend)
 
 add_library(PimBackend lib/backend/Config.cpp

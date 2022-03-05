@@ -63,9 +63,9 @@ void Config::parse(const string& fname) {
         //    _datatype = atoi(tokens[1].c_str());
         } else if (tokens[0] == "clock_rate") {
             _clock_rate = atoi(tokens[1].c_str());
-        } else if (tokens[0] == "rst_file") {
-            _rst_file = tokens[1];
-            _rst_file += ("_" + std::to_string(_dataflow));
+        } else if (tokens[0] == "result_file") {
+            _result_file = tokens[1];
+            _result_file += ("_" + std::to_string(_dataflow));
         } else if (tokens[0] == "compact_alloc") {
             if (tokens[1] == "true") {
                 _compact_alloc = true;

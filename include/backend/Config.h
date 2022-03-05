@@ -21,7 +21,7 @@ private:
     int _wordsize_tile2tile;
     int _wordsize_dram;
     int _clock_rate;
-    std::string _rst_file = "STDOUT";
+    std::string _result_file = "STDOUT";
     bool _compact_alloc = false, _blockctrl = false, _tilectrl = false, _chipctrl = false, _sync = false;
     std::string _net_configuration, _mem_configuration;
     int _dataflow;
@@ -78,7 +78,7 @@ public:
     bool getSync() const {return _sync;}
     std::string get_mem_configuration() const {return _mem_configuration;}
     std::string get_net_configuration() const {return _net_configuration;}
-    std::string get_rstfile() const {return _rst_file;}
+    std::string get_rstfile() const {return _result_file;}
 };
 
 }
