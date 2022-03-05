@@ -94,34 +94,18 @@ public:
 
     //void lookUpTable_example();  // add by Ruihao Li
 
-
     //void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-
 
     void broadcast_row(int src_row, int dst_start_row, int stride, int times, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
     void broadcast_row_x_pattern(int src_row, int dst_start_row, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
     void broadcast_row_y_pattern(int src_row, int dst_start_row, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
     void broadcast_row_z_pattern(int src_row, int dst_start_row, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
-    //void multi_element_compute_div_velocity_and_grad_pressure_3d();
-    //void multi_element_compute_div_velocity_and_grad_pressure_3d_level_5(int num_element, int iter);
-    //void multi_element_compute_volume_acoustic_3d();
-
-
-
-    //void multi_element_compute_volume_acoustic_3d_level_5();
-    //void store_data_volume();
-    //void load_data_volume();
-
-
     void broadcast_row_x_y_z_pattern(int x_src_row, int x_dst_start_row, int x_src_col, int x_dst_col,
                                      int y_src_row, int y_dst_start_row, int y_src_col, int y_dst_col,
                                      int z_src_row, int z_dst_start_row, int z_src_col, int z_dst_col,
                                      int col_len, int block_per_element, int num_element, int num_copy);
-    //void multi_element_compute_div_velocity_and_grad_pressure_3d_4();
-    //void multi_element_compute_volume_acoustic_3d_4();
-
 
     struct ElementPhysicalAddr;
     ElementPhysicalAddr getElementPhysicalAddr(uint32_t ElementID);
@@ -129,44 +113,7 @@ public:
     int getNodeIDonElement(const int faceID, const int nodeIDonFace);
     int getNeighborsID(int axis, int direction, int ElementID);
 
-    /*
-    // Begin Compute Flux Section
-    void multi_element_compute_flux_acoustic_3d();
-    void multi_element_compute_flux_acoustic_3d_inter();
-    void multi_element_compute_flux_acoustic_3d_4();
-    void multi_element_compute_flux_acoustic_3d_4_inter();
-    void multi_element_compute_flux_acoustic_3d_level_5();
-    void store_data_flux();
-    void load_data_flux();
 
-    // Begin Integration Section
-    void IntegrationLSRK4(int current_stage);
-    void IntegrationLSRK4_4(int current_stage);
-    void IntegrationLSRK4_level5(int current_stage);
-
-
-    void compute_div_stress_and_d_velocity_3d();
-    void multi_element_compute_volume_elastic_3d();
-    void multi_element_compute_flux_elastic_3d();
-    void multi_element_compute_flux_elastic_3d_inter();
-
-    void multi_element_compute_flux_elastic_riemann_3d();
-    void multi_element_compute_flux_elastic_riemann_3d_v1_v2_v3(int faceID, int axis, int normal);
-    void multi_element_compute_flux_elastic_riemann_3d_s11_s22_s33(int faceID, int axis, int normal);
-    void multi_element_compute_flux_elastic_riemann_3d_s12_s13_s23(int faceID, int axis, int normal);
-
-    void IntegrationLSRK4_elastic(int current_stage);
-
-    void compute_div_stress_and_d_velocity_3d_4();
-    void multi_element_compute_volume_elastic_3d_4();
-    void multi_element_compute_flux_elastic_3d_4();
-    void multi_element_compute_flux_elastic_3d_4_inter();
-
-    void multi_element_compute_flux_elastic_riemann_3d_4();
-    void multi_element_compute_flux_elastic_riemann_3d_4_v1_v2_v3_s11_s22_s33_s12_s13_s23(int faceID, int axis, int normal);
-
-    void IntegrationLSRK4_elastic_4(int current_stage);
-    */
 };
 
 }
