@@ -36,6 +36,10 @@ double MemoryComponent::getReqTiming(Request req) {
     return _values->getTiming(req);
 }
 
+int MemoryComponent::getPrecisionBits(Request req) {
+    return _values->getPrecisionBits(req);
+}
+
 double MemoryComponent::getReqEnergy(Request req) {
     return _values->getEnergy(req);
 }
@@ -82,6 +86,7 @@ MemoryComponent::setDecoderTime(TimeT time)
     _ctrl->setDecoderTime(time);
 }
 
+//This is not used anymore
 TimeT 
 MemoryComponent::getNextGlobalTime() 
 {
@@ -95,18 +100,37 @@ MemoryComponent::getNextGlobalTime()
     return max;   
 }
 
+//Update the time for blocks, tiles and the chip.
+//Basically the max time of all blocks in a tile gets assigned to the tile
+//and the max time of all tiles gets assigned to the chip.
 void 
 MemoryComponent::updateTime() 
 {
-    TimeT max_time = 0;
-    if (_level == MemoryComponent::Level::Chip)
-        max_time = getNextGlobalTime();
-    else 
-        max_time = _parent->getNextGlobalTime();
-    _ctrl->setTime(max_time);
-    for (int i =0 ; i < _nchildren; i++) {
-        _children[i]->updateTime();
+    TimeT max_chip_time = 0;
+    if (_level == MemoryComponent::Level::Chip) {
+
+        //Iterate over all tiles (children of this chip)
+        for (int i = 0 ; i < this->_nchildren; i++) {
+            
+            TimeT max_tile_time = 0;
+            //Iterate over all blocks (children of this tile)
+            for (int j = 0; j < this->_children[i]->_nchildren; j++) {
+                TimeT block_time = this->_children[i]->_children[j]->getTime();
+                if (block_time > max_tile_time) {
+                    max_tile_time = block_time;
+                }
+            }
+            this->_children[i]->_ctrl->setTime(max_tile_time);
+
+            if (max_tile_time > max_chip_time) {
+                max_chip_time = max_tile_time;
+            }
+        }
+        this->_ctrl->setTime(max_chip_time);
     }
+    else 
+        _parent->updateTime();
+
 }
 
 void 

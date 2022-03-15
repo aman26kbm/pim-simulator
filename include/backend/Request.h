@@ -75,13 +75,14 @@ public:
         ColSearch,
 
         BlockSend, //Doesn't mean send a whole block from one place to another.
-                   //Send a row from one block to another within a tile. 
+                   //Send N rows from one block to another within a tile. 
                    //Bandwidth of the block-to-block interconnect is specified in memory characteristics (_wordsize).
                    //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
                    //with number of transfer bursts (in the bus interconnect case) and with number of bursts + number of hops (in the htree interconnect case)
-                   //The number of bursts = number of bits in a row / interconnect bandwidth
+                   //The number of bursts = number of rows * number of bits in a row / interconnect bandwidth
                    //The "addr" argument will specify the row ID of row0.
                    //The "size" argument is unused.
+                   //The "precision" argument will specify the number of rows to transfer.
         BlockReceive, //Same as above; just for receive
         BlockSend_Receive, //Same as above; but for both send and receive
         TileSend, //Doesn't mean send a whole tile from one place to another.
@@ -90,14 +91,14 @@ public:
                   //For the H-tree interconnect, this involves some hops. So, there are some extra cycles to be added.
                   //But for the bus interconnect, this involves the delay in the tile-to-tile interconnect (the bus structure
                   //isn't global across the entire chip; there is a hierarchy)
-                  //size and addr arguments have the same meaning as BlockSend.
+                  //size, precision and addr arguments have the same meaning as BlockSend.
         TileReceive, //Same as above; just for receive
         TileSend_Receive,//Same as above; but for both send and receive
         ChipSend_Receive,//This does not transfer some bits from one block to another in a different chip. 
                          //This only accounts for the transfer from a chip to another chip. 
                          //So, network delay is added.
                          //The transfer time from block to tile, tile to chip boundary is not included.
-                         //size and addr arguments have the same meaning as BlockSend.
+                         //size, precision and addr arguments have the same meaning as BlockSend.
 
         //The following request types form a higher level API. They just wrap the lower level types above.
         //So, there is no "time taken" mentioned for the following in Memorycharacteristics.cpp.
@@ -107,14 +108,18 @@ public:
                        //If the tiles are the same, then it invokes even fewer of these.
                        //In the case of PIMRA, we have only 1 chip. So, we will always use this API
                        //with the same src and dst chip
-        SystemRow2Col,
-        SystemCol2Row,
-        SystemCol2Col,
-        SystemLookUpTable,
-        SystemRowRead, 
-        SystemColRead,
-        SystemRowWrite,
-        SystemColWrite,
+        SystemRow2Col, //Not supported
+        SystemCol2Row, //Not supported
+        SystemCol2Col, //Not supported
+        SystemLookUpTable, //Not supported
+
+        SystemRowStore, //Stores rows from a CRAM block into DRAM. This is a higher level API.
+                        //So, this includes the steps to read rows from a block, then send it via the 
+                        //block to block interconnect, then via the tile level interconnect, into the DRAM.
+        SystemColRead,  //Not supported
+        SystemRowLoad,  //Loads rows from DRAM into a CRAM block. This is basically the same as
+                        //SystemRowStore, just in the opposite direction.
+        SystemColWrite, //Not supported
         RowReduce,  //Reduce internally within the array. Multi-bit elements present in multiple columns are reduced.
                     //"Precision" argument specifies the precision of the data ([0] will be for src, [1] will be for destination).
                     //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
@@ -133,8 +138,6 @@ public:
                     //The "addr" argument will specify the row ID of row0.
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
-        SystemDramLoad,  //TODO: Implement this
-        SystemDramStore, //TODO: Implement this
         MAX
     } type;
 
@@ -175,15 +178,13 @@ public:
             case 31: return        "SystemCol2Row";
             case 32: return        "SystemCol2Col";
             case 33: return        "SystemLookUpTable";
-            case 34: return        "SystemRowRead";
+            case 34: return        "SystemRowStore";
             case 35: return        "SystemColRead";
-            case 36: return        "SystemRowWrite";
+            case 36: return        "SystemRowLoad";
             case 37: return        "SystemColWrite";
             case 38: return        "RowReduce";
             case 39: return        "RowLoad";
             case 40: return        "RowStore";
-            case 41: return        "SystemDramLoad";
-            case 42: return        "SystemDramStore";
             default: return       "Help";
         };
 
@@ -230,9 +231,9 @@ public:
         "SystemCol2Col",
 
         "SystemLookUpTable",
-        "SystemRowRead",
+        "SystemRowStore",
         "SystemColRead",
-        "SystemRowWrite",
+        "SystemRowLoad",
         "SystemColWrite",
         "RowReduce"
     };
@@ -303,9 +304,9 @@ public:
     bool isSystem() {
         if ((type == Type::SystemRow2Row) || (type == Type::SystemRow2Col)
         || (type == Type::SystemCol2Row) || (type == Type::SystemCol2Col)
-        || (type == Type::SystemLookUpTable) || (type == Type::SystemDramLoad) || (type == Type::SystemDramStore)
-        || (type == Type::SystemRowRead) || (type == Type::SystemColRead)
-        || (type == Type::SystemRowWrite) || (type == Type::SystemColWrite) ) {
+        || (type == Type::SystemLookUpTable)
+        || (type == Type::SystemRowStore) || (type == Type::SystemColRead)
+        || (type == Type::SystemRowLoad) || (type == Type::SystemColWrite) ) {
             return true;
         } else {
             return false;

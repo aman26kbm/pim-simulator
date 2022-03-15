@@ -46,6 +46,9 @@ public:
     MemoryCharacteristics* _values;
     TimeT _next_available = 0;
 
+    //This is the time at which the last request was completed
+    TimeT _last_req_time = 0;
+
     std::string level_str[int(Level::MAX)] = {"Chip", "Tile", "Block"};
 
     //TimeT _timing[int(Request::Type::MAX)];
@@ -75,6 +78,7 @@ public:
 
     double getReqTiming(Request req);
     double getReqEnergy(Request req);
+    int getPrecisionBits(Request req);
 
     double getTotalEnergy();
 

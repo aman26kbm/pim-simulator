@@ -76,6 +76,7 @@ Controller::receiveReq(Request& req)
      * 3. Blocks can be configured to handle PIM operations
      * */
     if (_host->_level == MemoryComponent::Level::Chip) {
+        //Decoder time is calculated separately to the execution time
         _decoder_time++;
     }
     if (req.isChip()) {
@@ -109,8 +110,9 @@ Controller::issueReq(ReqQueue &queue)
 void 
 Controller::tick() 
 {
-    /* Schedule both MO and PE operations when ticking */
-    _time++;
+    //No time advancing in tick() method.
+    //It's done in the sync* and advance* methods in system.cpp now.
+    //_time++;
     /* schedule the next request based on the scheduler 
      * TODO: current scheduler always schedule PIM requests */
     ReqQueue* q;

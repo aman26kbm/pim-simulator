@@ -31,7 +31,7 @@ public:
     /* Queue (buffer) in the controller */
     ReqQueue *_pim_q = new ReqQueue();
     ReqQueue *_tile_q = new ReqQueue();
-            ReqQueue *_chip_q = new ReqQueue();
+    ReqQueue *_chip_q = new ReqQueue();
     Scheduler* _sched;
 
     Controller(MemoryComponent* host);

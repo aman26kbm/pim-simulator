@@ -23,6 +23,7 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, Memory
 
     for (int i = 0; i < _ntiles; i++) {
         MemoryTile* tile = new MemoryTile(_nblocks, _nrows, _ncols, values);
+        //One controller for each tile
         Controller* ctrl = new Controller(tile);
         tile->setController(ctrl);
         tile->setId(i);
@@ -47,6 +48,7 @@ MemoryChip::send2Child(Request& req)
 bool
 MemoryChip::isReady(Request& req)
 {
+    //_ctrl refers to the controller of the chip 
     TimeT cur_time = _ctrl->getTime();
     if (req.isSystem()) {
         cout << "Error: never should issue system request at chip level!\n";
@@ -69,6 +71,7 @@ MemoryChip::isReady(Request& req)
 void
 MemoryChip::issueReq(Request& req)
 {
+    //_ctrl refers to the controller of the chip 
     TimeT cur_time = _ctrl->getTime();
 
     if (req.isChip()) {
@@ -76,11 +79,15 @@ MemoryChip::issueReq(Request& req)
         //if this chip-level request is for a DRAM access, then we call a different set of functions
         if (req.isChipDram()) {
             req.process_time = cur_time;
-            //precision_list[0] contains the number of rows to transfer
-            int words = req.precision_list[0] / _values->_wordsize_dram;
+            //precision_list[0] effectively contains the number of rows to transfer.
+            int words = int(_ncols / _values->_wordsize_dram) * getPrecisionBits(req);
             dram_counter += words;
             req.finish_time = cur_time + getReqTiming(req) * dram_counter;
+            ////////////////////////
+            //This is very important
+            ////////////////////////
             _next_available = req.finish_time;
+            _last_req_time = req.finish_time - req.arrive_time;
             finishReq(req);
             commitReq(req);
         }
@@ -88,11 +95,12 @@ MemoryChip::issueReq(Request& req)
         else {
             req.process_time = cur_time;
             //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-            int words = _ncols / _values->_wordsize_tile2tile;
+            //precision_list[0] effectively contains the number of rows to transfer.
+            int words = int(_ncols / _values->_wordsize_tile2tile) * getPrecisionBits(req);
             if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
                 bus_counter += words;
                 //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
-                req.finish_time = cur_time + getReqTiming(req) * (bus_counter + 1);
+                req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
             } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
                 std::vector<int> switch_list;
 
@@ -115,8 +123,15 @@ MemoryChip::issueReq(Request& req)
                 req.finish_time = cur_time + getReqTiming(req) * jump;
                 switch_list.clear();
             }
+            else { //ideal
+                req.finish_time = cur_time + 0;
+            }
 
+            ////////////////////////
+            //This is very important
+            ////////////////////////
             _next_available = req.finish_time;
+            _last_req_time = req.finish_time - req.arrive_time;
 
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 

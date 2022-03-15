@@ -44,6 +44,7 @@ MemoryTile::send2Child(Request& req)
 bool
 MemoryTile::isReady(Request& req)
 {
+    //_ctrl refers to the controller of the tile
     TimeT cur_time = _ctrl->getTime();
     if (req.isTile()) {
         TimeT next = getNextGlobalTime();
@@ -61,17 +62,17 @@ MemoryTile::isReady(Request& req)
 void
 MemoryTile::issueReq(Request& req)
 {
-//    std::cout << req.reqToStr() << std::endl;
+    //_ctrl refers to the controller of the tile.
     TimeT cur_time = _ctrl->getTime();
     if (req.isTile()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-        int words = int(_ncols / _values->_wordsize_block2block);
+        int words = int(_ncols / _values->_wordsize_block2block) * getPrecisionBits(req);
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             //bus_counter is reset after each tick in the MemoryComponent::tick() method
             bus_counter += words;
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
-            req.finish_time = cur_time + getReqTiming(req) * (bus_counter + 1);
+            req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
             std::vector<int> switch_list;
 
@@ -94,8 +95,16 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req) * jump;
             switch_list.clear();
         }
+        else { //ideal
+            req.finish_time = cur_time + 0;
+        }
 
+        ////////////////////////
+        //This is very important
+        ////////////////////////
+        //cout<<"tile "<< this->_id << " req.finish_time = "<<req.finish_time<<", req.arrive_time = "<<req.arrive_time<<endl;
         _next_available = req.finish_time;
+        _last_req_time = req.finish_time - req.arrive_time;
 
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 

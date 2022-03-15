@@ -28,6 +28,7 @@ MemoryBlock::send2Child(Request& req)
 bool
 MemoryBlock::isReady(Request& req)
 {
+    //_ctrl refers to the controller of the tile (each block doesn't have a separate controller)
     TimeT cur_time = _ctrl->getTime();
     if (req.isPIM()) {
         TimeT next = getNextGlobalTime();
@@ -45,6 +46,7 @@ MemoryBlock::isReady(Request& req)
 void
 MemoryBlock::issueReq(Request& req)
 {
+    //_ctrl refers to the controller of the tile (each block doesn't have a separate controller)
     TimeT cur_time = _ctrl->getTime();
     if (req.isPIM()) {
         req.process_time = cur_time;
@@ -57,7 +59,12 @@ MemoryBlock::issueReq(Request& req)
         //    req.finish_time = cur_time + _timing[int(req.type)] * req.size_list[0];
         //}
 
+        ////////////////////////
+        //This is very important
+        ////////////////////////
         _next_available = req.finish_time;
+        _last_req_time = req.finish_time - req.arrive_time;
+        //cout<<"_next_available for block id "<<_id<<" is "<<_next_available<<endl;
 
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 

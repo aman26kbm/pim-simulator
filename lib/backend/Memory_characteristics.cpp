@@ -21,37 +21,38 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wo
 //Helper function to find the number of clocks for a given request's precision and op type
 int getClocksForReq(PrecisionT precision, string op, int levels=0) {
     int clocks;
+    int bits;
     string dtype;
     int mantissa;
     int exponent;
 
     switch(precision) { 
         case 0:  //fp8_e3m4
-            dtype = "float"; exponent = 3; mantissa = 4;
+            dtype = "float"; exponent = 3; mantissa = 4; bits = 8;
             break;
         case 1:  //bf16_e8m7
-            dtype = "float"; exponent = 8; mantissa = 7;
+            dtype = "float"; exponent = 8; mantissa = 7; bits = 16;
             break;
         case 2:  //fp16_e5m10
-            dtype = "float"; exponent = 5; mantissa = 10;
+            dtype = "float"; exponent = 5; mantissa = 10; bits = 16;
             break;
         case 3:  //fp32_e8m23
-            dtype = "float"; exponent = 8; mantissa = 23;
+            dtype = "float"; exponent = 8; mantissa = 23; bits = 32;
             break;
         case 4:  //INT4
-            dtype = "int"; exponent = 0; mantissa = 4;
+            dtype = "int"; exponent = 0; mantissa = 4; bits = 4;
             break;
         case 5:  //INT8
-            dtype = "int"; exponent = 0; mantissa = 8;
+            dtype = "int"; exponent = 0; mantissa = 8; bits = 8;
             break;
         case 6:  //INT16
-            dtype = "int"; exponent = 0; mantissa = 16;
+            dtype = "int"; exponent = 0; mantissa = 16; bits = 16;
             break;
         case 7:  //INT32
-            dtype = "int"; exponent = 0; mantissa = 32;
+            dtype = "int"; exponent = 0; mantissa = 32; bits = 32;
             break;
         default: 
-            dtype = "-"; exponent = -1; mantissa = -1;
+            dtype = "-"; exponent = -1; mantissa = -1; bits = -1;
             break;
     } 
 
@@ -92,12 +93,19 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
         }
     
     }
+    else if (op=="read" || op=="write") {
+        clocks = bits;
+    }
     else {
         //unsopported operation
         clocks = -1;
     }
 
     return clocks;
+}
+
+int MemoryCharacteristics::getPrecisionBits(Request req) {
+    return getClocksForReq(req.precision_list[0], "read");
 }
 
 //double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {
@@ -119,11 +127,11 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case 6: //RowRead
         case 7: //ColRead
-            time = T_READ;
+            time = T_READ * getPrecisionBits(req);
             break;
         case 8: //RowWrite
         case 9: //ColWrite
-            time = T_WRITE;
+            time = T_WRITE * getPrecisionBits(req);
             break;
         case 10: //RowAdd
         case 11: //ColAdd
@@ -192,7 +200,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
     }
     double fclk = time / (1000000000.0 / float(_freq));
-    time = int(fclk + 0.5);
+    time = int(fclk);
     return time;
 }
 
@@ -216,11 +224,11 @@ double MemoryCharacteristics::getEnergy(Request req) {
             break;
         case 6: //RowRead
         case 7: //ColRead
-            energy = E_READ;
+            energy = E_READ * getPrecisionBits(req);
             break;
         case 8: //RowWrite
         case 9: //ColWrite
-            energy = E_WRITE;
+            energy = E_WRITE * getPrecisionBits(req);
             break;
         case 10: //RowAdd
         case 11: //ColAdd
