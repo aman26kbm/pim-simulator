@@ -67,7 +67,7 @@ MemoryTile::issueReq(Request& req)
     if (req.isTile()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-        int words = int(_ncols / _values->_wordsize_block2block) * getPrecisionBits(req);
+        int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_block2block) ;
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             //bus_counter is reset after each tick in the MemoryComponent::tick() method
             bus_counter += words;

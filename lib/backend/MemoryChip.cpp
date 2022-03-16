@@ -80,7 +80,7 @@ MemoryChip::issueReq(Request& req)
         if (req.isChipDram()) {
             req.process_time = cur_time;
             //precision_list[0] effectively contains the number of rows to transfer.
-            int words = int(_ncols / _values->_wordsize_dram) * getPrecisionBits(req);
+            int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
             dram_counter += words;
             req.finish_time = cur_time + getReqTiming(req) * dram_counter;
             ////////////////////////
@@ -96,7 +96,7 @@ MemoryChip::issueReq(Request& req)
             req.process_time = cur_time;
             //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
             //precision_list[0] effectively contains the number of rows to transfer.
-            int words = int(_ncols / _values->_wordsize_tile2tile) * getPrecisionBits(req);
+            int words = int((_ncols  * getPrecisionBits(req)) / _values->_wordsize_tile2tile);
             if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
                 bus_counter += words;
                 //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);

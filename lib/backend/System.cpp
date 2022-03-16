@@ -927,7 +927,7 @@ void System<T>::syncSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2,
 
 //Advance time for specific things based on a request's properties
 template <class T>
-void System<T>::advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd) 
+void System<T>::advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram) 
 { 
     int src_chip = 0, src_tile = 0, src_bloc = 0, src_row = 0, src_col = 0;
 
@@ -939,7 +939,7 @@ void System<T>::advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, 
     int src_tile_time = _chips[src_chip]->_children[src_tile]->_last_req_time;
     int src_bloc_time = _chips[src_chip]->_children[src_tile]->_children[src_bloc]->_last_req_time;
 
-    if (chip) {
+    if (chip || involves_dram) {
         total_time = src_chip_time + src_tile_time + src_bloc_time;
     }
     if (tile) {
@@ -957,7 +957,7 @@ void System<T>::advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, 
 
 //Advance time for specific things based on a request's properties
 template <class T>
-void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd) 
+void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram) 
 { 
     int src_chip = 0, src_tile = 0, src_bloc = 0, src_row = 0, src_col = 0;
     int dst_chip = 0, dst_tile = 0, dst_bloc = 0, dst_row = 0, dst_col = 0;
@@ -988,7 +988,7 @@ void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req
         if (tile_upd)  _chips[dst_chip]->_children[dst_tile]->_ctrl->stall(total_time);
         if (bloc_upd)  _chips[dst_chip]->_children[dst_tile]->_children[dst_bloc]->_ctrl->stall(total_time);
     }
-    else if (src_chip == dst_chip && src_tile != dst_tile) {
+    else if (src_chip == dst_chip && ((src_tile != dst_tile) || involves_dram)) {
         if (chip) {
             total_time = src_chip_time + src_tile_time + dst_tile_time + src_bloc_time + dst_bloc_time;
         }
@@ -1475,11 +1475,13 @@ int System<T>::system_DramStore(Request& req) {
         block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
         tot_clks += sendTileReq(block_send_req, SEND);
 
-        Request tile_send_req(Request::Type::TileSend);
-        tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        tile_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendChipReq(tile_send_req, SEND);
+        //This is not required. The tile-to-tile interconnect basically becomes tile-to-dram
+        //interconnect in this case, and it's time is already included in RowStore.
+        //Request tile_send_req(Request::Type::TileSend);
+        //tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
+        //tile_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
+        //tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
+        //tot_clks += sendChipReq(tile_send_req, SEND);
 
         Request dram_store_req(Request::Type::RowStore);
         dram_store_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
@@ -1489,7 +1491,8 @@ int System<T>::system_DramStore(Request& req) {
 
         _chips[src_chip]->tick();
 
-        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true);
+        //                                                                                                                  involves_dram                 
+        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true);
     }
     return tot_clks;
 }
@@ -1526,11 +1529,13 @@ int System<T>::system_DramLoad(Request& req) {
         dram_load_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
         tot_clks += sendChipReq(dram_load_req, SEND);
 
-        Request tile_send_req(Request::Type::TileReceive);
-        tile_send_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-        tile_send_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        tile_send_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        tot_clks += sendChipReq(tile_send_req, RECEIVE);
+        //This is not required. The tile-to-tile interconnect basically becomes tile-to-dram
+        //interconnect in this case, and it's time is already included in RowLoad.
+        //Request tile_send_req(Request::Type::TileReceive);
+        //tile_send_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
+        //tile_send_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        //tile_send_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        //tot_clks += sendChipReq(tile_send_req, RECEIVE);
 
         Request block_send_req(Request::Type::BlockReceive);
         block_send_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
@@ -1546,7 +1551,8 @@ int System<T>::system_DramLoad(Request& req) {
 
         _chips[dst_chip]->tick();
 
-        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true);
+        //                                                                                                                  involves_dram             
+        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true);
     }
     return tot_clks;
 }
@@ -1710,18 +1716,16 @@ void System<T>::gemv()
     //to blocks 3,4,5 (second row)
     //in each block, the multiplication results are in 8 rows (row 8 to row 15)
 
-    for (int i=0; i<8; i++) {
-        request = new Request(Request::Type::SystemRow2Row);
-        request->addAddr(cram_addr_block0_row8 + i*_ncols, 0); //src 
-        request->addAddr(cram_addr_block3_row16 + i*_ncols, 0); //dst
+    request = new Request(Request::Type::SystemRow2Row);
+    request->addAddr(cram_addr_block0_row8, 0, PrecisionT::INT8); //src 
+    request->addAddr(cram_addr_block3_row16, 0, PrecisionT::INT8); //dst
 
-        request->addAddr(cram_addr_block1_row8 + i*_ncols, 0); //src
-        request->addAddr(cram_addr_block4_row16 + i*_ncols, 0); //dst
+    request->addAddr(cram_addr_block1_row8, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_block4_row16, 0, PrecisionT::INT8); //dst
 
-        request->addAddr(cram_addr_block2_row8 + i*_ncols, 0); //src
-        request->addAddr(cram_addr_block5_row16 + i*_ncols, 0); //dst
-        requests.push_back(*request);
-    };
+    request->addAddr(cram_addr_block2_row8, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_block5_row16, 0, PrecisionT::INT8); //dst
+    requests.push_back(*request);
 
     //now perform additions
     //in blocks 3,4,5 only
