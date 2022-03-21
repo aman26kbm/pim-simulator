@@ -4,6 +4,7 @@
 //#define DEBUG_OUTPUT
 
 #include "util.h"
+#include "Tool.h"
 #include <queue>
 #include <map>
 #include <vector>
@@ -57,6 +58,11 @@ public:
     bool _blockctrl, _tilectrl, _chipctrl;
     std::string net_scheme;
     LookUpTable *_lookUpTable;
+
+    //Inter tile communication
+    Mailbox* m1;
+    Mailbox* m2;
+    Mailbox* m3;
 
     System(Config* config);
     ~System();
@@ -124,6 +130,52 @@ public:
 
     //PIMRA
     void gemv();
+    void gemv_tile0();
+    void gemv_tile1();
+
+    AddrT cram_base_addr_tile0_block0; 
+    AddrT cram_addr_tile0_block0_row0;  
+    AddrT cram_addr_tile0_block0_row4;  
+    AddrT cram_addr_tile0_block0_row8;  
+
+    AddrT cram_base_addr_tile0_block1; 
+    AddrT cram_addr_tile0_block1_row0; 
+    AddrT cram_addr_tile0_block1_row4; 
+    AddrT cram_addr_tile0_block1_row8; 
+
+    AddrT cram_base_addr_tile0_block2; 
+    AddrT cram_addr_tile0_block2_row0; 
+    AddrT cram_addr_tile0_block2_row4; 
+    AddrT cram_addr_tile0_block2_row8; 
+
+    AddrT cram_base_addr_tile0_block3; 
+    AddrT cram_addr_tile0_block3_row0; 
+    AddrT cram_addr_tile0_block3_row4; 
+    AddrT cram_addr_tile0_block3_row8; 
+    AddrT cram_addr_tile0_block3_row16;
+    AddrT cram_addr_tile0_block3_row24;
+
+    AddrT cram_base_addr_tile1_block0; 
+    AddrT cram_addr_tile1_block0_row0; 
+    AddrT cram_addr_tile1_block0_row4; 
+    AddrT cram_addr_tile1_block0_row8; 
+
+    AddrT cram_base_addr_tile1_block1; 
+    AddrT cram_addr_tile1_block1_row0; 
+    AddrT cram_addr_tile1_block1_row4; 
+    AddrT cram_addr_tile1_block1_row8; 
+
+    AddrT cram_base_addr_tile1_block2; 
+    AddrT cram_addr_tile1_block2_row0; 
+    AddrT cram_addr_tile1_block2_row4; 
+    AddrT cram_addr_tile1_block2_row8; 
+
+    AddrT cram_base_addr_tile1_block3; 
+    AddrT cram_addr_tile1_block3_row0; 
+    AddrT cram_addr_tile1_block3_row4; 
+    AddrT cram_addr_tile1_block3_row8; 
+    AddrT cram_addr_tile1_block3_row16;
+    AddrT cram_addr_tile1_block3_row24;
 
 };
 

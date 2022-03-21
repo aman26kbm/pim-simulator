@@ -1,0 +1,1 @@
+rm -rf CMakeCache.txt CMakeFiles/ Makefile PIM_simulator cmake_install.cmake level_4_512_1_0_0.log_65537 libPimBackend.a

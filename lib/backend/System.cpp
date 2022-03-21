@@ -1,6 +1,7 @@
 #include "backend/System.h"
 #include <chrono>
 #include <algorithm>
+#include <thread>
 
 //DRAM addresses don't matter. We just define 1 address
 //and use it everywhere.
@@ -63,6 +64,57 @@ System<T>::System(Config* config) : _config(config)
 
     _conn = new GlobalConnection(this, nt);
     //_lookUpTable = new LookUpTable(_nchips, _ntiles, _nblocks, _nrows, _ncols, _datatype);
+
+    //Inter tile communication
+    m1 = new Mailbox();
+    m2 = new Mailbox();
+    m3 = new Mailbox();
+
+    //                                      t, b, r
+    cram_base_addr_tile0_block0 = getAddress(0,0,0); 
+    cram_addr_tile0_block0_row0 = getAddress(0,0,0);  //src1
+    cram_addr_tile0_block0_row4 = getAddress(0,0,4);  //src2
+    cram_addr_tile0_block0_row8 = getAddress(0,0,8);  //dst
+
+    cram_base_addr_tile0_block1 = getAddress(0,1,0); 
+    cram_addr_tile0_block1_row0 = getAddress(0,1,0); 
+    cram_addr_tile0_block1_row4 = getAddress(0,1,4); 
+    cram_addr_tile0_block1_row8 = getAddress(0,1,8); 
+
+    cram_base_addr_tile0_block2 = getAddress(0,2,0); 
+    cram_addr_tile0_block2_row0 = getAddress(0,2,0); 
+    cram_addr_tile0_block2_row4 = getAddress(0,2,4); 
+    cram_addr_tile0_block2_row8 = getAddress(0,2,8); 
+
+    cram_base_addr_tile0_block3 = getAddress(0,3,0); 
+    cram_addr_tile0_block3_row0 = getAddress(0,3,0); 
+    cram_addr_tile0_block3_row4 = getAddress(0,3,4); 
+    cram_addr_tile0_block3_row8 = getAddress(0,3,8); 
+    cram_addr_tile0_block3_row16 =getAddress(0,3,16);
+    cram_addr_tile0_block3_row24 =getAddress(0,3,24);
+
+    //                                      t, b, r
+    cram_base_addr_tile1_block0 = getAddress(1,0,0); 
+    cram_addr_tile1_block0_row0 = getAddress(1,0,0);  //src1
+    cram_addr_tile1_block0_row4 = getAddress(1,0,4);  //src2
+    cram_addr_tile1_block0_row8 = getAddress(1,0,8);  //dst
+
+    cram_base_addr_tile1_block1 = getAddress(1,1,0); 
+    cram_addr_tile1_block1_row0 = getAddress(1,1,0); 
+    cram_addr_tile1_block1_row4 = getAddress(1,1,4); 
+    cram_addr_tile1_block1_row8 = getAddress(1,1,8); 
+
+    cram_base_addr_tile1_block2 = getAddress(1,2,0); 
+    cram_addr_tile1_block2_row0 = getAddress(1,2,0); 
+    cram_addr_tile1_block2_row4 = getAddress(1,2,4); 
+    cram_addr_tile1_block2_row8 = getAddress(1,2,8); 
+
+    cram_base_addr_tile1_block3 = getAddress(1,3,0); 
+    cram_addr_tile1_block3_row0 = getAddress(1,3,0); 
+    cram_addr_tile1_block3_row4 = getAddress(1,3,4); 
+    cram_addr_tile1_block3_row8 = getAddress(1,3,8); 
+    cram_addr_tile1_block3_row16 =getAddress(1,3,16);
+    cram_addr_tile1_block3_row24 =getAddress(1,3,24);
 }
 
 template <class T>
@@ -1639,132 +1691,158 @@ int System<T>::system_ColWrite(Request& req) {
     return tot_clks;
 }
 
-//Simple program to perform a matrix-vector mul 
 template <class T>
-void System<T>::gemv()
-{
-    //                                      t, b, r
-    AddrT cram_base_addr_block0 = getAddress(0,0,0); 
-    AddrT cram_addr_block0_row0 = getAddress(0,0,0);  //src1
-    AddrT cram_addr_block0_row4 = getAddress(0,0,4);  //src2
-    AddrT cram_addr_block0_row8 = getAddress(0,0,8);  //dst
-
-    AddrT cram_base_addr_block1 = getAddress(0,1,0); 
-    AddrT cram_addr_block1_row0 = getAddress(0,1,0); 
-    AddrT cram_addr_block1_row4 = getAddress(0,1,4); 
-    AddrT cram_addr_block1_row8 = getAddress(0,1,8); 
-
-    AddrT cram_base_addr_block2 = getAddress(0,2,0); 
-    AddrT cram_addr_block2_row0 = getAddress(0,2,0); 
-    AddrT cram_addr_block2_row4 = getAddress(0,2,4); 
-    AddrT cram_addr_block2_row8 = getAddress(0,2,8); 
-
-    AddrT cram_base_addr_block3 = getAddress(0,3,0); 
-    AddrT cram_addr_block3_row0 = getAddress(0,3,0); 
-    AddrT cram_addr_block3_row4 = getAddress(0,3,4); 
-    AddrT cram_addr_block3_row8 = getAddress(0,3,8); 
-    AddrT cram_addr_block3_row16 =getAddress(0,3,16);
-    AddrT cram_addr_block3_row24 =getAddress(0,3,24);
-
-    AddrT cram_base_addr_block4 = getAddress(0,4,0); 
-    AddrT cram_addr_block4_row0 = getAddress(0,4,0); 
-    AddrT cram_addr_block4_row4 = getAddress(0,4,4); 
-    AddrT cram_addr_block4_row8 = getAddress(0,4,8); 
-    AddrT cram_addr_block4_row16 =getAddress(0,4,16);
-    AddrT cram_addr_block4_row24 =getAddress(0,4,24);
-
-    AddrT cram_base_addr_block5 = getAddress(0,6,0); 
-    AddrT cram_addr_block5_row0 = getAddress(0,6,0); 
-    AddrT cram_addr_block5_row4 = getAddress(0,6,4); 
-    AddrT cram_addr_block5_row8 = getAddress(0,6,8); 
-    AddrT cram_addr_block5_row16 =getAddress(0,6,16);
-    AddrT cram_addr_block5_row24 =getAddress(0,6,24);
+void System<T>::gemv_tile0() {
 
     std::vector<Request> requests;
     Request *request;
 
-    //Load some data into CRAM
-    request = new Request(Request::Type::SystemRowLoad);
-    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block0_row0, 0, PrecisionT::INT4); //dst
-    requests.push_back(*request);
-
     //Multiply in parallel on all crams
     //src1 - row0, src2 - row 4, dst - row8
     request = new Request(Request::Type::RowMul);
-    request->addAddr(cram_addr_block0_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_block1_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block1_row8, 0, PrecisionT::INT4); //dst
+    request->addAddr(cram_addr_tile0_block1_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block1_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_block2_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block2_row8, 0, PrecisionT::INT4); //dst
+    request->addAddr(cram_addr_tile0_block2_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_block3_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block3_row8, 0, PrecisionT::INT4); //dst
-
-    request->addAddr(cram_addr_block4_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block4_row8, 0, PrecisionT::INT4); //dst
-
-    request->addAddr(cram_addr_block5_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_block5_row8, 0, PrecisionT::INT4); //dst
+    request->addAddr(cram_addr_tile0_block3_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block3_row8, 0, PrecisionT::INT4); //dst
 
     requests.push_back(*request);
-
-    //send mult results from blocks 0,1,2 (first row)
-    //to blocks 3,4,5 (second row)
-    //in each block, the multiplication results are in 8 rows (row 8 to row 15)
-
-    request = new Request(Request::Type::SystemRow2Row);
-    request->addAddr(cram_addr_block0_row8, 0, PrecisionT::INT8); //src 
-    request->addAddr(cram_addr_block3_row16, 0, PrecisionT::INT8); //dst
-
-    request->addAddr(cram_addr_block1_row8, 0, PrecisionT::INT8); //src
-    request->addAddr(cram_addr_block4_row16, 0, PrecisionT::INT8); //dst
-
-    request->addAddr(cram_addr_block2_row8, 0, PrecisionT::INT8); //src
-    request->addAddr(cram_addr_block5_row16, 0, PrecisionT::INT8); //dst
-    requests.push_back(*request);
-
-    //now perform additions
-    //in blocks 3,4,5 only
-    //src1 - row 16 (values that came from blocks 0,1,2)
-    //src2 - row 8 (values that were present here after multiplication) 
-    //dst - row 24
-    request = new Request(Request::Type::RowAdd);
-    request->addAddr(cram_addr_block3_row8, 0, PrecisionT::INT8); //src
-    request->addAddr(cram_addr_block3_row24, 0, PrecisionT::INT8); //dst
-
-    request->addAddr(cram_addr_block4_row8, 0, PrecisionT::INT8); //src
-    request->addAddr(cram_addr_block4_row24, 0, PrecisionT::INT8); //dst
-
-    request->addAddr(cram_addr_block5_row8, 0, PrecisionT::INT8); //src
-    request->addAddr(cram_addr_block5_row24, 0, PrecisionT::INT8); //dst
-
-    requests.push_back(*request);
-
-    //Store results into DRAM
-    request = new Request(Request::Type::SystemRowStore);
-    request->addAddr(cram_addr_block3_row8, 0, PrecisionT::INT8); //src
-    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
-    requests.push_back(*request);
-
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);
 
-    vector<int> chips;
-    for (int i = 0; i < _nchips; i++) {
-        chips.push_back(i);
-        while (!_chips[i]->isFinished())
-            _chips[i]->tick();
-    }
-    
-    ////////////////////
-    //This is critical. We need to do this after every program
-    ////////////////////
-    sync(chips);
+    //send mult results from blocks 0,1,2,3 in tile0
+    //to blocks 0,1,2,3 in tile1
+    //in each block, the multiplication results are in 8 rows (row 8 to row 15)
+
+//    request = new Request(Request::Type::SystemRow2Row);
+//    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT8); //src 
+//    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT8); //dst
+//
+//    request->addAddr(cram_addr_tile0_block1_row8, 0, PrecisionT::INT8); //src
+//    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT8); //dst
+//
+//    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT8); //src
+//    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT8); //dst
+//    requests.push_back(*request);
+//
+//    for (unsigned int i = 0; i < requests.size(); i++)
+//        sendRequest(requests[i]);
+//
+//    //Signal that I have arrived
+//    m1->signal(_chips[0]->_children[0]->_ctrl->getTime());
+}
+
+template <class T>
+void System<T>::gemv_tile1() {
+
+
+    std::vector<Request> requests;
+    Request *request;
+
+    //Multiply in parallel on all crams
+    //src1 - row0, src2 - row 4, dst - row8
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile1_block1_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile1_block2_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile1_block3_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+
+//    bool data_received;
+//    do {
+//        _chips[0]->tick();
+//        data_received = m1->status();
+//    } while (!data_received);
+//
+//
+//    //now perform additions
+//    //in blocks 3,4,5 only
+//    //src1 - row 16 (values that came from blocks 0,1,2)
+//    //src2 - row 8 (values that were present here after multiplication) 
+//    //dst - row 24
+//    request = new Request(Request::Type::RowAdd);
+//    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT8); //src
+//    request->addAddr(cram_addr_tile1_block0_row4, 0, PrecisionT::INT8); //dst
+//
+//    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT8); //src
+//    request->addAddr(cram_addr_tile1_block1_row4, 0, PrecisionT::INT8); //dst
+//
+//    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT8); //src
+//    request->addAddr(cram_addr_tile1_block2_row4, 0, PrecisionT::INT8); //dst
+//
+//    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT8); //src
+//    request->addAddr(cram_addr_tile1_block3_row4, 0, PrecisionT::INT8); //dst
+//
+//    requests.push_back(*request);
+
+  //  //Store results into DRAM
+  //  request = new Request(Request::Type::SystemRowStore);
+  //  request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT8); //src
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
+  //  requests.push_back(*request);
+
+//    for (unsigned int i = 0; i < requests.size(); i++)
+//        sendRequest(requests[i]);
+
+}
+
+//Simple program to perform a matrix-vector mul 
+template <class T>
+void System<T>::gemv()
+{
+
+//    std::vector<Request> requests;
+//    Request *request;
+
+    //Load some data into CRAM
+  //  request = new Request(Request::Type::SystemRowLoad);
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+  //  request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+  //  request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+  //  requests.push_back(*request);
+
+  //  for (unsigned int i = 0; i < requests.size(); i++)
+  //      sendRequest(requests[i]);
+
+    std::thread tile0_thread(&System<T>::gemv_tile0, this);
+    std::thread tile1_thread(&System<T>::gemv_tile1, this);
+
+    tile0_thread.join();
+    tile1_thread.join();
+  //gemv_tile0();
+  //gemv_tile1();
+
+//    vector<int> chips;
+//    for (int i = 0; i < _nchips; i++) {
+//        chips.push_back(i);
+//        while (!_chips[i]->isFinished())
+//            _chips[i]->tick();
+//    }
+//    
+//    ////////////////////
+//    //This is critical. We need to do this after every program
+//    ////////////////////
+//    sync(chips);
 }
 
 /*

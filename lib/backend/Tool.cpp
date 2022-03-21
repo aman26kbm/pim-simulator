@@ -141,3 +141,26 @@ std::vector<int> get_index_list(int index, int height) {
 
     return index_list;
 }
+
+Mailbox::Mailbox() {
+
+}
+
+Mailbox::~Mailbox() {
+
+}
+
+void Mailbox::signal(TimeT t) {
+    _arrived = true;
+    _time = t;
+}
+bool Mailbox::status() {
+    return _arrived;
+}
+TimeT Mailbox::getTime() {
+    return _time;
+}
+void Mailbox::reset() {
+    _time = 0;
+    _arrived = false;
+}
