@@ -1009,7 +1009,7 @@ void System<T>::advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, 
 
 //Advance time for specific things based on a request's properties
 template <class T>
-void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram) 
+void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram, bool load) 
 { 
     int src_chip = 0, src_tile = 0, src_bloc = 0, src_row = 0, src_col = 0;
     int dst_chip = 0, dst_tile = 0, dst_bloc = 0, dst_row = 0, dst_col = 0;
@@ -1027,7 +1027,17 @@ void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req
     int dst_bloc_time = _chips[dst_chip]->_children[dst_tile]->_children[dst_bloc]->_last_req_time;
 
     //Increment the time by the total time
-    if (src_chip != dst_chip) {
+    if (involves_dram) {
+        //only support this case for now
+        assert(src_chip==dst_chip);
+        total_time = src_chip_time + src_tile_time + dst_tile_time + src_bloc_time + dst_bloc_time;
+        if (chip_upd)           _chips[src_chip]->_ctrl->stall(total_time);
+        if (tile_upd && load)   _chips[src_chip]->_children[src_tile]->_ctrl->stall(total_time);
+        if (bloc_upd && load)   _chips[src_chip]->_children[src_tile]->_children[src_bloc]->_ctrl->stall(total_time);
+        if (tile_upd && !load)  _chips[dst_chip]->_children[dst_tile]->_ctrl->stall(total_time);
+        if (bloc_upd && !load)  _chips[dst_chip]->_children[dst_tile]->_children[dst_bloc]->_ctrl->stall(total_time);
+    }
+    else if (src_chip != dst_chip) {
         //This is not supported currently
         cout<<"Unsupported code";
         assert(0);
@@ -1040,7 +1050,7 @@ void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req
         if (tile_upd)  _chips[dst_chip]->_children[dst_tile]->_ctrl->stall(total_time);
         if (bloc_upd)  _chips[dst_chip]->_children[dst_tile]->_children[dst_bloc]->_ctrl->stall(total_time);
     }
-    else if (src_chip == dst_chip && ((src_tile != dst_tile) || involves_dram)) {
+    else if (src_chip == dst_chip && src_tile != dst_tile) {
         if (chip) {
             total_time = src_chip_time + src_tile_time + dst_tile_time + src_bloc_time + dst_bloc_time;
         }
@@ -1543,8 +1553,8 @@ int System<T>::system_DramStore(Request& req) {
 
         _chips[src_chip]->tick();
 
-        //                                                                                                                  involves_dram                 
-        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true);
+        //                                                                                                                  involves_dram  load               
+        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true         , false );
     }
     return tot_clks;
 }
@@ -1603,8 +1613,8 @@ int System<T>::system_DramLoad(Request& req) {
 
         _chips[dst_chip]->tick();
 
-        //                                                                                                                  involves_dram             
-        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true);
+        //                                                                                                                  involves_dram  load            
+        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true,          true );
     }
     return tot_clks;
 }
