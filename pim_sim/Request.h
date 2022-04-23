@@ -374,6 +374,12 @@ public:
         }
     }
 
+    int getWordNum(){
+        int word_num = 0;
+        //TODO
+        return word_num;
+    }
+
 
 };
 
@@ -391,6 +397,9 @@ struct ReqQueue {
         req = q->front();
         q->pop();
         return req;
+    }
+    bool is_empty(){
+        return q->empty();
     }
     
     void clear() {q={};}

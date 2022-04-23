@@ -1,5 +1,3 @@
-#ifndef _MEMORY_CHARACTERISTICS_H_
-#define _MEMORY_CHARACTERISTICS_H_
 
 #include <cmath>
 #include "Request.h"
@@ -127,6 +125,3 @@ public:
     double getTotalLeakageEnergy(int ntiles, int nblocks);
 };
 }
-
-
-#endif
