@@ -205,3 +205,38 @@ MemoryChip::outputStats(FILE* rstFile)
     fprintf(rstFile, "Chip-level statistics: #Transfers(%lu)\n", 
             n_transfers);
 }
+
+
+MemoryComponent* MemoryChip::getTargetTile(Request& req) {
+    int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
+    AddrT addr;
+    //Destination
+    addr = req.addr_list[1];
+    col_idx = addr % this->_ncols;
+    addr /= _ncols;
+    row_idx = addr % this->_nrows;
+    addr /= _nrows;
+    block_idx = addr % this->_nblocks;
+    addr /= _nblocks;
+    tile_idx = addr % this->_ntiles;
+    //addr /= _ntiles;
+    //chip_idx = addr % this->_nchips;
+    return this->_children[tile_idx];
+};
+
+MemoryComponent* MemoryChip::getSourceTile(Request& req) {
+    int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
+    AddrT addr;
+    //Destination
+    addr = req.addr_list[0];
+    col_idx = addr % this->_ncols;
+    addr /= _ncols;
+    row_idx = addr % this->_nrows;
+    addr /= _nrows;
+    block_idx = addr % this->_nblocks;
+    addr /= _nblocks;
+    tile_idx = addr % this->_ntiles;
+    //addr /= _ntiles;
+    //chip_idx = addr % this->_nchips;
+    return this->_children[tile_idx];
+};

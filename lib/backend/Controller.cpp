@@ -19,40 +19,49 @@ Controller::~Controller()
 bool 
 Controller::receiveChipReq(Request& req)
 {
-    if (_host->getLevel() == MemoryComponent::Level::Chip) {
-        req.arrive_time = _time;
-        if (_chip_q->size() < _chip_q->max && (!_chip_q->contains(req))) {
-            _chip_q->push_back(req);
-        } else {
-            return false;
-        }
-        
-    } else if (_host->getLevel() < MemoryComponent::Level::Chip) {
-        return _host->send2Child(req);
-    }
-    return true;
+    //if (_host->getLevel() == MemoryComponent::Level::Chip) {
+    //    req.arrive_time = _time;
+    //    if (_chip_q->size() < _chip_q->max) {
+    //        _chip_q->push_back(req);
+    //    } else {
+    //        return false;
+    //    }
+    //    
+    //} else if (_host->getLevel() < MemoryComponent::Level::Chip) {
+    //    return _host->send2Child(req);
+    //}
+    //return true;
+    
+    //Just send to the tile
+    return _host->send2Child(req);
 }
 
 bool
 Controller::receiveTileReq(Request& req)
 {
-    if (_host->getLevel() == MemoryComponent::Level::Tile) {
-        req.arrive_time = _time;
-        if (_tile_q->size() < _tile_q->max && (!_tile_q->contains(req))) {
-            _tile_q->push_back(req);
-        } else {
-            return false;
-        }
+    //if (_host->getLevel() == MemoryComponent::Level::Tile) {
+    //    req.arrive_time = _time;
+    //    if (_tile_q->size() < _tile_q->max) {
+    //        _tile_q->push_back(req);
+    //    } else {
+    //        return false;
+    //    }
 
-    } else if (_host->getLevel() < MemoryComponent::Level::Tile) {
-        return _host->send2Child(req);
-    }
+    //} else if (_host->getLevel() < MemoryComponent::Level::Tile) {
+    //    return _host->send2Child(req);
+    //}
+    
+    //Push into the q for this tile
+    _tile_q->push_back(req);
     return true;
 }
 
 bool 
 Controller::receivePimReq(Request& req) 
 {
+    //We don't want to come here
+    assert(0);
+
     if (_host->_level == MemoryComponent::Level::Block) { // if the controller is at the lowest level for PIM
         req.arrive_time = _time;
         if (_pim_q->size() < _pim_q->max) {
@@ -75,28 +84,29 @@ Controller::receiveReq(Request& req)
      * 2. Tiles handle normal memory operations
      * 3. Blocks can be configured to handle PIM operations
      * */
-    if (_host->_level == MemoryComponent::Level::Chip) {
-        //Decoder time is calculated separately to the execution time
-        _decoder_time++;
-    }
-    if (req.isChip()) {
-        return receiveChipReq(req);
-    } else if (req.isTile()) {
-        return receiveTileReq(req);
-    } else if (req.isPIM()) {
-        return receivePimReq(req);
-    }
-    return true;
+    //if (_host->_level == MemoryComponent::Level::Chip) {
+    //    //Decoder time is calculated separately to the execution time
+    //    _decoder_time++;
+    //}
+    //if (req.isChip()) {
+    //    return receiveChipReq(req);
+    //} else if (req.isTile()) {
+    //    return receiveTileReq(req);
+    //} else if (req.isPIM()) {
+    //    return receivePimReq(req);
+    //}
+    return receiveChipReq(req);
+    //return true;
 }
 
 void 
 Controller::issueReq(ReqQueue &queue) 
 {
-    std::vector<Request>::iterator it;
-    for (it = queue.q->begin(); it != queue.q->end(); ++it) {
-        it->process_time = _time;
-        _host->issueReq(*it);
-    }
+    //std::vector<Request>::iterator it;
+    //for (it = queue.q->begin(); it != queue.q->end(); ++it) {
+    //    it->process_time = _time;
+    //    _host->issueReq(*it);
+    //}
 
 //    it = _sched->getNext(queue.q);
 //    while (it != queue.q.end()) {
@@ -115,17 +125,23 @@ Controller::tick()
     //_time++;
     /* schedule the next request based on the scheduler 
      * TODO: current scheduler always schedule PIM requests */
-    ReqQueue* q;
+    //ReqQueue* q;
     if (_host->_level == MemoryComponent::Level::Chip) {
-        q = _chip_q;
+        //Nothing to do here
+        return;
+        //q = _chip_q;
     } else if (_host->_level == MemoryComponent::Level::Tile) {
-        q = _tile_q;
+        //q = _tile_q;
+        _host->update_next();
+        _host->update_current();
     } else if (_host->_level == MemoryComponent::Level::Block) {
-        q = _pim_q;
+        //We don't want to come here
+        assert(0);
+        //q = _pim_q;
     }
         
-    issueReq(*q);
-    q->clear();
+    //issueReq(*q);
+    //q->clear();
 #ifdef DEBUG_OUTPUT
     printf("%s_%d removes one request!\n", _host->levelStr().c_str(), _host->_id);
 #endif

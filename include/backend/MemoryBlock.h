@@ -36,6 +36,10 @@ public:
     void commitReq(Request& req);
 
     virtual void outputStats(FILE* rstFile);
+    MemoryComponent* getTargetTile(Request& req) {assert(0);};
+    MemoryComponent* getSourceTile(Request& req) {assert(0);};
+    void update_next() {assert(0);};
+    void update_current() {assert(0);};
 };
 
 }

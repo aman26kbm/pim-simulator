@@ -1,7 +1,7 @@
 #include "backend/System.h"
 #include <chrono>
 #include <algorithm>
-#include <thread>
+//#include <thread>
 
 //DRAM addresses don't matter. We just define 1 address
 //and use it everywhere.
@@ -218,11 +218,11 @@ int System<T>::sendPIM_one_operand(Request& req)
         tot_clks++;
         bool res = _chips[src_chip]->receiveReq(*pim_req);
 
-        while (!res) {
-            tot_clks++;
-            _chips[src_chip]->tick();
-            res = _chips[src_chip]->receiveReq(*pim_req);
-        }
+        //while (!res) {
+        //    tot_clks++;
+        //    _chips[src_chip]->tick();
+        //    res = _chips[src_chip]->receiveReq(*pim_req);
+        //}
 	    delete pim_req;
         //  _chips[src_chip]->setDecoderTime(_chips[src_chip]->getDecoderTime() + 1);
     }
@@ -263,11 +263,11 @@ int System<T>::sendPIM_two_operands(Request& req)
         //And spend some cycles waiting here to put requests into the queue
         //The cycle spending happens via the tick().
         bool res = _chips[src_chip]->receiveReq(*pim_req);
-        while (!res) {
-            tot_clks++;
-            _chips[src_chip]->tick();
-            res = _chips[src_chip]->receiveReq(*pim_req);
-        }
+        //while (!res) {
+        //    tot_clks++;
+        //    _chips[src_chip]->tick();
+        //    res = _chips[src_chip]->receiveReq(*pim_req);
+        //}
         //	std::cout << i << std::endl;
 	    delete pim_req;
         //  _chips[src_chip]->setDecoderTime(_chips[src_chip]->getDecoderTime() + 1);
@@ -401,11 +401,11 @@ int System<T>::sendChipReq(Request& req, int para)
 
     tot_clks++;
     bool res = _chips[src_chip]->receiveReq(*inter_tile_req);
-    while (!res) {
-        tot_clks++;
-        _chips[src_chip]->tick();
-        res = _chips[src_chip]->receiveReq(*inter_tile_req);
-    }
+    //while (!res) {
+    //    tot_clks++;
+    //    _chips[src_chip]->tick();
+    //    res = _chips[src_chip]->receiveReq(*inter_tile_req);
+    //}
     delete inter_tile_req;
 
     return tot_clks;
@@ -490,11 +490,11 @@ int System<T>::sendTileReq(Request& req, int para)
 
     tot_clks++;
     bool res = _chips[src_chip]->receiveReq(*inter_block_req);
-    while (!res) {
-        tot_clks++;
-        _chips[src_chip]->tick();
-        res = _chips[src_chip]->receiveReq(*inter_block_req);
-    }
+    //while (!res) {
+    //    tot_clks++;
+    //    _chips[src_chip]->tick();
+    //    res = _chips[src_chip]->receiveReq(*inter_block_req);
+    //}
     delete inter_block_req;
 
     return tot_clks;
@@ -517,23 +517,23 @@ int System<T>::system_sendPimReq(Request& req)
         case Request::Type::ColSet:
         case Request::Type::ColReset:
         case Request::Type::RowReduce:
-            for (int i = 0; i < n_ops; i++) {
-                int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-                getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-                //We need to synchronize the specific tiles involved in this operation first
-                syncSpecificThings_OneOperand(req.addr_list[i], false, false, true, false, false, true);
-            }
+            //for (int i = 0; i < n_ops; i++) {
+            //    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+            //    getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
+            //    //We need to synchronize the specific tiles involved in this operation first
+            //    syncSpecificThings_OneOperand(req.addr_list[i], false, false, true, false, false, true);
+            //}
             
             clks = sendPimReq(req);
 
-            for (int i = 0; i < n_ops; i++) {
-                int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-                getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-                //This will actually issue the instruction
-                _chips[src_chip]->tick();
-                //We need to advance time in the specific things involved in this operation
-                advanceTimeSpecificThings_OneOperand(req.addr_list[i], false, false, true, false, false, true);
-            }
+            //for (int i = 0; i < n_ops; i++) {
+            //    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+            //    getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
+            //    //This will actually issue the instruction
+            //    _chips[src_chip]->tick();
+            //    //We need to advance time in the specific things involved in this operation
+            //    advanceTimeSpecificThings_OneOperand(req.addr_list[i], false, false, true, false, false, true);
+            //}
             break;
         case Request::Type::RowMv:
         case Request::Type::RowAdd:
@@ -549,23 +549,23 @@ int System<T>::system_sendPimReq(Request& req)
         case Request::Type::ColDiv:
         case Request::Type::ColBitwise:
         case Request::Type::ColSearch:
-            for (int i = 0; i < n_ops; i=i+2) {
-                //We need to synchronize the specific tiles involved in this operation first
-                syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
-            }
+            //for (int i = 0; i < n_ops; i=i+2) {
+            //    //We need to synchronize the specific tiles involved in this operation first
+            //    syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
+            //}
             
             clks = sendPimReq(req);
 
-            for (int i = 0; i < n_ops; i=i+2) {
-                int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-                int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-                getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-                getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-                //This will actually issue the instruction
-                _chips[src_chip]->tick();
-                //We need to advance time in the specific things involved in this operation
-                advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
-            }
+            //for (int i = 0; i < n_ops; i=i+2) {
+            //    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+            //    int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
+            //    getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
+            //    getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            //    //This will actually issue the instruction
+            //    _chips[src_chip]->tick();
+            //    //We need to advance time in the specific things involved in this operation
+            //    advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
+            //}
             break;
         default:
             cout << "Error: cannot handle non-PIM operations here!\n";
@@ -688,9 +688,9 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::SystemCol2Col:
             ticks = system_sendCol_receiveCol(req);
             break;
-        case Request::Type::SystemLookUpTable:
-            ticks = system_lookuptable(req);
-            break;
+        //case Request::Type::SystemLookUpTable:
+        //    ticks = system_lookuptable(req);
+        //    break;
         case Request::Type::SystemRowStore:
             ticks = system_DramStore(req);
             break;
@@ -806,9 +806,9 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::SystemCol2Col:
                 ticks = system_sendCol_receiveCol(reqs[i]);
                 break;
-            case Request::Type::SystemLookUpTable:
-                ticks = system_lookuptable(reqs[i]);
-                break;
+            //case Request::Type::SystemLookUpTable:
+            //    ticks = system_lookuptable(reqs[i]);
+            //    break;
             case Request::Type::SystemRowStore:
                 ticks = system_DramStore(reqs[i]);
                 break;
@@ -854,23 +854,24 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
     return ticks;
 }
 
-template <class T>
-void System<T>::sync(vector<int> chips)
-{
-    TimeT max_time = 0;
-    for (int i : chips) {
-        if (_chips[i]->getTime() > max_time) {
-            max_time = _chips[i]->getTime();
-        }
-    }
-    for (int i : chips) {
-        while (_chips[i]->getTime() < max_time) {
-            _chips[i]->tick();
-        }
-        _chips[i]->updateTime();
-    }
-}
+//template <class T>
+//void System<T>::sync(vector<int> chips)
+//{
+//    TimeT max_time = 0;
+//    for (int i : chips) {
+//        if (_chips[i]->getTime() > max_time) {
+//            max_time = _chips[i]->getTime();
+//        }
+//    }
+//    for (int i : chips) {
+//        while (_chips[i]->getTime() < max_time) {
+//            _chips[i]->tick();
+//        }
+//        _chips[i]->updateTime();
+//    }
+//}
 
+/*
 //Synchronize specific things based on a request's properties
 template <class T>
 void System<T>::syncSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool bloc, bool chip_upd, bool tile_upd, bool bloc_upd) 
@@ -1088,6 +1089,7 @@ void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req
         assert(0); //shouldn't reach here
     }
 }
+*/
 
 template <class T>
 void System<T>::finish()
@@ -1200,7 +1202,7 @@ int System<T>::system_sendRow_receiveRow(Request& req) {
 
         } else if (src_chip == dst_chip && src_tile != dst_tile) {
 
-            syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
+            //syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
 
             Request read_req(Request::Type::RowRead);
             read_req.addAddr(req.addr_list[i], req.size_list[i]);
@@ -1234,12 +1236,12 @@ int System<T>::system_sendRow_receiveRow(Request& req) {
             write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             tot_clks += sendPimReq(write_req);
 
-            _chips[src_chip]->tick();
+            //_chips[src_chip]->tick();
 
-            advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true);
+            //advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true);
         } else if (src_chip == dst_chip && src_tile == dst_tile && src_block != dst_block) {
 
-            syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
+            //syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
 
             Request read_req(Request::Type::RowRead);
             read_req.addAddr(req.addr_list[i], req.size_list[i]);
@@ -1261,9 +1263,9 @@ int System<T>::system_sendRow_receiveRow(Request& req) {
             write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             tot_clks += sendPimReq(write_req);
 
-            _chips[src_chip]->tick();
+            //_chips[src_chip]->tick();
 
-            advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, true, false, false, false, true);
+            //advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, true, false, false, false, true);
         } else if (src_chip == dst_chip && src_tile == dst_tile && src_block == dst_block) {
 
             //We dont support this anymore.
@@ -1293,7 +1295,7 @@ int System<T>::system_sendRow_receiveRow(Request& req) {
     return tot_clks;
 }
 
-
+/*
 template <class T>
 int System<T>::system_lookuptable(Request& req) {
     int tot_clks = 0;
@@ -1327,6 +1329,7 @@ int System<T>::system_lookuptable(Request& req) {
     tot_clks += sendRequest(system_rowtorow_req);
     return tot_clks;
 }
+*/
 
 /***************************************************************/
 /* Do not modify the above code.
@@ -1523,7 +1526,7 @@ int System<T>::system_DramStore(Request& req) {
 
         //We need to synchronize the specific tiles involved in this operation first
         //              chip   tile  block 
-        syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
+        //syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
 
         Request write_req(Request::Type::RowRead);
         write_req.addAddr(req.addr_list[i], req.size_list[i]);
@@ -1551,10 +1554,10 @@ int System<T>::system_DramStore(Request& req) {
         dram_store_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         tot_clks += sendChipReq(dram_store_req, RECEIVE);
 
-        _chips[src_chip]->tick();
+        //_chips[src_chip]->tick();
 
         //                                                                                                                  involves_dram  load               
-        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true         , false );
+        //advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true         , false );
     }
     return tot_clks;
 }
@@ -1583,7 +1586,7 @@ int System<T>::system_DramLoad(Request& req) {
 
         //We need to synchronize the specific tiles involved in this operation first
         //              chip   tile  block 
-        syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
+        //syncSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], false, false, true, false, false, true);
 
         Request dram_load_req(Request::Type::RowLoad);
         dram_load_req.addAddr(req.addr_list[i], req.size_list[i]);
@@ -1611,10 +1614,10 @@ int System<T>::system_DramLoad(Request& req) {
         write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         tot_clks += sendPimReq(write_req);
 
-        _chips[dst_chip]->tick();
+        //_chips[dst_chip]->tick();
 
         //                                                                                                                  involves_dram  load            
-        advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true,          true );
+        //advanceTimeSpecificThings_TwoOperands(req.addr_list[i], req.addr_list[i+1], true, false, false, false, false, true, true,          true );
     }
     return tot_clks;
 }
@@ -1700,6 +1703,8 @@ int System<T>::system_ColWrite(Request& req) {
     }
     return tot_clks;
 }
+
+/*
 
 template <class T>
 void System<T>::gemv_tile0() {
@@ -1841,6 +1846,79 @@ void System<T>::gemv()
     tile1_thread.join();
   //gemv_tile0();
   //gemv_tile1();
+
+//    vector<int> chips;
+//    for (int i = 0; i < _nchips; i++) {
+//        chips.push_back(i);
+//        while (!_chips[i]->isFinished())
+//            _chips[i]->tick();
+//    }
+//    
+//    ////////////////////
+//    //This is critical. We need to do this after every program
+//    ////////////////////
+//    sync(chips);
+}
+*/
+
+//Simple program to perform a matrix-vector mul 
+template <class T>
+void System<T>::gemv()
+{
+
+    std::vector<Request> requests;
+    Request *request;
+
+    //Load some data into CRAM
+  //  request = new Request(Request::Type::SystemRowLoad);
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+  //  request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+  //  request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+  //  requests.push_back(*request);
+
+  //  for (unsigned int i = 0; i < requests.size(); i++)
+  //      sendRequest(requests[i]);
+
+    //Populate the request queue of Tile 0
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile0_block1_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block1_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile0_block2_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile0_block3_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block3_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+
+    //Populate the request queue of Tile 1
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile1_block1_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile1_block2_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
+
+    request->addAddr(cram_addr_tile1_block3_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+
 
 //    vector<int> chips;
 //    for (int i = 0; i < _nchips; i++) {

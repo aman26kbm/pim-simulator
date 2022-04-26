@@ -1,4 +1,5 @@
 #include "backend/MemoryTile.h"
+#include <cstring>
 
 using namespace std;
 using namespace pimsim;
@@ -21,8 +22,9 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
 
     for (int i = 0; i < _nblocks; i++) {
         MemoryBlock* block = new MemoryBlock(_nrows, _ncols);
-        Controller* ctrl = new Controller(block);
-        block->setController(ctrl);
+        //Removing controller for each block. we don't need it
+        //Controller* ctrl = new Controller(block);
+        //block->setController(ctrl);
         block->setId(i);
         block->setParent(this);
         _children.push_back(block);
@@ -32,6 +34,11 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
     htree_counters.clear();
     for (int i = 0; i < htree_counter_size; i++)
         htree_counters.push_back(0);
+
+    status = IDLE;
+    n_reads = 0; n_writes = 0; n_unexpected_reqs = 0;
+    receive_ready = false;
+    send_done = false;
 }
 
 bool
@@ -40,6 +47,22 @@ MemoryTile::send2Child(Request& req)
     int idx = req.block;
     return _children[idx]->receiveReq(req);
 }
+
+
+//MemoryTile::MemoryTile(const MemoryTile &obj)
+//    : MemoryComponent(MemoryComponent::Level::Tile) 
+//{
+//    glb_clk = obj.glb_clk;
+//    next_available = obj.next_available;
+//    status = obj.status;
+//    receive_ready = obj.receive_ready;
+//    send_done = obj.send_done;
+//    n_reads = obj.n_reads;
+//    n_writes = obj.n_writes;
+//    n_transfers = obj.n_transfers;
+//    n_unexpected_reqs = obj.n_unexpected_reqs;
+//}
+
 
 bool
 MemoryTile::isReady(Request& req)
@@ -58,6 +81,8 @@ MemoryTile::isReady(Request& req)
         return _children[req.block]->isReady(req);
     }
 }
+
+
 
 void
 MemoryTile::issueReq(Request& req)
@@ -119,6 +144,8 @@ MemoryTile::issueReq(Request& req)
     }
 }
 
+
+
 void
 MemoryTile::finishReq(Request& req)
 {
@@ -148,3 +175,86 @@ MemoryTile::outputStats(FILE* rstFile)
     fprintf(rstFile, "Tile-level statistics: #Transfers(%lu)\n", 
             n_transfers);
 }
+
+
+void MemoryTile::update_next(){
+    if(_ctrl->_tile_q->is_empty()){
+        std::memcpy(next, this, sizeof(this));
+        (*glb_clk)++;
+    }
+    else{
+        Request req = _ctrl->_tile_q->pop_front();
+        MemoryTile* target = (MemoryTile*)_parent->getTargetTile(req);
+        MemoryTile* source = (MemoryTile*)_parent->getSourceTile(req);
+        
+        std::memcpy(next, this, sizeof(this));
+
+        switch(status){
+            case IDLE:
+                if (req.type == Request::Type::TileSend){
+                    //send_done = false;
+                    next->status = SEND_WAIT;
+                }
+                else if(req.type == Request::Type::TileReceive){
+                    next->status = RECEIVE_WAIT;
+                    next->receive_ready = true;
+                }
+                else{
+                    next->status = REQ_MODE;
+                    next->issueReq(req);
+                }
+                break;
+            case SEND_DONE:
+                next->status = IDLE;
+                next->send_done = false;
+                break;
+            case REQ_MODE:
+                if (*glb_clk==next_available){
+                    next->status = IDLE;
+                }
+                break;
+            case SEND_WAIT:
+                
+                if (target->receive_ready){
+                    next->status =  SEND_MODE;
+                    next->issueReq(req);
+                }
+                break;
+            case SEND_MODE:
+                if(*glb_clk == next_available){
+                    next->status = SEND_DONE;
+                    next->send_done = true;
+                }
+                break;
+            case RECEIVE_WAIT:
+                
+                if(source->send_done){
+                    next->status = RECEIVE_MODE;
+                    next->receive_ready=false;
+                    next->issueReq(req);
+                }
+                break;
+            case RECEIVE_MODE:
+                if(*glb_clk == next_available){
+                    next->status = IDLE;
+                }
+        }
+        *glb_clk++;
+    }
+}
+
+void MemoryTile::update_current(){
+    std::memcpy(this, next, sizeof(next));
+}
+
+//void MemoryTile::issueReq(Request& req){
+//    if(req.type == Request::Type::TileSend) {
+//        next_available = *glb_clk + req.getWordNum() * _cycle_per_word;
+//    }
+//    else if (req.type == Request::Type::TileReceive) {
+//        next_available = *glb_clk + _hops * _cycle_per_word;
+//    }
+//    else {
+//        next_available = *glb_clk + (int)(_values->getTiming(req)/_time_per_cycle) +1;
+//    }
+//}

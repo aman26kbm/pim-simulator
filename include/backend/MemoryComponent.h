@@ -68,6 +68,7 @@ public:
     double block_decoder_energy;
     double inter_connection_energy;
 
+    MemoryComponent() {};
     MemoryComponent(Level level);
     void setId(int id) {_id = id;}
     void setController(Controller* ctrl);
@@ -102,6 +103,11 @@ public:
     virtual void issueReq(Request& req) = 0; // function to set the timing of a req
     virtual void commitReq(Request& req) = 0; // function to make a req visible (handled by a bank)
     void finishReq(Request& req);
+
+    virtual MemoryComponent* getTargetTile(Request& req) = 0;
+    virtual MemoryComponent* getSourceTile(Request& req) = 0;
+    virtual void update_next() = 0;
+    virtual void update_current() = 0;
 };
 
 }

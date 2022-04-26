@@ -3,6 +3,7 @@
 
 #include "util.h"
 #include <vector>
+#include <queue>
 #include <list>
 #include <string>
 #include <cstdio>
@@ -376,39 +377,51 @@ public:
 };
 
 struct ReqQueue {
-    std::vector<Request> *q = new std::vector<Request>();
+    std::queue<Request> *q = new std::queue<Request>();
 //    ReqQueue() {
 ////        q = new std::vector<Request>();
 //        q->resize(1024);
 //    }
     unsigned int max = 64;
     unsigned int size() {return q->size();}
-    void push_back(Request req) {q->push_back(req);}
-    void pop_back() {q->pop_back();}
+    void push_back(Request req) {q->push(req);}
+    Request pop_front() {
+        Request req = q->front();
+        q->pop();
+        return req;
+    }
 //    void push_front(Request req) {q->push_front(req);}
 //    void pop_front() {q->pop_front();}
-    bool contains(Request req) {
-        std::list<Request>::iterator it;
-//        if (req.isChip()) {
-//            for (it = q.begin(); it != q.end(); ++it) {
-//                if (it->src_tile == req.src_tile || it->dst_tile == req.dst_tile) {
-//                    return true;
-//                }
-//            }
-//        }
+//    bool contains(Request req) {
+//        std::list<Request>::iterator it;
+////        if (req.isChip()) {
+////            for (it = q.begin(); it != q.end(); ++it) {
+////                if (it->src_tile == req.src_tile || it->dst_tile == req.dst_tile) {
+////                    return true;
+////                }
+////            }
+////        }
+////
+////        else if (req.isTile()) {
+////            for (it = q.begin(); it != q.end(); ++it) {
+////                if ((it->src_block == req.src_block && it->src_tile == req.src_tile) || (it->dst_block == req.dst_block && it->dst_tile == req.dst_tile)) {
+////                    return true;
+////                }
+////
+////            }
+////        }
 //
-//        else if (req.isTile()) {
-//            for (it = q.begin(); it != q.end(); ++it) {
-//                if ((it->src_block == req.src_block && it->src_tile == req.src_tile) || (it->dst_block == req.dst_block && it->dst_tile == req.dst_tile)) {
-//                    return true;
-//                }
-//
-//            }
-//        }
-
-        return false;
+//        return false;
+//    }
+    void clear() {
+        //pop until the end
+        while (!q->empty()) {
+            q->pop();
+        }
     }
-    void clear() {q->clear();}
+    bool is_empty() {
+        return (q->empty());
+    };
 };
 
 }

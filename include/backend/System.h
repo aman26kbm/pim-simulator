@@ -101,7 +101,7 @@ public:
     int system_sendRow_receiveCol(Request& req); // add by Ruihao Li
     int system_sendCol_receiveRow(Request& req); // add by Ruihao Li
     int system_sendCol_receiveCol(Request& req); // add by Ruihao Li
-    int system_lookuptable(Request& req); // add by Ruihao Li
+    //int system_lookuptable(Request& req); // add by Ruihao Li
     int system_DramStore(Request& req); // add by Ruihao Li
     int system_DramLoad(Request& req); // add by Ruihao Li
     int system_ColRead(Request& req); // add by Ruihao Li
