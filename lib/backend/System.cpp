@@ -1109,8 +1109,8 @@ void System<T>::finish()
     fprintf(rstFile, "\n############# Summary #############\n");
     for (int i = 0; i < _nchips; i++) {
         fprintf(rstFile, "--------------------------------\n");
-        fprintf(rstFile, "Chip#%d has ticked %lu clocks\n", i, _chips[i]->getTime());
-        fprintf(rstFile, "Chip#%d has processed %lu instructions\n", i, _chips[i]->getDecoderTime());
+        //fprintf(rstFile, "Chip#%d has ticked %lu clocks\n", i, _chips[i]->getTime());
+        //fprintf(rstFile, "Chip#%d has processed %lu instructions\n", i, _chips[i]->getDecoderTime());
         //Commenting out energy for now because any code related to energy hasn't been updated yet
         //fprintf(rstFile, "Chip#%d has consumed %.4lf nj energy\n", i, _chips[i]->getTotalEnergy());
         //fprintf(rstFile, "Chip#%d leakage power is %.4lf W\n", i, _chips[i]->getTotalLeakageEnergy());
@@ -1120,9 +1120,9 @@ void System<T>::finish()
             fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks\n", i, j, _chips[i]->_children[j]->getTime());
             fprintf(rstFile, "--------------------------------\n");
 
-            for (int k = 0; k < _chips[i]->_children[j]->_nchildren; k++) {
-                fprintf(rstFile, "Chip#%d Tile#%d Block#%d has ticked %lu clocks\n", i, j, k, _chips[i]->_children[j]->_children[k]->getTime());
-            }
+            //for (int k = 0; k < _chips[i]->_children[j]->_nchildren; k++) {
+            //    fprintf(rstFile, "Chip#%d Tile#%d Block#%d has ticked %lu clocks\n", i, j, k, _chips[i]->_children[j]->_children[k]->getTime());
+            //}
             fprintf(rstFile, "--------------------------------\n");
 
         }

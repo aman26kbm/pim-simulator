@@ -48,6 +48,8 @@ MemoryChip::send2Child(Request& req)
 bool
 MemoryChip::isReady(Request& req)
 {
+    cout<<"Unused code";
+    assert(0);
     //_ctrl refers to the controller of the chip 
     TimeT cur_time = _ctrl->getTime();
     if (req.isSystem()) {

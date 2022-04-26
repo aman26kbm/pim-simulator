@@ -171,11 +171,15 @@ MemoryComponent::tick()
 #endif
     if (getLevel() == MemoryComponent::Level::Chip) {
         for (int i = 0; i < _nchildren; i++) {
-            _children[i]->tick();
+            _children[i]->update_next();
+        }
+        for (int i = 0; i < _nchildren; i++) {
+            _children[i]->update_current();
         }
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
-        _ctrl->tick();
+        std::cout<<"tick() for Tile is illegal to call, because we only use it for Chip";
+        assert(0);
     }
     else {
         std::cout<<"tick() for Block is illegal to call, because we only use it for Tile";
@@ -256,9 +260,7 @@ MemoryComponent::isFinished()
         return true;
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
-        bool res = _ctrl->isEmpty();
-        if (!res)
-            return false;
+        return _ctrl->isEmpty();
     }
     else {
         std::cout<<"isFinished() called for Block. Not allowed";

@@ -121,6 +121,8 @@ Controller::issueReq(ReqQueue &queue)
 void 
 Controller::tick() 
 {
+    std::cout<<"tick() for controller is illegal to call";
+    assert(0);
     //No time advancing in tick() method.
     //It's done in the sync* and advance* methods in system.cpp now.
     //_time++;
@@ -128,18 +130,10 @@ Controller::tick()
      * TODO: current scheduler always schedule PIM requests */
     //ReqQueue* q;
     if (_host->_level == MemoryComponent::Level::Chip) {
-        //Nothing to do here
-        std::cout<<"tick() for Chip's controller is illegal to call, because we don't have a controller for Chip";
-        assert(0);
         //q = _chip_q;
     } else if (_host->_level == MemoryComponent::Level::Tile) {
         //q = _tile_q;
-        _host->update_next();
-        _host->update_current();
     } else if (_host->_level == MemoryComponent::Level::Block) {
-        //We don't want to come here
-        std::cout<<"tick() for Block's controller is illegal to call, because we don't have a controller for Block";
-        assert(0);
         //q = _pim_q;
     }
         

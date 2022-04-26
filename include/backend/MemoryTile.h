@@ -34,10 +34,15 @@ class MemoryComponent;
 
 class MemoryTile : public MemoryComponent {
 public:
-    uint64_t next_available;
-    status_t status;
-    bool receive_ready;
-    bool send_done;
+
+    struct state {
+        status_t status;
+        bool receive_ready;
+        bool send_done;
+    };
+    state cur_state;
+    state next_state;
+
     /* Per-tile statistics */
     uint64_t n_reads = 0, n_writes = 0;
     uint64_t n_transfers = 0, n_unexpected_reqs = 0;

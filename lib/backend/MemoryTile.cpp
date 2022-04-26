@@ -35,10 +35,10 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
     for (int i = 0; i < htree_counter_size; i++)
         htree_counters.push_back(0);
 
-    status = IDLE;
+    cur_state.status = IDLE;
     n_reads = 0; n_writes = 0; n_unexpected_reqs = 0;
-    receive_ready = false;
-    send_done = false;
+    cur_state.receive_ready = false;
+    cur_state.send_done = false;
 }
 
 bool
@@ -67,6 +67,8 @@ MemoryTile::send2Child(Request& req)
 bool
 MemoryTile::isReady(Request& req)
 {
+    cout<<"Unused code";
+    assert(0);
     //_ctrl refers to the controller of the tile
     TimeT cur_time = _ctrl->getTime();
     if (req.isTile()) {
@@ -179,7 +181,8 @@ MemoryTile::outputStats(FILE* rstFile)
 
 void MemoryTile::update_next(){
     if(_ctrl->_tile_q->is_empty()){
-        std::memcpy(next, this, sizeof(this));
+        //std::memcpy(next, this, sizeof(this));
+        next_state = cur_state;
         _ctrl->proceed(1);
     }
     else{
@@ -187,56 +190,57 @@ void MemoryTile::update_next(){
         MemoryTile* target = (MemoryTile*)_parent->getTargetTile(req);
         MemoryTile* source = (MemoryTile*)_parent->getSourceTile(req);
         
-        std::memcpy(next, this, sizeof(this));
+        //std::memcpy(next, this, sizeof(this));
+        next_state = cur_state;
 
-        switch(status){
+        switch(cur_state.status){
             case IDLE:
                 if (req.type == Request::Type::TileSend){
                     //send_done = false;
-                    next->status = SEND_WAIT;
+                    next_state.status = SEND_WAIT;
                 }
                 else if(req.type == Request::Type::TileReceive){
-                    next->status = RECEIVE_WAIT;
-                    next->receive_ready = true;
+                    next_state.status = RECEIVE_WAIT;
+                    next_state.receive_ready = true;
                 }
                 else{
-                    next->status = REQ_MODE;
-                    next->issueReq(req);
+                    next_state.status = REQ_MODE;
+                    issueReq(req);
                 }
                 break;
             case SEND_DONE:
-                next->status = IDLE;
-                next->send_done = false;
+                next_state.status = IDLE;
+                next_state.send_done = false;
                 break;
             case REQ_MODE:
-                if (_ctrl->getTime()==next_available){
-                    next->status = IDLE;
+                if (_ctrl->getTime()== _next_available){
+                    next_state.status = IDLE;
                 }
                 break;
             case SEND_WAIT:
                 
-                if (target->receive_ready){
-                    next->status =  SEND_MODE;
-                    next->issueReq(req);
+                if (target->cur_state.receive_ready){
+                    next_state.status =  SEND_MODE;
+                    issueReq(req);
                 }
                 break;
             case SEND_MODE:
-                if(_ctrl->getTime() == next_available){
-                    next->status = SEND_DONE;
-                    next->send_done = true;
+                if(_ctrl->getTime() == _next_available){
+                    next_state.status = SEND_DONE;
+                    next_state.send_done = true;
                 }
                 break;
             case RECEIVE_WAIT:
                 
-                if(source->send_done){
-                    next->status = RECEIVE_MODE;
-                    next->receive_ready=false;
-                    next->issueReq(req);
+                if(source->cur_state.send_done){
+                    next_state.status = RECEIVE_MODE;
+                    next_state.receive_ready=false;
+                    issueReq(req);
                 }
                 break;
             case RECEIVE_MODE:
-                if(_ctrl->getTime() == next_available){
-                    next->status = IDLE;
+                if(_ctrl->getTime() == _next_available){
+                    next_state.status = IDLE;
                 }
         }
         _ctrl->proceed(1);
@@ -244,7 +248,8 @@ void MemoryTile::update_next(){
 }
 
 void MemoryTile::update_current(){
-    std::memcpy(this, next, sizeof(next));
+    //std::memcpy(this, next, sizeof(next));
+    cur_state = next_state;
 }
 
 //void MemoryTile::issueReq(Request& req){
