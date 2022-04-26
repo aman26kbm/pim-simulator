@@ -169,9 +169,17 @@ MemoryComponent::tick()
 #ifdef DEBUG_OUTPUT
     //printf("%s_%d ticks once (%lu)!\n", level_str[int(_level)].c_str(), _id, _ctrl->getTime());
 #endif
-    _ctrl->tick();
-    for (int i = 0; i < _nchildren; i++) {
-        _children[i]->tick();
+    if (getLevel() == MemoryComponent::Level::Chip) {
+        for (int i = 0; i < _nchildren; i++) {
+            _children[i]->tick();
+        }
+    }
+    else if (getLevel() == MemoryComponent::Level::Tile) {
+        _ctrl->tick();
+    }
+    else {
+        std::cout<<"tick() for Block is illegal to call, because we only use it for Tile";
+        assert(0);
     }
 
     int total_counters = 0;
@@ -214,7 +222,19 @@ MemoryComponent::receiveReq(Request& req)
     printf("+++++%s_%d receives a reqeust! (%s : %lu)\n", level_str[int(_level)].c_str(), _id,
             req.reqToStr().c_str(), req.arrive_time);
 #endif
-    bool res = _ctrl->receiveReq(req);
+    //bool res = _ctrl->receiveReq(req);
+    if (getLevel() == MemoryComponent::Level::Chip) {
+        int idx = req.tile;
+        return _children[idx]->receiveReq(req);
+    }
+    else if (getLevel() == MemoryComponent::Level::Tile) {
+        bool res = _ctrl->receiveReq(req);
+        return res;
+    }
+    else {
+        std::cout<<"receiveReq() for Block is illegal to call, because we only use it for Tile";
+        assert(0);
+    }
 
 #ifdef DEBUG_OUTPUT
     if (res)
@@ -223,20 +243,27 @@ MemoryComponent::receiveReq(Request& req)
         printf("=====%s_%d cannot enqueue a request (%s : %lu)!\n", level_str[int(_level)].c_str(), _id, req.reqToStr().c_str(), req.arrive_time);
 #endif
 
-    return res;
 }
 
 bool
 MemoryComponent::isFinished()
 {
-    bool res = _ctrl->isEmpty();
-    if (!res)
-        return false;
-    for (int i = 0; i < _nchildren; i++) {
-        if (!_children[i]->isFinished())
+    if (getLevel() == MemoryComponent::Level::Chip) {
+        for (int i = 0; i < _nchildren; i++) {
+            if (!_children[i]->isFinished())
+                return false;
+        }
+        return true;
+    }
+    else if (getLevel() == MemoryComponent::Level::Tile) {
+        bool res = _ctrl->isEmpty();
+        if (!res)
             return false;
     }
-    return true;
+    else {
+        std::cout<<"isFinished() called for Block. Not allowed";
+        assert(0);
+    }
 }
 
 void

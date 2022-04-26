@@ -34,7 +34,6 @@ class MemoryComponent;
 
 class MemoryTile : public MemoryComponent {
 public:
-    uint64_t* glb_clk;
     uint64_t next_available;
     status_t status;
     bool receive_ready;
@@ -56,8 +55,14 @@ public:
     void commitReq(Request& req);
 
     virtual void outputStats(FILE* rstFile);
-    MemoryComponent* getTargetTile(Request& req) {assert(0);};
-    MemoryComponent* getSourceTile(Request& req) {assert(0);};
+    MemoryComponent* getTargetTile(Request& req) {
+        std::cout<<"We shouldn't be here in getTargetTile() of MemoryTile";
+        assert(0);
+    };
+    MemoryComponent* getSourceTile(Request& req) {
+        std::cout<<"We shouldn't be here in getSourceTile() of MemoryTile";
+        assert(0);
+    };
     void update_next();
     void update_current();
 

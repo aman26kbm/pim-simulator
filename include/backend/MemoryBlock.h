@@ -36,10 +36,22 @@ public:
     void commitReq(Request& req);
 
     virtual void outputStats(FILE* rstFile);
-    MemoryComponent* getTargetTile(Request& req) {assert(0);};
-    MemoryComponent* getSourceTile(Request& req) {assert(0);};
-    void update_next() {assert(0);};
-    void update_current() {assert(0);};
+    MemoryComponent* getTargetTile(Request& req) {
+        std::cout<<"We shouldn't be here in getTargetTile() of MemoryBlock";
+        assert(0);
+    };
+    MemoryComponent* getSourceTile(Request& req) {
+        std::cout<<"We shouldn't be here in getSourceTile() of MemoryBlock";
+        assert(0);
+    };
+    void update_next() {
+        std::cout<<"We shouldn't be here in update_next() of MemoryBlock";
+        assert(0);
+    };
+    void update_current() {
+        std::cout<<"We shouldn't be here in update_current() of MemoryBlock";
+        assert(0);
+    };
 };
 
 }

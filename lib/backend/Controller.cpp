@@ -7,9 +7,9 @@ Controller::Controller(MemoryComponent* host) : _host(host)
 {
     _decoder_time = 0;
     _sched = _host->_sched;
-    if (_host->getLevel() == MemoryComponent::Level::Block) {
-        _pim_q->max = _host->_nrows;
-    }
+    //if (_host->getLevel() == MemoryComponent::Level::Block) {
+    //    _pim_q->max = _host->_nrows;
+    //}
 }
 
 Controller::~Controller()
@@ -60,19 +60,20 @@ bool
 Controller::receivePimReq(Request& req) 
 {
     //We don't want to come here
+    std::cout<<"No one should call receivePimReq anymore";
     assert(0);
 
-    if (_host->_level == MemoryComponent::Level::Block) { // if the controller is at the lowest level for PIM
-        req.arrive_time = _time;
-        if (_pim_q->size() < _pim_q->max) {
-            _pim_q->push_back(req);
-        } else {
-            return false;
-        }
-    } else if (_host->getLevel() < MemoryComponent::Level::Block) {
-        return _host->send2Child(req);
-    }
-    return true;
+   // if (_host->_level == MemoryComponent::Level::Block) { // if the controller is at the lowest level for PIM
+   //     req.arrive_time = _time;
+   //     if (_pim_q->size() < _pim_q->max) {
+   //         _pim_q->push_back(req);
+   //     } else {
+   //         return false;
+   //     }
+   // } else if (_host->getLevel() < MemoryComponent::Level::Block) {
+   //     return _host->send2Child(req);
+   // }
+   // return true;
 }
 
 
@@ -95,7 +96,7 @@ Controller::receiveReq(Request& req)
     //} else if (req.isPIM()) {
     //    return receivePimReq(req);
     //}
-    return receiveChipReq(req);
+    return receiveTileReq(req);
     //return true;
 }
 
@@ -128,7 +129,8 @@ Controller::tick()
     //ReqQueue* q;
     if (_host->_level == MemoryComponent::Level::Chip) {
         //Nothing to do here
-        return;
+        std::cout<<"tick() for Chip's controller is illegal to call, because we don't have a controller for Chip";
+        assert(0);
         //q = _chip_q;
     } else if (_host->_level == MemoryComponent::Level::Tile) {
         //q = _tile_q;
@@ -136,6 +138,7 @@ Controller::tick()
         _host->update_current();
     } else if (_host->_level == MemoryComponent::Level::Block) {
         //We don't want to come here
+        std::cout<<"tick() for Block's controller is illegal to call, because we don't have a controller for Block";
         assert(0);
         //q = _pim_q;
     }
@@ -152,9 +155,10 @@ Controller::tick()
 void 
 Controller::proceed(TimeT t) 
 {
-    while (_time < t) {
-        tick();
-    }
+    _time += t;
+    //while (_time < t) {
+    //    tick();
+    //}
 }
 
 void 
@@ -166,7 +170,8 @@ Controller::stall(TimeT t)
 bool
 Controller::isEmpty()
 {
-    if (_chip_q->size() == 0 && _tile_q->size() == 0 && _pim_q->size() == 0) {
+    //if (_chip_q->size() == 0 && _tile_q->size() == 0 && _pim_q->size() == 0) {
+    if (_tile_q->size() == 0) {
         return true;
     } else {
         return false;

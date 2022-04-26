@@ -29,9 +29,9 @@ private:
 public:
     MemoryComponent* _host; // indicate the memory component attached to this controller
     /* Queue (buffer) in the controller */
-    ReqQueue *_pim_q = new ReqQueue();
+    //ReqQueue *_pim_q = new ReqQueue();
     ReqQueue *_tile_q = new ReqQueue();
-    ReqQueue *_chip_q = new ReqQueue();
+    //ReqQueue *_chip_q = new ReqQueue();
     Scheduler* _sched;
 
     Controller(MemoryComponent* host);

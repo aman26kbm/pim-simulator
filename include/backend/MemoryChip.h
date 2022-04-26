@@ -42,8 +42,14 @@ public:
     virtual void outputStats(FILE* rstFile);
     MemoryComponent* getTargetTile(Request& req);
     MemoryComponent* getSourceTile(Request& req);
-    void update_next() {assert(0);};
-    void update_current() {assert(0);};
+    void update_next() {
+        std::cout<<"We shouldn't be here in update_next() of MemoryChip";
+        assert(0);
+    };
+    void update_current() {
+        std::cout<<"We shouldn't be here in update_current() of MemoryChip";
+        assert(0);
+    };
 };
 
 }

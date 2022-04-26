@@ -46,9 +46,10 @@ System<T>::System(Config* config) : _config(config)
     for (int i = 0; i < _nchips; i++) {
         MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _values);
         chip->setValues(_values);
-        Controller* ctrl = new Controller(chip);
+        //We don't need a controller per chip
+        //Controller* ctrl = new Controller(chip);
         chip->setId(i);
-        chip->setController(ctrl);
+        //chip->setController(ctrl);
         chip->setParent(NULL);
         _chips.push_back(chip);
     }

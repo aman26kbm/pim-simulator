@@ -180,7 +180,7 @@ MemoryTile::outputStats(FILE* rstFile)
 void MemoryTile::update_next(){
     if(_ctrl->_tile_q->is_empty()){
         std::memcpy(next, this, sizeof(this));
-        (*glb_clk)++;
+        _ctrl->proceed(1);
     }
     else{
         Request req = _ctrl->_tile_q->pop_front();
@@ -209,7 +209,7 @@ void MemoryTile::update_next(){
                 next->send_done = false;
                 break;
             case REQ_MODE:
-                if (*glb_clk==next_available){
+                if (_ctrl->getTime()==next_available){
                     next->status = IDLE;
                 }
                 break;
@@ -221,7 +221,7 @@ void MemoryTile::update_next(){
                 }
                 break;
             case SEND_MODE:
-                if(*glb_clk == next_available){
+                if(_ctrl->getTime() == next_available){
                     next->status = SEND_DONE;
                     next->send_done = true;
                 }
@@ -235,11 +235,11 @@ void MemoryTile::update_next(){
                 }
                 break;
             case RECEIVE_MODE:
-                if(*glb_clk == next_available){
+                if(_ctrl->getTime() == next_available){
                     next->status = IDLE;
                 }
         }
-        *glb_clk++;
+        _ctrl->proceed(1);
     }
 }
 
