@@ -20,8 +20,6 @@ Controller::receiveReq(Request& req)
     return true;
 }
 
-
-
 void 
 Controller::proceed(TimeT t) 
 {
@@ -29,12 +27,6 @@ Controller::proceed(TimeT t)
     //while (_time < t) {
     //    tick();
     //}
-}
-
-void 
-Controller::stall(TimeT t) 
-{
-    _time += t;
 }
 
 bool

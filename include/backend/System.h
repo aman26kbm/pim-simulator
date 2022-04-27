@@ -81,7 +81,6 @@ public:
     int sendChipReq(Request& req, int para);
     int system_sendTileReq(Request& req, int para);
     int system_sendChipReq(Request& req, int para);
-    //int system_sendNetReq(Request& req);
 
     int sendRequest(Request& req);
     int sendRequests(std::vector<Request>& reqs);
@@ -97,7 +96,6 @@ public:
     int system_sendRow_receiveCol(Request& req); // add by Ruihao Li
     int system_sendCol_receiveRow(Request& req); // add by Ruihao Li
     int system_sendCol_receiveCol(Request& req); // add by Ruihao Li
-    //int system_lookuptable(Request& req); // add by Ruihao Li
     int system_DramStore(Request& req); // add by Ruihao Li
     int system_DramLoad(Request& req); // add by Ruihao Li
     int system_ColRead(Request& req); // add by Ruihao Li
@@ -108,21 +106,6 @@ public:
     //void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-
-    void broadcast_row(int src_row, int dst_start_row, int stride, int times, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
-    void broadcast_row_x_pattern(int src_row, int dst_start_row, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
-    void broadcast_row_y_pattern(int src_row, int dst_start_row, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
-    void broadcast_row_z_pattern(int src_row, int dst_start_row, int src_col, int dst_col, int col_len, int block_per_element, int num_element, int num_copy);
-    void broadcast_row_x_y_z_pattern(int x_src_row, int x_dst_start_row, int x_src_col, int x_dst_col,
-                                     int y_src_row, int y_dst_start_row, int y_src_col, int y_dst_col,
-                                     int z_src_row, int z_dst_start_row, int z_src_col, int z_dst_col,
-                                     int col_len, int block_per_element, int num_element, int num_copy);
-
-    struct ElementPhysicalAddr;
-    ElementPhysicalAddr getElementPhysicalAddr(uint32_t ElementID);
-    ElementPhysicalAddr getElementPhysicalAddr(uint32_t ElementID, int blocks_per_element, int offset);
-    int getNodeIDonElement(const int faceID, const int nodeIDonFace);
-    int getNeighborsID(int axis, int direction, int ElementID);
 
     //PIMRA
     void gemv();

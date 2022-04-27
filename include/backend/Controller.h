@@ -40,12 +40,9 @@ public:
     TimeT getDecoderTime() {return _decoder_time;}
     void setDecoderTime(TimeT time) { _decoder_time = time;}
 
-
     bool receiveReq(Request& req);
 
     void proceed(TimeT t);
-    void stall(TimeT t);
-    bool scheduleWrite();
     bool isEmpty();
 };
 
