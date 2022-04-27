@@ -25,7 +25,6 @@ System<T>::System(Config* config) : _config(config)
     _wordsize_block2block = config->get_wordsize_block2block();
     _wordsize_tile2tile = config->get_wordsize_tile2tile();
     _wordsize_dram = config->get_wordsize_dram();
-    //_datatype = config->get_datatype();
     if (!(_blockctrl || _tilectrl || _chipctrl))
         _blockctrl = true;
     _blocksize = _nrows * _ncols; // set the blocksize based on columns and rows
@@ -33,7 +32,6 @@ System<T>::System(Config* config) : _config(config)
     this->_chipsize = this->_tilesize * _ntiles;
 
     rstFile = fopen(config->get_rstfile().c_str(), "w");
-
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _clock_rate);
@@ -53,18 +51,6 @@ System<T>::System(Config* config) : _config(config)
         chip->setParent(NULL);
         _chips.push_back(chip);
     }
-    /* Network connection */
-    GlobalConnection::Type nt;
-    if (_config->get_net_configuration() == "mesh") {
-        nt = GlobalConnection::Type::Mesh;
-    } else if (_config->get_net_configuration() == "dragonfly") {
-        nt = GlobalConnection::Type::Dragonfly;
-    } else {
-        nt = GlobalConnection::Type::Ideal;
-    }
-
-    _conn = new GlobalConnection(this, nt);
-    //_lookUpTable = new LookUpTable(_nchips, _ntiles, _nblocks, _nrows, _ncols, _datatype);
 
     //Inter tile communication
     m1 = new Mailbox();
@@ -276,48 +262,6 @@ int System<T>::sendPIM_two_operands(Request& req)
     return tot_clks;
 }
 
-//Not updated for PIMRA. We don't support chip-to-chip connectivity
-//via the network yet. 
-template <class T>
-int System<T>::sendNetReq(Request& req)
-{
-    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-    int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-
-    //We don't support net requests in PIMRA yet.
-    //So, we don't expect to be here.
-    cout<<"Unsupported code";
-    assert(0);
-
-    getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-    getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-    req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-    req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-    req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-    int net_overhead = _conn->getLatency(src_chip, dst_chip, req.size_list[0]);
-
-    TimeT sync_time = _chips[src_chip]->getTime();
-    if (_chips[dst_chip]->getTime() > sync_time)
-        sync_time = _chips[dst_chip]->getTime();
-    int tick1 = 0, tick2 = 0;
-    while (_chips[src_chip]->getTime() < sync_time) {
-        tick1++;
-        _chips[src_chip]->tick();
-    }
-    while (_chips[dst_chip]->getTime() < sync_time + net_overhead) {
-        tick2++;
-        _chips[dst_chip]->tick();
-    }
-#ifdef NET_DEBUG_OUTPUT
-    printf("Send a network request from Chip#%d to Chip#%d at %lu with %d overhead!\n",
-            cp1, cp2, sync_time, net_overhead);
-#endif
-    _conn->issueNetReq(src_chip, dst_chip, req.size_list[0], tick1, tick2, net_overhead);
-    if (tick1 > tick2)
-        return tick1;
-    return tick2;
-}
 
 //I don't think this function will be used standalone
 template <class T>
@@ -671,12 +615,9 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::TileSend_Receive:
             ticks = system_sendChipReq(req, SEND_RECEIVE);
             break;
-        case Request::Type::ChipSend_Receive:
-#ifdef NET_DEBUG_OUTPUT
-            printf("A request from library: %lu, %lu\n", req.addr_list[0], req.addr_list[1]);
-#endif
-            ticks = sendNetReq(req);
-            break;
+        //case Request::Type::ChipSend_Receive:
+        //    ticks = sendNetReq(req);
+        //    break;
         case Request::Type::SystemRow2Row:
             ticks = system_sendRow_receiveRow(req);
             break;
@@ -789,12 +730,9 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::TileSend_Receive:
                 ticks = system_sendChipReq(reqs[i], SEND_RECEIVE);
                 break;
-            case Request::Type::ChipSend_Receive:
-#ifdef NET_DEBUG_OUTPUT
-                printf("A request from library: %lu, %lu\n", req.addr_list[0], req.addr_list[1]);
-#endif
-                ticks = sendNetReq(reqs[i]);
-                break;
+            //case Request::Type::ChipSend_Receive:
+            //    ticks = sendNetReq(reqs[i]);
+            //    break;
             case Request::Type::SystemRow2Row:
                 ticks = system_sendRow_receiveRow(reqs[i]);
                 break;
@@ -1095,16 +1033,12 @@ void System<T>::advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req
 template <class T>
 void System<T>::finish()
 {
-    fprintf(rstFile, "\n############# Backend ##############\n");
 
     for (int i = 0; i < _nchips; i++) {
         while (!_chips[i]->isFinished())
             _chips[i]->tick();
         _chips[i]->outputStats(rstFile);
     }
-
-    fprintf(rstFile, "\n############# Network #############\n");
-    _conn->outputStat(rstFile);
 
     fprintf(rstFile, "\n############# Summary #############\n");
     for (int i = 0; i < _nchips; i++) {
@@ -1154,9 +1088,7 @@ int System<T>::system_sendRow_receiveRow(Request& req) {
             cout<<"Unsupported code";
             assert(0);
 
-#ifdef NET_DEBUG_OUTPUT
-            printf("A request from RowMv: %lu, %lu\n", net_req.addr_list[0], net_req.addr_list[1]);
-#endif
+            /*
             Request read_req(Request::Type::RowRead);
             read_req.addAddr(req.addr_list[i], req.size_list[i]);
             read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -1200,6 +1132,7 @@ int System<T>::system_sendRow_receiveRow(Request& req) {
             write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             tot_clks += sendPimReq(write_req);
+            */
 
         } else if (src_chip == dst_chip && src_tile != dst_tile) {
 
@@ -1382,9 +1315,7 @@ int System<T>::system_sendCol_receiveCol(Request& req) {
         }
 
         if (src_chip != dst_chip) {
-#ifdef NET_DEBUG_OUTPUT
-            printf("A request from RowMv: %lu, %lu\n", net_req.addr_list[0], net_req.addr_list[1]);
-#endif
+            /*
             Request read_req(Request::Type::ColRead);
             read_req.addAddr(req.addr_list[i], req.size_list[i]);
             read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -1428,6 +1359,7 @@ int System<T>::system_sendCol_receiveCol(Request& req) {
             write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             tot_clks += sendPimReq(write_req);
+            */
 
         } else if (src_chip == dst_chip && src_tile != dst_tile) {
             Request read_req(Request::Type::ColRead);
@@ -1896,6 +1828,10 @@ void System<T>::gemv()
     request->addAddr(cram_addr_tile0_block3_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile0_block3_row8, 0, PrecisionT::INT4); //dst
 
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
@@ -1914,6 +1850,10 @@ void System<T>::gemv()
 
     request->addAddr(cram_addr_tile1_block3_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT4); //dst
+
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
 
     requests.push_back(*request);
 

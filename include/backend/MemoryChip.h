@@ -7,7 +7,6 @@
 #include <string>
 
 #include "Config.h"
-#include "GlobalConnection.h"
 #include "Message.h"
 #include "Request.h"
 

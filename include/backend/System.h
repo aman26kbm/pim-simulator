@@ -16,7 +16,6 @@
 #include "MemoryTile.h"
 #include "MemoryBlock.h"
 #include "MemoryComponent.h"
-#include "GlobalConnection.h"
 #include "Message.h"
 #include "Request.h"
 #include "Memory_characteristics.h"
@@ -27,7 +26,6 @@ using namespace std;
 namespace pimsim {
 
 class MemoryChip;
-class GlobalConnection;
 
 /* Interface for host system with the memory system,
  * There are several steps for execution:
@@ -49,7 +47,6 @@ public:
     uint64_t tot_reqs = 0;
     TimeT _time; // Global cycles for processing
     Config* _config;
-    GlobalConnection* _conn;
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
     int _nchips, _ntiles, _nblocks, _nrows, _ncols, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram;
@@ -82,7 +79,6 @@ public:
 
     int sendTileReq(Request& req, int para);
     int sendChipReq(Request& req, int para);
-    int sendNetReq(Request& req);
     int system_sendTileReq(Request& req, int para);
     int system_sendChipReq(Request& req, int para);
     //int system_sendNetReq(Request& req);
