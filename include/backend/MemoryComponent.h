@@ -13,7 +13,6 @@
 #include "Config.h"
 #include "Message.h"
 #include "Request.h"
-#include "Scheduler.h"
 #include "Controller.h"
 #include "Memory_characteristics.h"
 
@@ -42,7 +41,6 @@ public:
     int dram_counter = 0; //counter for dram accesses
 
     Controller* _ctrl;
-    Scheduler* _sched;
     MemoryCharacteristics* _values;
     TimeT _next_available = 0;
 

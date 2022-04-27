@@ -15,7 +15,6 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, Memory
 
 
     _nchildren = n_tiles;
-    _sched = new Scheduler(Scheduler::Strategy::Naive);
 
 #ifdef DEBUG_OUTPUT
      printf("Create a chip!\n");
@@ -58,7 +57,7 @@ MemoryChip::isReady(Request& req)
     } else if (req.isNet()) {
         cout << "Error: never should issue net request at chip level!\n";
         return false;
-    } else if (req.isChip()) {
+    } else if (req.isChip() || req.isChipDram()) {
         TimeT next = getNextGlobalTime();
         if (next <= cur_time) {
             return true;
@@ -70,84 +69,6 @@ MemoryChip::isReady(Request& req)
     }
 }
 
-void
-MemoryChip::issueReq(Request& req)
-{
-    //_ctrl refers to the controller of the chip 
-    TimeT cur_time = _ctrl->getTime();
-
-    if (req.isChip()) {
-        
-        //if this chip-level request is for a DRAM access, then we call a different set of functions
-        if (req.isChipDram()) {
-            req.process_time = cur_time;
-            //precision_list[0] effectively contains the number of rows to transfer.
-            int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
-            dram_counter += words;
-            req.finish_time = cur_time + getReqTiming(req) * dram_counter;
-            ////////////////////////
-            //This is very important
-            ////////////////////////
-            _next_available = req.finish_time;
-            _last_req_time = req.finish_time - req.arrive_time;
-            finishReq(req);
-            commitReq(req);
-        }
-
-        else {
-            req.process_time = cur_time;
-            //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-            //precision_list[0] effectively contains the number of rows to transfer.
-            int words = int((_ncols  * getPrecisionBits(req)) / _values->_wordsize_tile2tile);
-            if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
-                bus_counter += words;
-                //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
-                req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
-            } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-                std::vector<int> switch_list;
-
-                if (req.type == Request::Type::TileSend)
-                    switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
-                else if (req.type == Request::Type::TileReceive)
-                    switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
-                else if (req.type == Request::Type::TileSend_Receive)
-                    switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
-
-                int jump = 1;
-//                cout << "chip_switches: ";
-                for (int i = 0; i < switch_list.size(); i++) {
-                    htree_counters[switch_list[i]] += words;
-                    jump += htree_counters[switch_list[i]];
-//                    cout << switch_list[i] << ", ";
-                }
-//                cout << "jump: " << jump << endl;
-                //req.finish_time = cur_time + _timing[int(req.type)] * jump;
-                req.finish_time = cur_time + getReqTiming(req) * jump;
-                switch_list.clear();
-            }
-            else { //ideal
-                req.finish_time = cur_time + 0;
-            }
-
-            ////////////////////////
-            //This is very important
-            ////////////////////////
-            _next_available = req.finish_time;
-            _last_req_time = req.finish_time - req.arrive_time;
-
-#ifdef DEBUG_OUTPUT
-            printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
-                    level_str[int(_level)].c_str(), _id, 
-                    req.reqToStr().c_str(), req.arrive_time, req.process_time, req.finish_time);
-#endif
-            finishReq(req);
-            commitReq(req);
-        }
-    } else {
-        _children[req.tile]->issueReq(req);
-    }
-   
-}
 
 void
 MemoryChip::finishReq(Request& req)

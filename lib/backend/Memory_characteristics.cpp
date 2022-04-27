@@ -111,15 +111,15 @@ int MemoryCharacteristics::getPrecisionBits(Request req) {
 //double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {
 double MemoryCharacteristics::getTiming(Request req) {
     int idx = int(req.type);
-    double time = 0.0;
+    TimeT time = 0;
     switch (idx) {
         case 0: //RowSet
         case 1: //ColSet
-            time = T_SET;
+            time = T_CLK;
             break;
         case 2: //RowReset
         case 3: //ColReset
-            time = T_RESET;
+            time = T_CLK;
             break;
         case 4: //RowMv
         case 5: //ColMv
@@ -127,20 +127,16 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case 6: //RowRead
         case 7: //ColRead
-            time = T_READ * getPrecisionBits(req);
+            time = T_CLK * getPrecisionBits(req);
             break;
         case 8: //RowWrite
         case 9: //ColWrite
-            time = T_WRITE * getPrecisionBits(req);
+            time = T_CLK * getPrecisionBits(req);
             break;
         case 10: //RowAdd
         case 11: //ColAdd
         case 12: //RowSub
         case 13: //ColSub
-
-            //time = (12 * N + 1) * T_CLK; //fixed-32 --- 385
-            //time = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * T_CLK + (2 * N_m + 1) * T_SEARCH; // float-32 --- 1191
-
            //Looking the precision of the second item in the list (the destination) for calculating the
            //number of cycles consumed.
            //Number of destination bits tells the right value for addition because it could be more
@@ -151,11 +147,6 @@ double MemoryCharacteristics::getTiming(Request req) {
         case 15: //RowDiv
         case 16: //ColMul
         case 17: //ColDiv
-
-            //time = (13 * N * N - 14 * N + 6) * T_CLK; // fixed-32 (full precision)
-            //time = (6.5 * N * N - 7.5 * N - 2) * T_CLK; // fixed-32 (half precision) --- 6414 3400
-            //time = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * T_CLK; // float-32 --- 3360 2276
-
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
            //Number of src bits gives the right value for multiplication cycles.
@@ -167,7 +158,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case 20: //RowSearch
         case 21: //ColSearch
-            time = T_SEARCH;
+            time = T_CLK;
             break;
         case 22: //BlockSend
         case 23: //BlockReceive
@@ -199,8 +190,6 @@ double MemoryCharacteristics::getTiming(Request req) {
             time = T_CLK;
             break;
     }
-    double fclk = time / (1000000000.0 / float(_freq));
-    time = int(fclk);
     return time;
 }
 

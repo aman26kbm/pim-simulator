@@ -7,7 +7,6 @@
 #include "Config.h"
 #include "Message.h"
 #include "Request.h"
-#include "Scheduler.h"
 
 #include "System.h"
 #include "MemoryBlock.h"
@@ -16,17 +15,6 @@
 
 namespace pimsim {
 
-enum status_t {
-    IDLE, 
-    REQ_MODE,
-    SEND_WAIT,
-    SEND_MODE,
-    SEND_DONE,
-    RECEIVE_WAIT,
-    RECEIVE_MODE
-};
-
-class Scheduler;
 class Request;
 class MemoryBlock;
 class MemoryChip;
@@ -34,6 +22,29 @@ class MemoryComponent;
 
 class MemoryTile : public MemoryComponent {
 public:
+    enum status_t {
+        IDLE, 
+        REQ_MODE,
+        SEND_WAIT,
+        SEND_MODE,
+        SEND_DONE,
+        RECEIVE_WAIT,
+        RECEIVE_MODE
+    };
+    
+    static std::string print_name(int type) {
+        switch(type) {
+            case 0: return       "IDLE";
+            case 1: return       "REQ_MODE";
+            case 2: return       "SEND_WAIT";
+            case 3: return       "SEND_MODE";
+            case 4: return       "SEND_DONE";
+            case 5: return       "RECEIVE_WAIT";
+            case 6: return       "RECEIVE_MODE";
+            default: return       "Help";
+        };
+    
+    }
 
     struct state {
         status_t status;

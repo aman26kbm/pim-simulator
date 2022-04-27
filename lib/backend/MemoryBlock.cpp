@@ -11,7 +11,6 @@ MemoryBlock::MemoryBlock(int n_rows, int n_cols)
     _blocksize = _nrows * _ncols;
 
     _nchildren = 0;
-    _sched = new Scheduler(Scheduler::Strategy::Naive);
 
 #ifdef DEBUG_OUTPUT
      printf("Create a block!\n");
@@ -42,42 +41,6 @@ MemoryBlock::isReady(Request& req)
     } else {
         cout << "Error: only PIM request can be called at block level!\n";
         return false;
-    }
-}
-
-void
-MemoryBlock::issueReq(Request& req)
-{
-    //_ctrl refers to the controller of the tile (each block doesn't have a separate controller)
-    TimeT cur_time = _parent->_ctrl->getTime();
-    if (req.isPIM()) {
-        req.process_time = cur_time;
-        //req.finish_time = cur_time + _timing[int(req.type)];
-        req.finish_time = cur_time + getReqTiming(req);
-        //The timing will be all included in getReqTiming
-        //if (req.type == Request::Type::RowBitwise || req.type == Request::Type::ColBitwise ||
-        //    req.type == Request::Type::RowSet || req.type == Request::Type::ColSet ||
-        //    req.type == Request::Type::RowReset || req.type == Request::Type::ColReset) {
-        //    req.finish_time = cur_time + _timing[int(req.type)] * req.size_list[0];
-        //}
-
-        ////////////////////////
-        //This is very important
-        ////////////////////////
-        _parent->_next_available = req.finish_time;
-        _parent->_last_req_time = req.finish_time - req.arrive_time;
-        //cout<<"_next_available for block id "<<_id<<" is "<<_next_available<<endl;
-
-#ifdef DEBUG_OUTPUT
-            printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
-                    level_str[int(_level)].c_str(), _id, 
-                    req.reqToStr().c_str(), req.arrive_time, req.process_time, req.finish_time);
-#endif
-
-        finishReq(req);
-        commitReq(req);
-    } else {
-        cout << "Error: only PIM request can be issued at block level!\n";
     }
 }
 

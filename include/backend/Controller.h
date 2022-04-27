@@ -5,7 +5,6 @@
 #include "MemoryComponent.h"
 #include "Message.h"
 #include "Request.h"
-#include "Scheduler.h"
 
 #include <vector>
 #include <list>
@@ -14,7 +13,6 @@
 
 namespace pimsim {
 
-class Scheduler;
 class MemoryComponent;
 
 class Controller {
@@ -32,7 +30,6 @@ public:
     //ReqQueue *_pim_q = new ReqQueue();
     ReqQueue *_tile_q = new ReqQueue();
     //ReqQueue *_chip_q = new ReqQueue();
-    Scheduler* _sched;
 
     Controller(MemoryComponent* host);
 
@@ -43,14 +40,9 @@ public:
     TimeT getDecoderTime() {return _decoder_time;}
     void setDecoderTime(TimeT time) { _decoder_time = time;}
 
-    bool receiveChipReq(Request& req);
-    bool receiveTileReq(Request& req);
-    bool receivePimReq(Request& req);
 
     bool receiveReq(Request& req);
 
-    void issueReq(ReqQueue& req);
-    void tick();
     void proceed(TimeT t);
     void stall(TimeT t);
     bool scheduleWrite();

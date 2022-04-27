@@ -191,55 +191,6 @@ public:
 
     }
 
-    /*
-    static constexpr const std::string req_str[int(Type::MAX)] = {
-        "RowSet",
-        "ColSet",
-        "RowReset",
-        "ColReset",
-        "RowMv",
-        "ColMv",
-
-        "RowRead",
-        "ColRead",
-        "RowWrite",
-        "ColWrite",
-
-        "RowAdd",
-        "ColAdd",
-        "RowSub",
-        "ColSub",
-        "RowMul",
-        "ColMul",
-        "RowDiv",
-        "ColDiv",
-        "RowBitwise",
-        "ColBitwise",
-        "RowSearch",
-        "ColSearch",
-
-        "BlockSend",
-        "BlockReceive",
-        "BlockSend_Receive",
-        "TileSend",
-        "TileReceive",
-        "TileSend_Receive",
-        "ChipSend_Receive",
-
-        "SystemRow2Row",
-        "SystemRow2Col",
-        "SystemCol2Row",
-        "SystemCol2Col",
-
-        "SystemLookUpTable",
-        "SystemRowStore",
-        "SystemColRead",
-        "SystemRowLoad",
-        "SystemColWrite",
-        "RowReduce"
-    };
-    */
-    
     bool first_arrive = true;
     TimeT arrive_time, process_time, finish_time, net_overhead = 0;
     std::vector<AddrT> addr_list; //address list
@@ -329,7 +280,7 @@ public:
     }
 
     bool isChip() {
-        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_Receive || type == Type::RowLoad || type == Type::RowStore)
+        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_Receive)
             return true;
         else
             return false;

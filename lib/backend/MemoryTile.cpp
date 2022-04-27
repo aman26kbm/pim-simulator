@@ -14,7 +14,6 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
     _values = values;
 
     _nchildren = _nblocks;
-    _sched = new Scheduler(Scheduler::Strategy::Naive);
 
 #ifdef DEBUG_OUTPUT
      printf("Create a tile!\n");
@@ -49,21 +48,6 @@ MemoryTile::send2Child(Request& req)
 }
 
 
-//MemoryTile::MemoryTile(const MemoryTile &obj)
-//    : MemoryComponent(MemoryComponent::Level::Tile) 
-//{
-//    glb_clk = obj.glb_clk;
-//    next_available = obj.next_available;
-//    status = obj.status;
-//    receive_ready = obj.receive_ready;
-//    send_done = obj.send_done;
-//    n_reads = obj.n_reads;
-//    n_writes = obj.n_writes;
-//    n_transfers = obj.n_transfers;
-//    n_unexpected_reqs = obj.n_unexpected_reqs;
-//}
-
-
 bool
 MemoryTile::isReady(Request& req)
 {
@@ -91,7 +75,49 @@ MemoryTile::issueReq(Request& req)
 {
     //_ctrl refers to the controller of the tile.
     TimeT cur_time = _ctrl->getTime();
-    if (req.isTile()) {
+        
+    //if this chip-level request is for a DRAM access, then we call a different set of functions
+    if (req.isChipDram()) {
+        req.process_time = cur_time;
+        //precision_list[0] effectively contains the number of rows to transfer.
+        int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+        dram_counter += words;
+        req.finish_time = cur_time + getReqTiming(req) * dram_counter;
+    }
+
+    else if (req.isChip()) {
+        req.process_time = cur_time;
+        //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
+        //precision_list[0] effectively contains the number of rows to transfer.
+        int words = int((_ncols  * getPrecisionBits(req)) / _values->_wordsize_tile2tile);
+        if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
+            bus_counter += words;
+            //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
+            req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
+        } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
+            std::vector<int> switch_list;
+
+            if (req.type == Request::Type::TileSend)
+                switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
+            else if (req.type == Request::Type::TileReceive)
+                switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
+            else if (req.type == Request::Type::TileSend_Receive)
+                switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
+
+            int jump = 1;
+            for (int i = 0; i < switch_list.size(); i++) {
+                htree_counters[switch_list[i]] += words;
+                jump += htree_counters[switch_list[i]];
+            }
+            req.finish_time = cur_time + getReqTiming(req) * jump;
+            switch_list.clear();
+        }
+        else { //ideal
+            req.finish_time = cur_time + 0;
+        }
+
+    }
+     else if (req.isTile()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
         int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_block2block) ;
@@ -111,14 +137,10 @@ MemoryTile::issueReq(Request& req)
                 switch_list = h_tree_switches(req.src_block, req.dst_block, _nblocks);
 
             int jump = 1;
-//            cout << "tile_switches: ";
             for (int i = 0; i < switch_list.size(); i++) {
                 htree_counters[switch_list[i]] += words;
                 jump += htree_counters[switch_list[i]];
-//                cout << switch_list[i] << ", ";
             }
-//            cout << "jump: " << jump << endl;
-            //req.finish_time = cur_time + _timing[int(req.type)] * jump;
             req.finish_time = cur_time + getReqTiming(req) * jump;
             switch_list.clear();
         }
@@ -126,24 +148,25 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + 0;
         }
 
-        ////////////////////////
-        //This is very important
-        ////////////////////////
-        //cout<<"tile "<< this->_id << " req.finish_time = "<<req.finish_time<<", req.arrive_time = "<<req.arrive_time<<endl;
-        _next_available = req.finish_time;
-        _last_req_time = req.finish_time - req.arrive_time;
+
+    } else if (req.isPIM()) {
+        req.process_time = cur_time;
+        req.finish_time = cur_time + getReqTiming(req);
+    }
 
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
                     level_str[int(_level)].c_str(), _id, 
                     req.reqToStr().c_str(), req.arrive_time, req.process_time, req.finish_time);
 #endif
+    ////////////////////////
+    //This is very important
+    ////////////////////////
+    _next_available = req.finish_time;
+    _last_req_time = req.finish_time - req.arrive_time;
 
-        finishReq(req);
-        commitReq(req);
-    } else if (req.isPIM()) {
-        _children[req.src_block]->issueReq(req);
-    }
+    finishReq(req);
+    commitReq(req);
 }
 
 
@@ -250,6 +273,7 @@ void MemoryTile::update_next(){
 void MemoryTile::update_current(){
     //std::memcpy(this, next, sizeof(next));
     cur_state = next_state;
+    printf("Tile#%d current state is %s\n", _id, print_name(cur_state.status).c_str());
 }
 
 //void MemoryTile::issueReq(Request& req){

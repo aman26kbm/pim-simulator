@@ -150,13 +150,6 @@ MemoryComponent::outputStats(FILE* rstFile)
         }
     }
 
-    //for (int i = 0; i < int(Request::Type::MAX); i++) {
-    //    if (req_cnt[i] != 0) {
-    //        fprintf(rstFile, " %lu, %.4lf, %.4lf, %.4lf\n",
-    //             req_cnt[i], req_latency[i], req_waittime[i], req_energy[i]);
-    //    }
-    //}
-
     for (int i = 0; i < _nchildren; i++) {
         _children[i]->outputStats(rstFile);
         fprintf(rstFile, "\n----------------------------------------\n");
@@ -197,9 +190,6 @@ MemoryComponent::tick()
     bus_counter = 0;
     dram_counter = 0;
 
-//    if (_level == MemoryComponent::Level::Chip || _level == MemoryComponent::Level::Tile)
-//        cout << "total_counters: " << total_counters << endl;
-
     if (_level == MemoryComponent::Level::Chip) {
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
             inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_tile2tile / 32)]);
@@ -226,7 +216,6 @@ MemoryComponent::receiveReq(Request& req)
     printf("+++++%s_%d receives a reqeust! (%s : %lu)\n", level_str[int(_level)].c_str(), _id,
             req.reqToStr().c_str(), req.arrive_time);
 #endif
-    //bool res = _ctrl->receiveReq(req);
     if (getLevel() == MemoryComponent::Level::Chip) {
         int idx = req.tile;
         return _children[idx]->receiveReq(req);

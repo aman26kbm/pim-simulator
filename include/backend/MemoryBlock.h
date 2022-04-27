@@ -7,7 +7,6 @@
 #include "Config.h"
 #include "Message.h"
 #include "Request.h"
-#include "Scheduler.h"
 
 #include "System.h"
 #include "MemoryTile.h"
@@ -16,7 +15,6 @@
 
 namespace pimsim {
 
-class Scheduler;
 class Request;
 class MemoryChip;
 class MemoryChannel;
@@ -31,7 +29,10 @@ public:
 
     bool send2Child(Request& req);
     bool isReady(Request& req);
-    void issueReq(Request& req);
+    void issueReq(Request& req) {
+        std::cout<<"We shouldn't be here in issueReq() of MemoryBlock";
+        assert(0);
+    };
     void finishReq(Request& req);
     void commitReq(Request& req);
 

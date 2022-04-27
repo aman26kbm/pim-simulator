@@ -18,7 +18,6 @@ add_library(PimBackend lib/backend/Config.cpp
         lib/backend/MemoryTile.cpp
         lib/backend/MemoryChip.cpp
         lib/backend/MemoryComponent.cpp
-        lib/backend/Scheduler.cpp
         lib/backend/Tool.cpp
         lib/backend/System.cpp
         lib/backend/Memory_characteristics.cpp)
