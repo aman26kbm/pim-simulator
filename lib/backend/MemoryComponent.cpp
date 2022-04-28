@@ -163,9 +163,12 @@ MemoryComponent::tick()
     //printf("%s_%d ticks once (%lu)!\n", level_str[int(_level)].c_str(), _id, _ctrl->getTime());
 #endif
     if (getLevel() == MemoryComponent::Level::Chip) {
+        //For each tile, execute/issue the instruction if we can.
+        //Also update the next state
         for (int i = 0; i < _nchildren; i++) {
             _children[i]->update_next();
         }
+        //Now, update the current state
         for (int i = 0; i < _nchildren; i++) {
             _children[i]->update_current();
         }
@@ -217,10 +220,13 @@ MemoryComponent::receiveReq(Request& req)
             req.reqToStr().c_str(), req.arrive_time);
 #endif
     if (getLevel() == MemoryComponent::Level::Chip) {
+        //Send to tiles
         int idx = req.tile;
+        std::cout<<"tile number = "<<idx<<std::endl;
         return _children[idx]->receiveReq(req);
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
+        //Send to controller
         bool res = _ctrl->receiveReq(req);
         return res;
     }
@@ -249,7 +255,7 @@ MemoryComponent::isFinished()
         return true;
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
-        return _ctrl->isEmpty();
+        return (_ctrl->isEmpty() && (isIdle()));
     }
     else {
         std::cout<<"isFinished() called for Block. Not allowed";

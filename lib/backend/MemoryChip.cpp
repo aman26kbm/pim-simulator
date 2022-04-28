@@ -130,7 +130,7 @@ MemoryChip::outputStats(FILE* rstFile)
 }
 
 
-MemoryComponent* MemoryChip::getTargetTile(Request& req) {
+MemoryComponent* MemoryChip::getDestTile(Request& req) {
     int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
     AddrT addr;
     //Destination

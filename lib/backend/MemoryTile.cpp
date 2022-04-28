@@ -203,21 +203,16 @@ MemoryTile::outputStats(FILE* rstFile)
 
 
 void MemoryTile::update_next(){
-    if(_ctrl->_tile_q->is_empty()){
-        //std::memcpy(next, this, sizeof(this));
-        next_state = cur_state;
-        _ctrl->proceed(1);
-    }
-    else{
-        Request req = _ctrl->_tile_q->pop_front();
-        MemoryTile* target = (MemoryTile*)_parent->getTargetTile(req);
-        MemoryTile* source = (MemoryTile*)_parent->getSourceTile(req);
-        
-        //std::memcpy(next, this, sizeof(this));
         next_state = cur_state;
 
         switch(cur_state.status){
             case IDLE:
+                if (_ctrl->_tile_q->is_empty()) {
+                    break;
+                }
+                req = _ctrl->_tile_q->pop_front();
+                dest = (MemoryTile*)_parent->getDestTile(req);
+                source = (MemoryTile*)_parent->getSourceTile(req);
                 if (req.type == Request::Type::TileSend){
                     //send_done = false;
                     next_state.status = SEND_WAIT;
@@ -236,13 +231,12 @@ void MemoryTile::update_next(){
                 next_state.send_done = false;
                 break;
             case REQ_MODE:
-                if (_ctrl->getTime()== _next_available){
+                if (_ctrl->getTime() == _next_available){
                     next_state.status = IDLE;
                 }
                 break;
             case SEND_WAIT:
-                
-                if (target->cur_state.receive_ready){
+                if (dest->cur_state.receive_ready){
                     next_state.status =  SEND_MODE;
                     issueReq(req);
                 }
@@ -254,7 +248,6 @@ void MemoryTile::update_next(){
                 }
                 break;
             case RECEIVE_WAIT:
-                
                 if(source->cur_state.send_done){
                     next_state.status = RECEIVE_MODE;
                     next_state.receive_ready=false;
@@ -267,13 +260,16 @@ void MemoryTile::update_next(){
                 }
         }
         _ctrl->proceed(1);
-    }
+    //}
 }
 
 void MemoryTile::update_current(){
     //std::memcpy(this, next, sizeof(next));
+    printf("Time=%d: Tile#%d current state is %s, next state is %s\n", 
+    _ctrl->getTime(), _id, 
+    print_name(cur_state.status).c_str(),
+    print_name(next_state.status).c_str());
     cur_state = next_state;
-    printf("Tile#%d current state is %s\n", _id, print_name(cur_state.status).c_str());
 }
 
 //void MemoryTile::issueReq(Request& req){

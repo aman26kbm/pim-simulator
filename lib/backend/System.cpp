@@ -256,9 +256,6 @@ int System<T>::system_sendChipReq(Request& req, int para)
 {
     int tot_clks = 0;
 
-    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-    int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-
     tot_clks = sendChipReq(req, para);
 
     return tot_clks;
@@ -273,25 +270,11 @@ int System<T>::sendChipReq(Request& req, int para)
     int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
 
     Request* inter_tile_req = new Request(req.type);
+
     if (para == SEND) {
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
-    } else if (para == RECEIVE) {
-        getLocation(req.addr_list[0], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-
-        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-    } else if (para == SEND_RECEIVE) {
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
         getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -300,8 +283,29 @@ int System<T>::sendChipReq(Request& req, int para)
         inter_tile_req->addAddr(req.addr_list[1], req.size_list[1]);
         inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        //setLocation is used to tell which tile owns this request
         inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+    } 
+    else if (para == RECEIVE) {
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
+        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
+        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
+        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0]);
+        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1]);
+        inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+        inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        //setLocation is used to tell which tile owns this request
+        inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
     }
+    else {
+        std::cout<<"Unsupported request type/direction"<<std::endl;
+        assert(0);
+    }
+
 
     tot_clks++;
     bool res = _chips[src_chip]->receiveReq(*inter_tile_req);
@@ -317,9 +321,6 @@ int System<T>::system_sendTileReq(Request& req, int para)
 {
     int tot_clks = 0;
 
-    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-    int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-
     tot_clks = sendTileReq(req, para);
 
     return tot_clks;
@@ -334,25 +335,13 @@ int System<T>::sendTileReq(Request& req, int para)
     int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
 
     Request *inter_block_req = new Request(req.type);
-    if (para == SEND) {
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        inter_block_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
-    } else if (para == RECEIVE) {
-        getLocation(req.addr_list[0], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-
-        inter_block_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        inter_block_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-    } else if (para == SEND_RECEIVE) {
+    if (para == SEND_RECEIVE) {
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
         getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
+        assert(src_chip==dst_chip);
+        assert(src_tile==dst_tile);
+
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -362,6 +351,10 @@ int System<T>::sendTileReq(Request& req, int para)
         inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+    }
+    else {
+        std::cout<<"Unsupported request type/direction"<<std::endl;
+        assert(0);
     }
 
     tot_clks++;
@@ -377,40 +370,7 @@ template <class T>
 int System<T>::system_sendPimReq(Request& req)
 {
     int clks;
-    int n_ops = req.addr_list.size();
-    switch (req.type) {
-        case Request::Type::RowRead:
-        case Request::Type::RowWrite:
-        case Request::Type::ColRead:
-        case Request::Type::ColWrite:
-        case Request::Type::RowSet:
-        case Request::Type::RowReset:
-        case Request::Type::ColSet:
-        case Request::Type::ColReset:
-        case Request::Type::RowReduce:
-            clks = sendPimReq(req);
-            break;
-        case Request::Type::RowMv:
-        case Request::Type::RowAdd:
-        case Request::Type::RowSub:
-        case Request::Type::RowMul:
-        case Request::Type::RowDiv:
-        case Request::Type::RowBitwise:
-        case Request::Type::RowSearch:
-        case Request::Type::ColMv:
-        case Request::Type::ColAdd:
-        case Request::Type::ColSub:
-        case Request::Type::ColMul:
-        case Request::Type::ColDiv:
-        case Request::Type::ColBitwise:
-        case Request::Type::ColSearch:
-            clks = sendPimReq(req);
-            break;
-        default:
-            cout << "Error: cannot handle non-PIM operations here!\n";
-            break;
-    }
-
+    clks = sendPimReq(req);
     return clks;
 }
 
@@ -491,12 +451,12 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::RowReduce:
             ticks = system_sendPimReq(req);
             break;
-        case Request::Type::BlockSend:
-            ticks = system_sendTileReq(req, SEND);
-            break;
-        case Request::Type::BlockReceive:
-            ticks = system_sendTileReq(req, RECEIVE);
-            break;
+        //case Request::Type::BlockSend:
+        //    ticks = system_sendTileReq(req, SEND);
+        //    break;
+        //case Request::Type::BlockReceive:
+        //    ticks = system_sendTileReq(req, RECEIVE);
+        //    break;
         case Request::Type::BlockSend_Receive:
             ticks = system_sendTileReq(req, SEND_RECEIVE);
             break;
@@ -506,24 +466,24 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::TileReceive:
             ticks = system_sendChipReq(req, RECEIVE);
             break;
-        case Request::Type::TileSend_Receive:
-            ticks = system_sendChipReq(req, SEND_RECEIVE);
-            break;
+        //case Request::Type::TileSend_Receive:
+        //    ticks = system_sendChipReq(req, SEND_RECEIVE);
+        //    break;
         //case Request::Type::ChipSend_Receive:
         //    ticks = sendNetReq(req);
         //    break;
-        case Request::Type::SystemRow2Row:
-            ticks = system_sendRow_receiveRow(req);
-            break;
-        case Request::Type::SystemRow2Col:
-            ticks = system_sendRow_receiveCol(req);
-            break;
-        case Request::Type::SystemCol2Row:
-            ticks = system_sendCol_receiveRow(req);
-            break;
-        case Request::Type::SystemCol2Col:
-            ticks = system_sendCol_receiveCol(req);
-            break;
+        //case Request::Type::SystemRow2Row:
+        //    ticks = system_sendRow_receiveRow(req);
+        //    break;
+        //case Request::Type::SystemRow2Col:
+        //    ticks = system_sendRow_receiveCol(req);
+        //    break;
+        //case Request::Type::SystemCol2Row:
+        //    ticks = system_sendCol_receiveRow(req);
+        //    break;
+        //case Request::Type::SystemCol2Col:
+        //    ticks = system_sendCol_receiveCol(req);
+        //    break;
         //case Request::Type::SystemLookUpTable:
         //    ticks = system_lookuptable(req);
         //    break;
@@ -533,12 +493,12 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::SystemRowLoad:
             ticks = system_DramLoad(req);
             break;
-        case Request::Type::SystemColRead:
-            ticks = system_ColRead(req);
-            break;
-        case Request::Type::SystemColWrite:
-            ticks = system_ColWrite(req);
-            break;
+        //case Request::Type::SystemColRead:
+        //    ticks = system_ColRead(req);
+        //    break;
+        //case Request::Type::SystemColWrite:
+        //    ticks = system_ColWrite(req);
+        //    break;
         default:
             cout << "[Error] unrecognized request!\n";
             break;
@@ -593,12 +553,12 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::RowReduce:
                 ticks = system_sendPimReq(reqs[i]);
                 break;
-            case Request::Type::BlockSend:
-                ticks = system_sendTileReq(reqs[i], SEND);
-                break;
-            case Request::Type::BlockReceive:
-                ticks = system_sendTileReq(reqs[i], RECEIVE);
-                break;
+            //case Request::Type::BlockSend:
+            //    ticks = system_sendTileReq(reqs[i], SEND);
+            //    break;
+            //case Request::Type::BlockReceive:
+            //    ticks = system_sendTileReq(reqs[i], RECEIVE);
+            //    break;
             case Request::Type::BlockSend_Receive:
                 ticks = system_sendTileReq(reqs[i], SEND_RECEIVE);
                 break;
@@ -608,24 +568,24 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::TileReceive:
                 ticks = system_sendChipReq(reqs[i], RECEIVE);
                 break;
-            case Request::Type::TileSend_Receive:
-                ticks = system_sendChipReq(reqs[i], SEND_RECEIVE);
-                break;
+            //case Request::Type::TileSend_Receive:
+            //    ticks = system_sendChipReq(reqs[i], SEND_RECEIVE);
+            //    break;
             //case Request::Type::ChipSend_Receive:
             //    ticks = sendNetReq(reqs[i]);
             //    break;
-            case Request::Type::SystemRow2Row:
-                ticks = system_sendRow_receiveRow(reqs[i]);
-                break;
-            case Request::Type::SystemRow2Col:
-                ticks = system_sendRow_receiveCol(reqs[i]);
-                break;
-            case Request::Type::SystemCol2Row:
-                ticks = system_sendCol_receiveRow(reqs[i]);
-                break;
-            case Request::Type::SystemCol2Col:
-                ticks = system_sendCol_receiveCol(reqs[i]);
-                break;
+            //case Request::Type::SystemRow2Row:
+            //    ticks = system_sendRow_receiveRow(reqs[i]);
+            //    break;
+            //case Request::Type::SystemRow2Col:
+            //    ticks = system_sendRow_receiveCol(reqs[i]);
+            //    break;
+            //case Request::Type::SystemCol2Row:
+            //    ticks = system_sendCol_receiveRow(reqs[i]);
+            //    break;
+            //case Request::Type::SystemCol2Col:
+            //    ticks = system_sendCol_receiveCol(reqs[i]);
+            //    break;
             //case Request::Type::SystemLookUpTable:
             //    ticks = system_lookuptable(reqs[i]);
             //    break;
@@ -635,12 +595,12 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::SystemRowLoad:
                 ticks = system_DramLoad(reqs[i]);
                 break;
-            case Request::Type::SystemColRead:
-                ticks = system_ColRead(reqs[i]);
-                break;
-            case Request::Type::SystemColWrite:
-                ticks = system_ColWrite(reqs[i]);
-                break;
+            //case Request::Type::SystemColRead:
+            //    ticks = system_ColRead(reqs[i]);
+            //    break;
+            //case Request::Type::SystemColWrite:
+            //    ticks = system_ColWrite(reqs[i]);
+            //    break;
             default:
                 cout << "[Error] unrecognized request!\n";
                 break;
@@ -1363,7 +1323,8 @@ template <class T>
 void System<T>::gemv()
 {
 
-    std::vector<Request> requests;
+    std::vector<Request> requests0;
+    std::vector<Request> requests1;
     Request *request;
 
     //Load some data into CRAM
@@ -1383,46 +1344,50 @@ void System<T>::gemv()
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_tile0_block1_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile0_block1_row8, 0, PrecisionT::INT4); //dst
+//    request->addAddr(cram_addr_tile0_block1_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile0_block1_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile0_block2_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile0_block3_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile0_block3_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_tile0_block2_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
-
-    request->addAddr(cram_addr_tile0_block3_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile0_block3_row8, 0, PrecisionT::INT4); //dst
+    requests0.push_back(*request);
 
     request = new Request(Request::Type::TileSend);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
 
-    requests.push_back(*request);
+    requests0.push_back(*request);
 
-    for (unsigned int i = 0; i < requests.size(); i++)
-        sendRequest(requests[i]);
+    for (unsigned int i = 0; i < requests0.size(); i++)
+        sendRequest(requests0[i]);
 
     //Populate the request queue of Tile 1
     request = new Request(Request::Type::RowMul);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_tile1_block1_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT4); //dst
+//    request->addAddr(cram_addr_tile1_block1_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile1_block2_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile1_block3_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT4); //dst
 
-    request->addAddr(cram_addr_tile1_block2_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
-
-    request->addAddr(cram_addr_tile1_block3_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT4); //dst
+    requests1.push_back(*request);
 
     request = new Request(Request::Type::TileReceive);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
 
-    requests.push_back(*request);
+    requests1.push_back(*request);
 
-    for (unsigned int i = 0; i < requests.size(); i++)
-        sendRequest(requests[i]);
+    for (unsigned int i = 0; i < requests1.size(); i++)
+        sendRequest(requests1[i]);
 
 
 //    vector<int> chips;

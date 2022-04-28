@@ -37,8 +37,12 @@ public:
     void commitReq(Request& req);
 
     virtual void outputStats(FILE* rstFile);
-    MemoryComponent* getTargetTile(Request& req) {
-        std::cout<<"We shouldn't be here in getTargetTile() of MemoryBlock";
+    bool isIdle() {
+        std::cout<<"We shouldn't be here in isIdle() of MemoryBlock";
+        assert(0);
+    }
+    MemoryComponent* getDestTile(Request& req) {
+        std::cout<<"We shouldn't be here in getDestTile() of MemoryBlock";
         assert(0);
     };
     MemoryComponent* getSourceTile(Request& req) {

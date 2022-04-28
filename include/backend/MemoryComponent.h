@@ -95,6 +95,7 @@ public:
     void tick();
     bool receiveReq(Request& req);
     bool isFinished();
+    virtual bool isIdle() = 0;
 
     virtual bool send2Child(Request& req) = 0;
     virtual bool isReady(Request& req) = 0;
@@ -102,7 +103,7 @@ public:
     virtual void commitReq(Request& req) = 0; // function to make a req visible (handled by a bank)
     void finishReq(Request& req);
 
-    virtual MemoryComponent* getTargetTile(Request& req) = 0;
+    virtual MemoryComponent* getDestTile(Request& req) = 0;
     virtual MemoryComponent* getSourceTile(Request& req) = 0;
     virtual void update_next() = 0;
     virtual void update_current() = 0;

@@ -200,6 +200,8 @@ public:
     int src_chip, src_tile, src_block, src_row, src_col;
     int dst_chip, dst_tile, dst_block, dst_row, dst_col;
 
+    Request() {}
+
     Request(Type t) : type(t) {}
 
     Request(Type t, AddrT addr) : type(t) {

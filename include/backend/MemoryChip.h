@@ -40,8 +40,12 @@ public:
     double getTotalLeakageEnergy();
 
     virtual void outputStats(FILE* rstFile);
-    MemoryComponent* getTargetTile(Request& req);
+    MemoryComponent* getDestTile(Request& req);
     MemoryComponent* getSourceTile(Request& req);
+    bool isIdle() {
+        std::cout<<"We shouldn't be here in isIdle() of MemoryChip";
+        assert(0);
+    }
     void update_next() {
         std::cout<<"We shouldn't be here in update_next() of MemoryChip";
         assert(0);

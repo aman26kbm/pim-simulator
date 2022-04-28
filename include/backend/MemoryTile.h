@@ -54,6 +54,10 @@ public:
     state cur_state;
     state next_state;
 
+    Request req;
+    MemoryTile* dest;
+    MemoryTile* source;
+
     /* Per-tile statistics */
     uint64_t n_reads = 0, n_writes = 0;
     uint64_t n_transfers = 0, n_unexpected_reqs = 0;
@@ -64,6 +68,9 @@ public:
 
     //void copyContents(MemoryTile &obj);
 
+    bool isIdle() {
+        return ((cur_state.status==IDLE) && (next_state.status==IDLE));
+    };
     bool send2Child(Request& req);
     bool isReady(Request& req);
     void issueReq(Request& req);
@@ -71,8 +78,8 @@ public:
     void commitReq(Request& req);
 
     virtual void outputStats(FILE* rstFile);
-    MemoryComponent* getTargetTile(Request& req) {
-        std::cout<<"We shouldn't be here in getTargetTile() of MemoryTile";
+    MemoryComponent* getDestTile(Request& req) {
+        std::cout<<"We shouldn't be here in getDestTile() of MemoryTile";
         assert(0);
     };
     MemoryComponent* getSourceTile(Request& req) {
