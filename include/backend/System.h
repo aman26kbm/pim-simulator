@@ -75,31 +75,31 @@ public:
     int sendPIM_one_operand(Request& req);
     int sendPIM_two_operands(Request& req);
     int sendPimReq(Request& req);
-    int system_sendPimReq(Request& req);
+    //int system_sendPimReq(Request& req);
 
     int sendTileReq(Request& req, int para);
     int sendChipReq(Request& req, int para);
-    int system_sendTileReq(Request& req, int para);
-    int system_sendChipReq(Request& req, int para);
+    //int system_sendTileReq(Request& req, int para);
+    //int system_sendChipReq(Request& req, int para);
 
     int sendRequest(Request& req);
     int sendRequests(std::vector<Request>& reqs);
 
-    void sync(std::vector<int> chips);
-    void syncSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
-    void syncSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
-    void advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false);
-    void advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false, bool load=false);
+    //void sync(std::vector<int> chips);
+    //void syncSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
+    //void syncSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
+    //void advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false);
+    //void advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false, bool load=false);
     void finish();
 
-    int system_sendRow_receiveRow(Request& req); // add by Ruihao Li
-    int system_sendRow_receiveCol(Request& req); // add by Ruihao Li
-    int system_sendCol_receiveRow(Request& req); // add by Ruihao Li
-    int system_sendCol_receiveCol(Request& req); // add by Ruihao Li
-    int system_DramStore(Request& req); // add by Ruihao Li
-    int system_DramLoad(Request& req); // add by Ruihao Li
-    int system_ColRead(Request& req); // add by Ruihao Li
-    int system_ColWrite(Request& req); // add by Ruihao Li
+    //int system_sendRow_receiveRow(Request& req); // add by Ruihao Li
+    //int system_sendRow_receiveCol(Request& req); // add by Ruihao Li
+    //int system_sendCol_receiveRow(Request& req); // add by Ruihao Li
+    //int system_sendCol_receiveCol(Request& req); // add by Ruihao Li
+    //int system_DramStore(Request& req); // add by Ruihao Li
+    //int system_DramLoad(Request& req); // add by Ruihao Li
+    //int system_ColRead(Request& req); // add by Ruihao Li
+    //int system_ColWrite(Request& req); // add by Ruihao Li
 
     //void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
