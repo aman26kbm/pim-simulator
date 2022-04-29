@@ -101,16 +101,13 @@ public:
     int system_ColRead(Request& req); // add by Ruihao Li
     int system_ColWrite(Request& req); // add by Ruihao Li
 
-    //void lookUpTable_example();  // add by Ruihao Li
-
     //void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
     //void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
 
     //PIMRA
     void gemv();
-    void gemv_tile0();
-    void gemv_tile1();
+    void fir();
 
     AddrT cram_base_addr_tile0_block0; 
     AddrT cram_addr_tile0_block0_row0;  

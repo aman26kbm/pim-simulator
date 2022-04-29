@@ -265,10 +265,11 @@ void MemoryTile::update_next(){
 
 void MemoryTile::update_current(){
     //std::memcpy(this, next, sizeof(next));
-    printf("Time=%d: Tile#%d current state is %s, next state is %s\n", 
+    printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s\n", 
     _ctrl->getTime(), _id, 
     print_name(cur_state.status).c_str(),
-    print_name(next_state.status).c_str());
+    print_name(next_state.status).c_str(),
+    Request::print_name(int(req.type)).c_str());
     cur_state = next_state;
 }
 

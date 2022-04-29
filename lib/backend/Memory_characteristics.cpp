@@ -183,9 +183,11 @@ double MemoryCharacteristics::getTiming(Request req) {
         case 40: //RowStore
             time = DramLatency;
             break;
-
-        //cases 41-42 are System commands
-
+        case 41: //RowShift
+            // precision_list[0] tells the number of bits in the operand
+            // size_list[0] tells the number of shifts
+            time = getClocksForReq(req.precision_list[0], "read", req.size_list[0]) * T_CLK;
+            break;
         default:
             time = T_CLK;
             break;

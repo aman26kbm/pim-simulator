@@ -390,6 +390,7 @@ int System<T>::sendPimReq(Request& req)
         case Request::Type::ColSet:
         case Request::Type::ColReset:
         case Request::Type::RowReduce:
+        case Request::Type::RowShift:
             return_value =  sendPIM_one_operand(req);
             break;
         case Request::Type::RowMv:
@@ -449,6 +450,7 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::RowSearch:
         case Request::Type::ColSearch:
         case Request::Type::RowReduce:
+        case Request::Type::RowShift:
             ticks = system_sendPimReq(req);
             break;
         //case Request::Type::BlockSend:
@@ -551,6 +553,7 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::RowSearch:
             case Request::Type::ColSearch:
             case Request::Type::RowReduce:
+            case Request::Type::RowShift:
                 ticks = system_sendPimReq(reqs[i]);
                 break;
             //case Request::Type::BlockSend:
@@ -1385,6 +1388,105 @@ void System<T>::gemv()
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
 
     requests1.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests1.push_back(*request);
+
+    for (unsigned int i = 0; i < requests1.size(); i++)
+        sendRequest(requests1[i]);
+
+
+//    vector<int> chips;
+//    for (int i = 0; i < _nchips; i++) {
+//        chips.push_back(i);
+//        while (!_chips[i]->isFinished())
+//            _chips[i]->tick();
+//    }
+//    
+}
+
+//Simple program to perform an FIR filter
+template <class T>
+void System<T>::fir()
+{
+
+    std::vector<Request> requests0;
+    std::vector<Request> requests1;
+    Request *request;
+
+    //Load some data into CRAM
+  //  request = new Request(Request::Type::SystemRowLoad);
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+  //  request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+
+  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+  //  request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+  //  requests.push_back(*request);
+
+  //  for (unsigned int i = 0; i < requests.size(); i++)
+  //      sendRequest(requests[i]);
+
+    //Populate the request queue of Tile 0
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+
+//    request->addAddr(cram_addr_tile0_block1_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile0_block1_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile0_block2_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile0_block3_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile0_block3_row8, 0, PrecisionT::INT4); //dst
+
+    requests0.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests0.push_back(*request);
+
+    request = new Request(Request::Type::RowShift);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests0.push_back(*request);
+
+    for (unsigned int i = 0; i < requests0.size(); i++)
+        sendRequest(requests0[i]);
+
+    //Populate the request queue of Tile 1
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+//    request->addAddr(cram_addr_tile1_block1_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile1_block1_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile1_block2_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
+//
+//    request->addAddr(cram_addr_tile1_block3_row0, 0, PrecisionT::INT4); //src
+//    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT4); //dst
+
+    requests1.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests1.push_back(*request);
+
+    request = new Request(Request::Type::RowShift);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests0.push_back(*request);
 
     for (unsigned int i = 0; i < requests1.size(); i++)
         sendRequest(requests1[i]);

@@ -139,6 +139,7 @@ public:
                     //The "addr" argument will specify the row ID of row0.
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
+        RowShift,
         MAX
     } type;
 
@@ -186,6 +187,7 @@ public:
             case 38: return        "RowReduce";
             case 39: return        "RowLoad";
             case 40: return        "RowStore";
+            case 41: return        "RowShift";
             default: return       "Help";
         };
 
@@ -307,7 +309,6 @@ public:
             case Type::ColRead:
             case Type::RowWrite:
             case Type::ColWrite:
-
             case Type::RowAdd:
             case Type::ColAdd:
             case Type::RowSub:
@@ -320,6 +321,8 @@ public:
             case Type::ColBitwise:
             case Type::RowSearch:
             case Type::ColSearch:
+            case Type::RowReduce:
+            case Type::RowShift:
                 return true;
             default:
                 return false;
