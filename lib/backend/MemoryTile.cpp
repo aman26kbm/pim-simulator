@@ -180,16 +180,26 @@ MemoryTile::finishReq(Request& req)
 void
 MemoryTile::commitReq(Request& req)
 {
-    if (req.type == Request::Type::BlockSend) {
-        n_transfers++;
-    } else if (req.type == Request::Type::BlockReceive) {
-        n_transfers++;
+    if (req.type == Request::Type::BlockSend_Receive) {
+        n_intra_block_transfers++;
+    } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive)) {
+        n_inter_block_transfers++;
         //dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
-    } else if (req.type == Request::Type::BlockSend_Receive) {
-        n_transfers++;
+    } else if (req.type == Request::Type::RowRead) {
+        n_reads++;
         //dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
-    } else {
-        _children[req.block]->commitReq(req);
+    } else if (req.type == Request::Type::RowWrite) {
+        n_writes++;
+    } else if ((req.type == Request::Type::RowAdd) 
+              || (req.type == Request::Type::RowMul)
+              || (req.type == Request::Type::RowBitwise)
+              || (req.type == Request::Type::RowReduce)
+              || (req.type == Request::Type::RowShift)
+              ) {
+        n_pim_reqs++;
+    }
+    else {
+        n_unexpected_reqs++;
     }
 }
 
@@ -197,8 +207,8 @@ void
 MemoryTile::outputStats(FILE* rstFile)
 {
     MemoryComponent::outputStats(rstFile);
-    fprintf(rstFile, "Tile-level statistics: #Transfers(%lu)\n", 
-            n_transfers);
+    fprintf(rstFile, "Tile-level statistics: #Inter-block-transfers = %lu, #Intra-block-transfers = %lu, #Reads = %lu, #Writes = %lu, #PIM-operations = %lu, #Unexpected-reqs = %lu\n", 
+            n_inter_block_transfers, n_intra_block_transfers, n_reads, n_writes, n_pim_reqs, n_unexpected_reqs);
 }
 
 
@@ -264,7 +274,6 @@ void MemoryTile::update_next(){
 }
 
 void MemoryTile::update_current(){
-    //std::memcpy(this, next, sizeof(next));
     printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s\n", 
     _ctrl->getTime(), _id, 
     print_name(cur_state.status).c_str(),

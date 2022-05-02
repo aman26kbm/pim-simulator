@@ -49,6 +49,7 @@ MemoryChip::isReady(Request& req)
 {
     cout<<"Unused code";
     assert(0);
+    /*
     //_ctrl refers to the controller of the chip 
     TimeT cur_time = _ctrl->getTime();
     if (req.isSystem()) {
@@ -67,6 +68,7 @@ MemoryChip::isReady(Request& req)
     } else {
         return _children[req.tile]->isReady(req);
     }
+    */
 }
 
 
@@ -76,23 +78,7 @@ MemoryChip::finishReq(Request& req)
     MemoryComponent::finishReq(req);
 }
 
-void
-MemoryChip::commitReq(Request& req)
-{
-    if (req.type == Request::Type::TileSend) {
-        n_transfers++;
-    } else if (req.type == Request::Type::TileReceive) {
-        n_transfers++;
-        //dynamic_cast<MemoryBlock *>(_children[req.dst_tile]->_children[req.dst_block])->n_writes++;
-    } else if (req.type == Request::Type::TileSend_Receive) {
-        n_transfers++;
-        //dynamic_cast<MemoryBlock *>(_children[req.dst_tile]->_children[req.dst_block])->n_writes++;
-    } else {
-        _children[req.tile]->commitReq(req);
-    }
-}
-
-
+/*
 double
 MemoryChip::getTotalEnergy()
 {
@@ -119,14 +105,14 @@ MemoryChip::getTotalLeakageEnergy()
     cur_energy = cur_energy / 1000000000.0; // 1W =  1000,000,000 nW
     return cur_energy;
 }
-
+*/
 
 void
 MemoryChip::outputStats(FILE* rstFile)
 {
-    MemoryComponent::outputStats(rstFile);
-    fprintf(rstFile, "Chip-level statistics: #Transfers(%lu)\n", 
-            n_transfers);
+    for (int i = 0; i < _nchildren; i++) {
+        _children[i]->outputStats(rstFile);
+    }
 }
 
 
@@ -142,15 +128,13 @@ MemoryComponent* MemoryChip::getDestTile(Request& req) {
     block_idx = addr % this->_nblocks;
     addr /= _nblocks;
     tile_idx = addr % this->_ntiles;
-    //addr /= _ntiles;
-    //chip_idx = addr % this->_nchips;
     return this->_children[tile_idx];
 };
 
 MemoryComponent* MemoryChip::getSourceTile(Request& req) {
     int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
     AddrT addr;
-    //Destination
+    //Source
     addr = req.addr_list[0];
     col_idx = addr % this->_ncols;
     addr /= _ncols;
@@ -159,7 +143,5 @@ MemoryComponent* MemoryChip::getSourceTile(Request& req) {
     block_idx = addr % this->_nblocks;
     addr /= _nblocks;
     tile_idx = addr % this->_ntiles;
-    //addr /= _ntiles;
-    //chip_idx = addr % this->_nchips;
     return this->_children[tile_idx];
 };

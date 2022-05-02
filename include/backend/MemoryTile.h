@@ -60,7 +60,9 @@ public:
 
     /* Per-tile statistics */
     uint64_t n_reads = 0, n_writes = 0;
-    uint64_t n_transfers = 0, n_unexpected_reqs = 0;
+    uint64_t n_inter_block_transfers = 0, n_intra_block_transfers = 0;
+    uint64_t n_pim_reqs = 0;
+    uint64_t n_unexpected_reqs = 0;
 
     MemoryTile() {};
     MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);

@@ -19,7 +19,6 @@
 #include "Message.h"
 #include "Request.h"
 #include "Memory_characteristics.h"
-#include "look_up_table.h"
 
 using namespace std;
 
@@ -54,7 +53,6 @@ public:
     int _clock_rate = 0;
     bool _blockctrl, _tilectrl, _chipctrl;
     std::string net_scheme;
-    LookUpTable *_lookUpTable;
 
     //Inter tile communication
     Mailbox* m1;

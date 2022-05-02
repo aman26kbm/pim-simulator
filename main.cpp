@@ -9,8 +9,6 @@
 
 #include <chrono>
 
-#include "look_up_table.h"
-
 using namespace std;
 using namespace pimsim;
 

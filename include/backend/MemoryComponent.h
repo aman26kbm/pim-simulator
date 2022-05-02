@@ -72,8 +72,6 @@ public:
     void setController(Controller* ctrl);
     void setValues(MemoryCharacteristics* values);
     void setParent(MemoryComponent* p) {_parent = p;}
-    void setTiming();
-    void setEnergy();
 
     double getReqTiming(Request req);
     double getReqEnergy(Request req);
@@ -99,8 +97,8 @@ public:
 
     virtual bool send2Child(Request& req) = 0;
     virtual bool isReady(Request& req) = 0;
-    virtual void issueReq(Request& req) = 0; // function to set the timing of a req
-    virtual void commitReq(Request& req) = 0; // function to make a req visible (handled by a bank)
+    virtual void issueReq(Request& req) = 0; 
+    virtual void commitReq(Request& req) = 0; 
     void finishReq(Request& req);
 
     virtual MemoryComponent* getDestTile(Request& req) = 0;

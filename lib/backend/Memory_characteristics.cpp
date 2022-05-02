@@ -195,8 +195,7 @@ double MemoryCharacteristics::getTiming(Request req) {
     return time;
 }
 
-
-//double MemoryCharacteristics::getEnergy(int idx) {
+/*
 double MemoryCharacteristics::getEnergy(Request req) {
     double energy = 0.0;
     int idx = int(req.type);
@@ -286,15 +285,12 @@ double MemoryCharacteristics::getTotalLeakageEnergy(int cycles, int ntiles, int 
     for (int i = 0; i < _block_level; i++)
         switch_numbers += pow(4, i);
 
-    //cout << "switch_numbers: " << switch_numbers << endl;
     switch_numbers *= ntiles;
 
     for (int i = 0; i < _tile_level; i++)
         switch_numbers += pow(4, i);
 
-    //cout << "switch_numbers: " << switch_numbers << endl;
     bus_numbers = ntiles + 1;
-    //cout << "bus_numbers: " << bus_numbers << endl;
 
     //TODO: Commenting this out for not, until we focus on energy.
     //Need to update the following code, _wordsize has been split into 
@@ -323,15 +319,12 @@ double MemoryCharacteristics::getTotalLeakageEnergy(int ntiles, int nblocks) {
     for (int i = 0; i < _block_level; i++)
         switch_numbers += pow(4, i);
 
-    //cout << "switch_numbers: " << switch_numbers << endl;
     switch_numbers *= ntiles;
 
     for (int i = 0; i < _tile_level; i++)
         switch_numbers += pow(4, i);
 
-    //cout << "switch_numbers: " << switch_numbers << endl;
     bus_numbers = ntiles + 1;
-    //cout << "bus_numbers: " << bus_numbers << endl;
 
     //TODO: Commenting this out for not, until we focus on energy.
     //Need to update the following code, _wordsize has been split into 
@@ -345,8 +338,6 @@ double MemoryCharacteristics::getTotalLeakageEnergy(int ntiles, int nblocks) {
 
     energy += E_leakage_per_block * ntiles * nblocks;
 
-    //cout << "Leakage energy = " << (E_leakage_bus[5] + E_internal_bus[5] + E_switching_bus[5]) / pow(10, 12) << endl;
-
     return energy;
 }
-
+*/

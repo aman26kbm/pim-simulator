@@ -20,7 +20,6 @@ MemoryComponent::setController(Controller* ctrl)
     _ctrl = ctrl;
 }
 
-//Note: This is defunct
 void
 MemoryComponent::setValues(MemoryCharacteristics* values) 
 {
@@ -28,8 +27,6 @@ MemoryComponent::setValues(MemoryCharacteristics* values)
     for (auto child : _children) {
         child->setValues(values);
     }
-    setTiming();
-    setEnergy();
 }
 
 double MemoryComponent::getReqTiming(Request req) {
@@ -40,33 +37,11 @@ int MemoryComponent::getPrecisionBits(Request req) {
     return _values->getPrecisionBits(req);
 }
 
+/*
 double MemoryComponent::getReqEnergy(Request req) {
     return _values->getEnergy(req);
 }
-
-void
-MemoryComponent::setTiming()
-{
-    for (int i = 0; i < int(Request::Type::MAX); i++) {
-        // time = ns, freq = MHz
-//        double fclk = _values->getTiming(i)  /  (1000.0 / float(_freq));
-//        _timing[i] = int(fclk + 0.5);
-
-//        double fclk = _values->getTiming(i)  /  (1000.0 / float(_freq));
-       //_timing is being deprecated
-       // _timing[i] = _values->getTiming(i);
-
-    }
-}
-
-void
-MemoryComponent::setEnergy()
-{
-    for (int i = 0; i < int(Request::Type::MAX); i++) {
-        // calculate 1,000,000fj = 1,000 pj = nj
-        //_energy[i] = _values->getEnergy(i);
-    }
-}
+*/
 
 TimeT 
 MemoryComponent::getTime() 
@@ -150,10 +125,6 @@ MemoryComponent::outputStats(FILE* rstFile)
         }
     }
 
-    for (int i = 0; i < _nchildren; i++) {
-        _children[i]->outputStats(rstFile);
-        fprintf(rstFile, "\n----------------------------------------\n");
-    }
 }
 
 void 
@@ -168,10 +139,6 @@ MemoryComponent::tick()
         for (int i = 0; i < _nchildren; i++) {
             _children[i]->update_next();
         }
-        //Now, update the current state
-        for (int i = 0; i < _nchildren; i++) {
-            _children[i]->update_current();
-        }
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
         std::cout<<"tick() for Tile is illegal to call, because we only use it for Chip";
@@ -182,6 +149,7 @@ MemoryComponent::tick()
         assert(0);
     }
 
+    //Code that will collect stuff from multiple tiles for this clock period, before we update the current state
     int total_counters = 0;
     int htree_counter_size = h_tree_size(_nchildren);
     for (int i = 0; i < htree_counter_size; i++) {
@@ -193,6 +161,7 @@ MemoryComponent::tick()
     bus_counter = 0;
     dram_counter = 0;
 
+    /*
     if (_level == MemoryComponent::Level::Chip) {
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
             inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_tile2tile / 32)]);
@@ -209,7 +178,22 @@ MemoryComponent::tick()
         else
             inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
     }
+    */
 
+    if (getLevel() == MemoryComponent::Level::Chip) {
+        //For each tile, update the current state
+        for (int i = 0; i < _nchildren; i++) {
+            _children[i]->update_current();
+        }
+    }
+    else if (getLevel() == MemoryComponent::Level::Tile) {
+        std::cout<<"tick() for Tile is illegal to call, because we only use it for Chip";
+        assert(0);
+    }
+    else {
+        std::cout<<"tick() for Block is illegal to call, because we only use it for Tile";
+        assert(0);
+    }
 }
 
 bool 
@@ -270,6 +254,7 @@ MemoryComponent::finishReq(Request& req)
     req_latency[int(req.type)] += req.finish_time - req.arrive_time;
     req_waittime[int(req.type)] += req.process_time - req.arrive_time;
 
+/*
     switch (req.type) {
         case Request::Type::RowMv:
         case Request::Type::ColMv:
@@ -280,17 +265,17 @@ MemoryComponent::finishReq(Request& req)
         case Request::Type::RowBitwise:
         case Request::Type::ColBitwise:
             block_decoder_energy += (double) (req.finish_time - req.arrive_time) / _values->_freq * (_values->E_internal_decoder+_values->E_switching_decoder);
-            //req_energy[int(req.type)] += _energy[int(req.type)] * req.size_list[0];
             req_energy[int(req.type)] += getReqEnergy(req);
             break;
         default:
             block_decoder_energy += (double) (req.finish_time - req.arrive_time) / _values->_freq * (_values->E_internal_decoder+_values->E_switching_decoder);
-            //req_energy[int(req.type)] += _energy[int(req.type)];
             req_energy[int(req.type)] += getReqEnergy(req);
             break;
     }
+*/
 }
 
+/*
 double
 MemoryComponent::getTotalEnergy()
 {
@@ -309,3 +294,4 @@ MemoryComponent::getTotalEnergy()
     cur_energy = cur_energy / 1000000.0; // 1nj = 1000,000 fj
     return cur_energy;
 }
+*/

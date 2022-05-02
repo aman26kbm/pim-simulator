@@ -22,9 +22,6 @@ class MemoryComponent;
 
 class MemoryBlock : public MemoryComponent {
 public:
-    /* Per-block statistics */
-    uint64_t n_reads = 0, n_writes = 0, n_unexpected_reqs = 0;
-
     MemoryBlock(int n_rows, int n_cols);
 
     bool send2Child(Request& req);
@@ -34,7 +31,10 @@ public:
         assert(0);
     };
     void finishReq(Request& req);
-    void commitReq(Request& req);
+    void commitReq(Request& req) {
+        std::cout<<"We shouldn't be here in commitReq() of MemoryBlock";
+        assert(0);
+    }
 
     virtual void outputStats(FILE* rstFile);
     bool isIdle() {
