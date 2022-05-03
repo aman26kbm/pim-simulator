@@ -53,8 +53,8 @@ System<T>::System(Config* config) : _config(config)
     }
 
     //Inter tile communication
-    m1 = new Mailbox();
-    m2 = new Mailbox();
+    m1 = new Mailbox();  //use as a semaphore
+    m2 = new Mailbox(_ntiles);  //use as a barrier for all tiles
     m3 = new Mailbox();
 
     //                                      t, b, r
@@ -1427,6 +1427,14 @@ void System<T>::test_tile0()
     request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    request = new Request(Request::Type::Signal, m2);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::Wait, m2);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
     //request = new Request(Request::Type::RowStore);
     //request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
@@ -1451,7 +1459,7 @@ void System<T>::test_tile1()
     //request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
     //requests.push_back(*request);
 
-    request = new Request(Request::Type::RowAdd);
+    request = new Request(Request::Type::RowMul);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
@@ -1474,6 +1482,14 @@ void System<T>::test_tile1()
     //request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
     //requests.push_back(*request);
+
+    request = new Request(Request::Type::Signal, m2);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::Wait, m2);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);

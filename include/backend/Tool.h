@@ -18,11 +18,16 @@ std::vector<int> get_index_list(int index, int height);
 using namespace pimsim;
 class Mailbox {
     private:
-        TimeT _time;
-        bool _arrived;
+        TimeT _time;     //This is the time at which the mailbox was last signalled
+        bool _arrived;   //This flag tells whether all required threads have arrived
+        int _max_count;  //This count tells the max number of thread involved 
+                         //(this is 1 for a normal mailbox/semaphore, but can be initialized to
+                         //a larger value for implementing a barrier
+        int _count;      //This count tells how many threads have arrived so far
 
     public:
         Mailbox();
+        Mailbox(int);
         ~Mailbox();
         void signal(TimeT t);
         bool status();

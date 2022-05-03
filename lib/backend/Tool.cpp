@@ -145,20 +145,35 @@ std::vector<int> get_index_list(int index, int height) {
 Mailbox::Mailbox() {
     _arrived = false;
     _time = 0;
+    _max_count = 1;
+    _count = 0;
+}
+Mailbox::Mailbox(int count) {
+    _arrived = false;
+    _time = 0;
+    _max_count = count;
+    _count = 0;
 }
 Mailbox::~Mailbox() {
 }
 void Mailbox::signal(TimeT t) {
     _arrived = true;
     _time = t;
+    _count++;
 }
 bool Mailbox::status() {
-    return _arrived;
+    if (_max_count == 1) {
+        return _arrived;
+    }
+    else {
+        return (_arrived && (_count >= _max_count));
+    }
 }
 TimeT Mailbox::getTime() {
     return _time;
 }
 void Mailbox::reset() {
-    _time = 0;
     _arrived = false;
+    _time = 0;
+    _count = 0;
 }
