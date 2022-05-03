@@ -67,6 +67,7 @@ int main(int argc, char *argv[]) {
         system->fir();
     }
 
+    system->run();
     system->finish();
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();

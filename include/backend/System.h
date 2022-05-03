@@ -88,6 +88,7 @@ public:
     //void syncSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
     //void advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false);
     //void advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false, bool load=false);
+    void run();
     void finish();
 
     //int system_sendRow_receiveRow(Request& req); // add by Ruihao Li
@@ -105,7 +106,12 @@ public:
 
     //PIMRA
     void gemv();
+    void gemv_tile0();
+    void gemv_tile1();
+
     void fir();
+    void fir_tile0();
+    void fir_tile1();
 
     AddrT cram_base_addr_tile0_block0; 
     AddrT cram_addr_tile0_block0_row0;  
