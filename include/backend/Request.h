@@ -143,7 +143,7 @@ public:
         RowShift,
         Signal,
         Wait,
-        _NULL_,
+        NOP,
         MAX
     } type;
 
@@ -194,7 +194,8 @@ public:
             case 41: return        "RowShift";
             case 42: return        "Signal";
             case 43: return        "Wait";
-            default: return        "_NULL_";
+            case 44: return        "NOP";
+            default: return        "None";
         };
 
     }
