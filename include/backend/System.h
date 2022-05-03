@@ -3,7 +3,7 @@
 
 //#define DEBUG_OUTPUT
 
-#include "util.h"
+#include "Util.h"
 #include "Tool.h"
 #include <queue>
 #include <map>
@@ -77,6 +77,7 @@ public:
 
     int sendTileReq(Request& req, int para);
     int sendChipReq(Request& req, int para);
+    int sendSyncReq(Request& req);
     //int system_sendTileReq(Request& req, int para);
     //int system_sendChipReq(Request& req, int para);
 

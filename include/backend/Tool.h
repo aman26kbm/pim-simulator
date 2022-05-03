@@ -8,7 +8,7 @@
 #ifndef VERSION_0227_TOOL_H
 #define VERSION_0227_TOOL_H
 
-#include "util.h"
+#include "Util.h"
 int h_tree_distance(int index_A, int index_B, int total_size);
 int h_tree_height(int total_size);
 int h_tree_size(int total_size);

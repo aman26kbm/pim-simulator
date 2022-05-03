@@ -1,7 +1,7 @@
 #ifndef _MEMORY_CHIP_H_
 #define _MEMORY_CHIP_H_
 
-#include "util.h"
+#include "Util.h"
 #include <queue>
 #include <deque>
 #include <string>

@@ -1,7 +1,7 @@
 #ifndef _CONTROLLER_H_
 #define _CONTROLLER_H_
 
-#include "util.h"
+#include "Util.h"
 #include "MemoryComponent.h"
 #include "Message.h"
 #include "Request.h"

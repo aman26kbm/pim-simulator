@@ -1,7 +1,8 @@
 #ifndef _REQUEST_H_
 #define _REQUEST_H_
 
-#include "util.h"
+#include "Util.h"
+#include "Tool.h"
 #include <vector>
 #include <queue>
 #include <list>
@@ -140,6 +141,8 @@ public:
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
         RowShift,
+        Signal,
+        Wait,
         _NULL_,
         MAX
     } type;
@@ -189,6 +192,8 @@ public:
             case 39: return        "RowLoad";
             case 40: return        "RowStore";
             case 41: return        "RowShift";
+            case 42: return        "Signal";
+            case 43: return        "Wait";
             default: return        "_NULL_";
         };
 
@@ -202,6 +207,7 @@ public:
     int chip, tile, block, row, col;
     int src_chip, src_tile, src_block, src_row, src_col;
     int dst_chip, dst_tile, dst_block, dst_row, dst_col;
+    Mailbox* mail;
 
     Request() {}
 
@@ -209,6 +215,11 @@ public:
 
     Request(Type t, AddrT addr) : type(t) {
         addr_list.push_back(addr);
+    }
+
+    Request(Type t, Mailbox* m) {
+        type = t;
+        mail = m;
     }
 
 //    std::string reqToStr() {
@@ -330,6 +341,12 @@ public:
         }
     }
 
+    bool isSync() {
+        if (type == Type::Signal || type == Type::Wait)
+            return true;
+        else
+            return false;
+    }
 
 };
 

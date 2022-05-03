@@ -143,13 +143,11 @@ std::vector<int> get_index_list(int index, int height) {
 }
 
 Mailbox::Mailbox() {
-
+    _arrived = false;
+    _time = 0;
 }
-
 Mailbox::~Mailbox() {
-
 }
-
 void Mailbox::signal(TimeT t) {
     _arrived = true;
     _time = t;

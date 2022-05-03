@@ -153,6 +153,10 @@ MemoryTile::issueReq(Request& req)
         req.process_time = cur_time;
         req.finish_time = cur_time + getReqTiming(req);
     }
+    else {
+        std::cout<<"Unsupported request";
+        assert(0);
+    }
 
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
@@ -232,7 +236,13 @@ void MemoryTile::update_next(){
                     next_state.status = RECEIVE_WAIT;
                     next_state.receive_ready = true;
                 }
-                else{
+                else if(req.type == Request::Type::Signal) {
+                    req.mail->signal(_ctrl->getTime());
+                }
+                else if(req.type == Request::Type::Wait) {
+                    next_state.status = MAIL_WAIT;
+                }
+                else {
                     next_state.status = REQ_MODE;
                     issueReq(req);
                 }
@@ -268,6 +278,14 @@ void MemoryTile::update_next(){
             case RECEIVE_MODE:
                 if(_ctrl->getTime() == _next_available){
                     next_state.status = IDLE;
+                }
+                break;
+            case MAIL_WAIT:
+                if(req.mail->status()) {
+                    next_state.status = IDLE;
+                }
+                else {
+                    next_state.status = MAIL_WAIT;
                 }
         }
         _ctrl->proceed(1);

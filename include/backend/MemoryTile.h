@@ -3,7 +3,7 @@
 
 #include <deque>
 
-#include "util.h"
+#include "Util.h"
 #include "Config.h"
 #include "Message.h"
 #include "Request.h"
@@ -29,7 +29,8 @@ public:
         SEND_MODE,
         SEND_DONE,
         RECEIVE_WAIT,
-        RECEIVE_MODE
+        RECEIVE_MODE,
+        MAIL_WAIT
     };
     
     static std::string print_name(int type) {
@@ -41,7 +42,8 @@ public:
             case 4: return       "SEND_DONE";
             case 5: return       "RECEIVE_WAIT";
             case 6: return       "RECEIVE_MODE";
-            default: return       "Help";
+            case 7: return       "MAIL_WAIT";
+            default: return      "Help";
         };
     
     }

@@ -1,7 +1,7 @@
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
 
-#include "util.h"
+#include "Util.h"
 
 namespace pimsim {
 

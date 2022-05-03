@@ -1,1 +1,0 @@
-./PIM_simulator --cfg ../configs/level_4_512_1_0_0.cfg --gemv
