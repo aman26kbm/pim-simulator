@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
     string config_file = "";
     bool gemv_program = false;
     bool fir_program = false;
+    bool test_program = false;
 
     //Parse command line options
     // Wrap everything in a try block.  Do this every time,
@@ -37,6 +38,9 @@ int main(int argc, char *argv[]) {
         TCLAP::SwitchArg fir_program_arg("f", "fir", "Run the FIR program", false);
         cmd.add(fir_program_arg);
 
+        TCLAP::SwitchArg test_program_arg("t", "test", "Run the test program", false);
+        cmd.add(test_program_arg);
+
         // Parse the args.
         cmd.parse(argc, argv);
 
@@ -44,6 +48,7 @@ int main(int argc, char *argv[]) {
         config_file = config_file_arg.getValue();
         gemv_program = gemv_program_arg.getValue();
         fir_program = fir_program_arg.getValue();
+        test_program = test_program_arg.getValue();
 
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     {
@@ -65,6 +70,12 @@ int main(int argc, char *argv[]) {
     if (fir_program) {
         std::cout<<"Running fir program"<<std::endl;
         system->fir();
+    }
+
+    //Test application
+    if (test_program) {
+        std::cout<<"Running test program"<<std::endl;
+        system->test();
     }
 
     system->run();

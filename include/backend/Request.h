@@ -140,6 +140,7 @@ public:
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
         RowShift,
+        _NULL_,
         MAX
     } type;
 
@@ -188,7 +189,7 @@ public:
             case 39: return        "RowLoad";
             case 40: return        "RowStore";
             case 41: return        "RowShift";
-            default: return       "Help";
+            default: return        "_NULL_";
         };
 
     }

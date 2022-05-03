@@ -1400,6 +1400,102 @@ void System<T>::fir()
     fir_tile1();
 }
 
+/////////////////////////////////////////////////////////////
+// Queuing requests for tile0
+/////////////////////////////////////////////////////////////
+template <class T>
+void System<T>::test_tile0()
+{
+    std::vector<Request> requests;
+    Request *request;
+
+    //request = new Request(Request::Type::RowLoad);
+    //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+    //request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+
+    //requests.push_back(*request);
+
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::BlockSend_Receive);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    //request = new Request(Request::Type::RowStore);
+    //request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
+
+    //requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+
+/////////////////////////////////////////////////////////////
+// Queuing requests for tile1
+/////////////////////////////////////////////////////////////
+template <class T>
+void System<T>::test_tile1()
+{
+    std::vector<Request> requests;
+    Request *request;
+
+    //request = new Request(Request::Type::RowLoad);
+    //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+    //request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+
+    //requests.push_back(*request);
+
+    request = new Request(Request::Type::RowMul);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowShift);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+
+    requests.push_back(*request);
+
+    //request = new Request(Request::Type::RowStore);
+    //request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
+
+    //requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+
+/////////////////////////////////////////////////////////////
+// Simple program to perform an test filter
+/////////////////////////////////////////////////////////////
+template <class T>
+void System<T>::test()
+{
+    test_tile0();
+    test_tile1();
+}
+
 /*
 template <class T>
 void System<T>::matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col)

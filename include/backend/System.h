@@ -113,6 +113,10 @@ public:
     void fir_tile0();
     void fir_tile1();
 
+    void test();
+    void test_tile0();
+    void test_tile1();
+
     AddrT cram_base_addr_tile0_block0; 
     AddrT cram_addr_tile0_block0_row0;  
     AddrT cram_addr_tile0_block0_row4;  

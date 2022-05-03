@@ -218,6 +218,7 @@ void MemoryTile::update_next(){
         switch(cur_state.status){
             case IDLE:
                 if (_ctrl->_tile_q->is_empty()) {
+                    req = Request(Request::Type::_NULL_);
                     break;
                 }
                 req = _ctrl->_tile_q->pop_front();
