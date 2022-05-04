@@ -200,7 +200,7 @@ public:
 
     }
 
-    bool first_arrive = true;
+    int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time, process_time, finish_time, net_overhead = 0;
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list

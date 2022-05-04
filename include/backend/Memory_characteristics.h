@@ -28,8 +28,8 @@ public:
 	MemoryCharacteristics() {}
     MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int wordsize_dram, int freq);
 
-    //Assume DRAM latency is 100 cycles
-    int DramLatency = 100;
+    //Assume DRAM latency is 10 cycles
+    int DramLatency = 10;
 
     //One clock cycle in the hybrid mode 
     //Currently assuming to be 1ns

@@ -82,8 +82,8 @@ MemoryTile::issueReq(Request& req)
         //precision_list[0] effectively contains the number of rows to transfer.
         //1 "word" = 1 full dram interface width worth of data. 
         //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
-        int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
-        _parent->dram_counter += words;
+        req.dram_words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+        _parent->dram_counter += req.dram_words;
         // getReqTiming gives us the dram latency
         req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
     }
@@ -299,6 +299,7 @@ void MemoryTile::update_next(){
                 if (_ctrl->getTime() == _next_available){
                     next_state.status = IDLE;
                     dram_busy = false; //dram_busy local to this tile
+                    _parent->dram_counter -= req.dram_words;
                 }
                 else {
                     next_state.status = DRAM_WAIT;
