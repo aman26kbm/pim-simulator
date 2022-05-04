@@ -8,7 +8,7 @@ MemoryComponent::MemoryComponent(Level level)
 {
     for (int i = 0; i < int(Request::Type::MAX); i++) {
         req_cnt[i] = 0;
-        req_latency[i] = 0;
+        req_proctime[i] = 0;
         req_waittime[i] = 0;
         req_energy[i] = 0;
     }
@@ -117,11 +117,11 @@ MemoryComponent::outputStats(FILE* rstFile)
 
     fprintf(rstFile, "%s#%d\n", level_str[int(_level)].c_str(), _id);
 
-    fprintf(rstFile, "Request Type Breakdown:\nType, Cnt, Latency(clk), WaitTime(clk), Energy(nj)\n");
+    fprintf(rstFile, "Request Type Breakdown:\nType, Cnt, ProcessingTime(clk), WaitTime(clk), Energy(nj)\n");
     for (int i = 0; i < int(Request::Type::MAX); i++) {
         if (req_cnt[i] != 0) {
             fprintf(rstFile, "%s, %lu, %.4lf, %.4lf, %.4lf\n",
-                Request::print_name(i).c_str(), req_cnt[i], req_latency[i], req_waittime[i], req_energy[i]);
+                Request::print_name(i).c_str(), req_cnt[i], req_proctime[i], req_waittime[i], req_energy[i]);
         }
     }
 
@@ -241,7 +241,7 @@ void
 MemoryComponent::finishReq(Request& req)
 {
     req_cnt[int(req.type)]++;    
-    req_latency[int(req.type)] += req.finish_time - req.arrive_time;
+    req_proctime[int(req.type)] += req.finish_time - req.process_time;
     req_waittime[int(req.type)] += req.process_time - req.arrive_time;
 
 /*

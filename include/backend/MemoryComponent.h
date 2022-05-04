@@ -61,7 +61,8 @@ public:
 
     /* Statistics available at the current level */
     uint64_t req_cnt[int(Request::Type::MAX)];
-    double req_latency[int(Request::Type::MAX)], req_waittime[int(Request::Type::MAX)];
+    double req_proctime[int(Request::Type::MAX)]; 
+    double req_waittime[int(Request::Type::MAX)];
     double req_energy[int(Request::Type::MAX)];
 
     double block_decoder_energy;
