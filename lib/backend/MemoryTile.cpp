@@ -80,9 +80,12 @@ MemoryTile::issueReq(Request& req)
     if (req.isChipDram()) {
         req.process_time = cur_time;
         //precision_list[0] effectively contains the number of rows to transfer.
+        //1 "word" = 1 full dram interface width worth of data. 
+        //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
         int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
-        dram_counter += words;
-        req.finish_time = cur_time + getReqTiming(req) * dram_counter;
+        _parent->dram_counter += words;
+        // getReqTiming gives us the dram latency
+        req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
     }
 
     else if (req.isChip()) {
@@ -242,6 +245,10 @@ void MemoryTile::update_next(){
                 else if(req.type == Request::Type::Wait) {
                     next_state.status = MAIL_WAIT;
                 }
+                else if(req.isChipDram()) {
+                    next_state.status = DRAM_WAIT;
+                    issueReq(req);
+                }
                 else {
                     next_state.status = REQ_MODE;
                     issueReq(req);
@@ -287,17 +294,29 @@ void MemoryTile::update_next(){
                 else {
                     next_state.status = MAIL_WAIT;
                 }
+                break;
+            case DRAM_WAIT:
+                if (_ctrl->getTime() == _next_available){
+                    next_state.status = IDLE;
+                    dram_busy = false; //dram_busy local to this tile
+                }
+                else {
+                    next_state.status = DRAM_WAIT;
+                    dram_busy = true; //dram_busy local to this tile
+                }
+                break;
         }
         _ctrl->proceed(1);
     //}
 }
 
 void MemoryTile::update_current(){
-    printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s\n", 
+    printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. DRAM busy %d\n", 
     _ctrl->getTime(), _id, 
     print_name(cur_state.status).c_str(),
     print_name(next_state.status).c_str(),
-    Request::print_name(int(req.type)).c_str());
+    Request::print_name(int(req.type)).c_str(),
+    _parent->dram_busy);
     cur_state = next_state;
 }
 

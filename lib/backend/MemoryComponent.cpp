@@ -133,23 +133,19 @@ MemoryComponent::tick()
 #ifdef DEBUG_OUTPUT
     //printf("%s_%d ticks once (%lu)!\n", level_str[int(_level)].c_str(), _id, _ctrl->getTime());
 #endif
-    if (getLevel() == MemoryComponent::Level::Chip) {
-        //For each tile, execute/issue the instruction if we can.
-        //Also update the next state
-        for (int i = 0; i < _nchildren; i++) {
-            _children[i]->update_next();
-        }
-    }
-    else if (getLevel() == MemoryComponent::Level::Tile) {
-        std::cout<<"tick() for Tile is illegal to call, because we only use it for Chip";
-        assert(0);
-    }
-    else {
-        std::cout<<"tick() for Block is illegal to call, because we only use it for Tile";
+    if (getLevel() != MemoryComponent::Level::Chip) {
+        std::cout<<"tick() is illegal to call unless called by Chip";
         assert(0);
     }
 
-    //Code that will collect stuff from multiple tiles for this clock period, before we update the current state
+    //For each tile, execute/issue the instruction if we can.
+    //Also update the next state
+    for (int i = 0; i < _nchildren; i++) {
+        _children[i]->update_next();
+    }
+
+    //Code that will collect stuff from multiple tiles for this clock period, before we update the current state.
+    //TODO: This needs to updated based on the new interconnect modelling (assuming FPGA like switches).
     int total_counters = 0;
     int htree_counter_size = h_tree_size(_nchildren);
     for (int i = 0; i < htree_counter_size; i++) {
@@ -159,7 +155,12 @@ MemoryComponent::tick()
 
     total_counters += bus_counter;
     bus_counter = 0;
-    dram_counter = 0;
+
+    //If any tile says dram is busy, then dram is busy
+    dram_busy = false;
+    for (int i = 0; i < _nchildren; i++) {
+        dram_busy |= _children[i]->dram_busy;
+    }
 
     /*
     if (_level == MemoryComponent::Level::Chip) {
@@ -180,19 +181,9 @@ MemoryComponent::tick()
     }
     */
 
-    if (getLevel() == MemoryComponent::Level::Chip) {
-        //For each tile, update the current state
-        for (int i = 0; i < _nchildren; i++) {
-            _children[i]->update_current();
-        }
-    }
-    else if (getLevel() == MemoryComponent::Level::Tile) {
-        std::cout<<"tick() for Tile is illegal to call, because we only use it for Chip";
-        assert(0);
-    }
-    else {
-        std::cout<<"tick() for Block is illegal to call, because we only use it for Tile";
-        assert(0);
+    //For each tile, update the current state
+    for (int i = 0; i < _nchildren; i++) {
+        _children[i]->update_current();
     }
 }
 
@@ -206,7 +197,6 @@ MemoryComponent::receiveReq(Request& req)
     if (getLevel() == MemoryComponent::Level::Chip) {
         //Send to tiles
         int idx = req.tile;
-        std::cout<<"tile number = "<<idx<<std::endl;
         return _children[idx]->receiveReq(req);
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
