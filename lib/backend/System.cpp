@@ -199,7 +199,7 @@ int System<T>::sendPIM_one_operand(Request& req)
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[i], req.size_list[i]);
+        pim_req->addAddr(req.addr_list[i], req.size_list[i], req.precision_list[i]);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
@@ -280,8 +280,8 @@ int System<T>::sendChipReq(Request& req, int para)
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1]);
+        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         //setLocation is used to tell which tile owns this request
@@ -295,8 +295,8 @@ int System<T>::sendChipReq(Request& req, int para)
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
 
-        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1]);
+        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         //setLocation is used to tell which tile owns this request
@@ -349,8 +349,8 @@ int System<T>::sendTileReq(Request& req, int para)
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        inter_block_req->addAddr(req.addr_list[0], req.size_list[0]);
-        inter_block_req->addAddr(req.addr_list[1], req.size_list[1]);
+        inter_block_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        inter_block_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -380,7 +380,7 @@ int System<T>::sendSyncReq(Request& req)
     req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
     req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-    sync_req->addAddr(req.addr_list[0], req.size_list[0]);
+    sync_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
     sync_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
     sync_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
@@ -1228,17 +1228,19 @@ void System<T>::gemv_tile0() {
     std::vector<Request> requests;
     Request *request;
 
-  //Load some data into CRAM
-  //request = new Request(Request::Type::SystemRowLoad);
-  //request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
-  //request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
-  //requests.push_back(*request);
+    //Load some data into CRAM
+    request = new Request(Request::Type::RowLoad);
+    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
 
+    //Multiply in this core/tile
     request = new Request(Request::Type::RowMul);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //Send partial results to tile1
     request = new Request(Request::Type::TileSend);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
@@ -1257,42 +1259,38 @@ void System<T>::gemv_tile1() {
     std::vector<Request> requests;
     Request *request;
 
+    //Load some data into CRAM
+    request = new Request(Request::Type::RowLoad);
+    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //Multiply in this core/tile
     request = new Request(Request::Type::RowMul);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //Receive partial results from tile0
     request = new Request(Request::Type::TileReceive);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //Now add partial results from the two cores/tiles
     request = new Request(Request::Type::RowAdd);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //Store results into DRAM
+    request = new Request(Request::Type::RowStore);
+    request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT8); //src
+    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);
-
-//    //now perform additions
-//    //in blocks 3,4,5 only
-//    //src1 - row 16 (values that came from blocks 0,1,2)
-//    //src2 - row 8 (values that were present here after multiplication) 
-//    //dst - row 24
-//    request = new Request(Request::Type::RowAdd);
-//    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT8); //src
-//    request->addAddr(cram_addr_tile1_block0_row4, 0, PrecisionT::INT8); //dst
-//    requests.push_back(*request);
-
-  //  //Store results into DRAM
-  //  request = new Request(Request::Type::SystemRowStore);
-  //  request->addAddr(cram_addr_tile1_block3_row8, 0, PrecisionT::INT8); //src
-  //  request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
-  //  requests.push_back(*request);
-
-//    for (unsigned int i = 0; i < requests.size(); i++)
-//        sendRequest(requests[i]);
 
 }
 
@@ -1463,9 +1461,14 @@ void System<T>::test_tile1()
     std::vector<Request> requests;
     Request *request;
 
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
     request = new Request(Request::Type::RowLoad);
-    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT8); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowMul);
@@ -1480,11 +1483,6 @@ void System<T>::test_tile1()
 
     request = new Request(Request::Type::Wait, m1);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
-
-    request = new Request(Request::Type::RowAdd);
-    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowStore);

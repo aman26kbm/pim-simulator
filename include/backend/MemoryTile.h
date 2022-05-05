@@ -30,8 +30,9 @@ public:
         SEND_DONE,
         RECEIVE_WAIT,
         RECEIVE_MODE,
-        MAIL_WAIT,
-        DRAM_WAIT
+        MAIL_WAIT,   //Wait for mailbox (semaphore or barrier) to arrive
+        DRAM_WAIT1,  //Wait for a prior/ongoing dram request to finish so you can issue a new dram request
+        DRAM_WAIT2   //Wait for the current dram request to finish
     };
     
     static std::string print_name(int type) {
@@ -44,7 +45,8 @@ public:
             case 5: return       "RECEIVE_WAIT";
             case 6: return       "RECEIVE_MODE";
             case 7: return       "MAIL_WAIT";
-            case 8: return       "DRAM_WAIT";
+            case 8: return       "DRAM_WAIT1";
+            case 9: return       "DRAM_WAIT2";
             default: return      "Help";
         };
     

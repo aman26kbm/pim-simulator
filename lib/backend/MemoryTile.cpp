@@ -68,8 +68,6 @@ MemoryTile::isReady(Request& req)
     }
 }
 
-
-
 void
 MemoryTile::issueReq(Request& req)
 {
@@ -82,7 +80,7 @@ MemoryTile::issueReq(Request& req)
         //precision_list[0] effectively contains the number of rows to transfer.
         //1 "word" = 1 full dram interface width worth of data. 
         //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
-        req.dram_words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+        req.dram_words = int((_ncols * _nblocks * getPrecisionBits(req)) / _values->_wordsize_dram) ;
         _parent->dram_counter += req.dram_words;
         // getReqTiming gives us the dram latency
         req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
@@ -246,8 +244,13 @@ void MemoryTile::update_next(){
                     next_state.status = MAIL_WAIT;
                 }
                 else if(req.isChipDram()) {
-                    next_state.status = DRAM_WAIT;
-                    issueReq(req);
+                    if (_parent->dram_busy) {
+                        next_state.status = DRAM_WAIT1;
+                    }
+                    else {
+                        next_state.status = DRAM_WAIT2;
+                        issueReq(req);
+                    }
                 }
                 else {
                     next_state.status = REQ_MODE;
@@ -295,14 +298,24 @@ void MemoryTile::update_next(){
                     next_state.status = MAIL_WAIT;
                 }
                 break;
-            case DRAM_WAIT:
+            case DRAM_WAIT1:
+                    //stay here until dram_busy lowers down
+                    if (_parent->dram_busy) {
+                        next_state.status = DRAM_WAIT1;
+                    }
+                    else {
+                        next_state.status = DRAM_WAIT2;
+                        issueReq(req);
+                    }
+                break;
+            case DRAM_WAIT2:
                 if (_ctrl->getTime() == _next_available){
                     next_state.status = IDLE;
                     dram_busy = false; //dram_busy local to this tile
                     _parent->dram_counter -= req.dram_words;
                 }
                 else {
-                    next_state.status = DRAM_WAIT;
+                    next_state.status = DRAM_WAIT2;
                     dram_busy = true; //dram_busy local to this tile
                 }
                 break;
