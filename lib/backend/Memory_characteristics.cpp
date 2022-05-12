@@ -64,12 +64,28 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
             clocks = mantissa; //Not using +1 because the precision supplied already includes the carry bit
         }
     }
+    else if (op=="add_rf") {
+        if (dtype=="float") {
+            clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
+        }
+        else {
+            clocks = mantissa / 2; //Not using +1 because the precision supplied already includes the carry bit
+        }
+    }
     else if (op=="mul") {
         if (dtype=="float") {
             clocks = mantissa * mantissa + 7 * mantissa + 3 * exponent + 5;
         }
         else {
             clocks = mantissa * mantissa + 3 * mantissa - 2;
+        }
+    }
+    else if (op=="mul_rf") {
+        if (dtype=="float") {
+            clocks = (mantissa * mantissa + 7 * mantissa + 3 * exponent + 5) / 2;
+        }
+        else {
+            clocks = (mantissa * mantissa + 3 * mantissa - 2) / 2;
         }
     }
     else if (op=="reduce") {
@@ -187,6 +203,26 @@ double MemoryCharacteristics::getTiming(Request req) {
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of shifts
             time = getClocksForReq(req.precision_list[0], "read", req.size_list[0]) * T_CLK;
+            break;
+        case 45: //RowLoad_RF
+            time = DramLatency;
+            break;
+        case 46: //RowStore_RF
+            time = DramLatency;
+            break;
+        case 47: //RowMul_RF
+           //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
+           //number of cycles consumed.
+           //Number of src bits gives the right value for multiplication cycles.
+            time = getClocksForReq(req.precision_list[0], "mul_rf") * T_CLK;
+            break;
+        case 48: //RowAdd_RF
+           //Looking the precision of the second item in the list (the destination) for calculating the
+           //number of cycles consumed.
+           //Number of destination bits tells the right value for addition because it could be more
+           //than the operands. (Eg. in case where accumulator is wider)
+            time = getClocksForReq(req.precision_list[1], "add_rf") * T_CLK;
+            break;
             break;
         default:
             time = T_CLK;

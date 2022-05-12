@@ -11,6 +11,7 @@ include_directories(lib/backend)
 add_library(PimBackend lib/backend/Config.cpp
         lib/backend/Controller.cpp
         lib/backend/MemoryBlock.cpp
+        lib/backend/RegisterFile.cpp
         lib/backend/MemoryTile.cpp
         lib/backend/MemoryChip.cpp
         lib/backend/MemoryComponent.cpp

@@ -28,6 +28,9 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
         block->setParent(this);
         _children.push_back(block);
     }
+    
+    //Instantiate one RF in each tile
+    RegisterFile* rf = new RegisterFile();
 
     int htree_counter_size = h_tree_size(_nblocks);
     htree_counters.clear();
@@ -80,7 +83,12 @@ MemoryTile::issueReq(Request& req)
         //precision_list[0] effectively contains the number of rows to transfer.
         //1 "word" = 1 full dram interface width worth of data. 
         //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
-        req.dram_words = int((_ncols * _nblocks * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+        if (req.isRF()) {
+            req.dram_words = int((_values->_rf_chunk_size * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+        }
+        else {
+            req.dram_words = int((_ncols * _nblocks * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+        }
         _parent->dram_counter += req.dram_words;
         // getReqTiming gives us the dram latency
         req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
@@ -189,12 +197,14 @@ MemoryTile::commitReq(Request& req)
         n_intra_block_transfers++;
     } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive)) {
         n_inter_block_transfers++;
-        //dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
-    } else if (req.type == Request::Type::RowRead) {
+    } else if (req.type == Request::Type::RowStore) {
         n_reads++;
-        //dynamic_cast<MemoryBlock *>(_children[req.dst_block])->n_writes++;
     } else if (req.type == Request::Type::RowWrite) {
         n_writes++;
+    } else if (req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF) {
+        n_loads++;
+    } else if (req.type == Request::Type::RowStore || req.type == Request::Type::RowStore_RF) {
+        n_stores++;
     } else if ((req.type == Request::Type::RowAdd) 
               || (req.type == Request::Type::RowMul)
               || (req.type == Request::Type::RowBitwise)

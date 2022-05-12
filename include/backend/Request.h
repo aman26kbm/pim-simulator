@@ -144,6 +144,10 @@ public:
         Signal,
         Wait,
         NOP,
+        RowLoad_RF,
+        RowStore_RF,
+        RowMul_RF,
+        RowAdd_RF,
         MAX
     } type;
 
@@ -195,6 +199,10 @@ public:
             case 42: return        "Signal";
             case 43: return        "Wait";
             case 44: return        "NOP";
+            case 45: return        "RowLoad_RF";
+            case 46: return        "RowStore_RF";
+            case 47: return        "RowMul_RF";
+            case 48: return        "RowAdd_RF";
             default: return        "None";
         };
 
@@ -292,7 +300,7 @@ public:
     }
 
     bool isChipDram() {
-        if (type == Type::RowLoad || type == Type::RowStore)
+        if (type == Type::RowLoad || type == Type::RowStore || type == Type::RowLoad_RF || type == Type::RowStore_RF)
             return true;
         else
             return false;
@@ -325,10 +333,12 @@ public:
             case Type::RowWrite:
             case Type::ColWrite:
             case Type::RowAdd:
+            case Type::RowAdd_RF:
             case Type::ColAdd:
             case Type::RowSub:
             case Type::ColSub:
             case Type::RowMul:
+            case Type::RowMul_RF:
             case Type::RowDiv:
             case Type::ColMul:
             case Type::ColDiv:
@@ -342,6 +352,13 @@ public:
             default:
                 return false;
         }
+    }
+
+    bool isRF() {
+        if ((type == Type::RowMul_RF || type == Type::RowAdd_RF || type == Type::RowLoad_RF || type == Type::RowStore_RF))
+            return true;
+        else
+            return false;
     }
 
     bool isSync() {

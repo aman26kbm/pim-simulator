@@ -424,8 +424,10 @@ int System<T>::sendPimReq(Request& req)
             break;
         case Request::Type::RowMv:
         case Request::Type::RowAdd:
+        case Request::Type::RowAdd_RF:
         case Request::Type::RowSub:
         case Request::Type::RowMul:
+        case Request::Type::RowMul_RF:
         case Request::Type::RowDiv:
         case Request::Type::RowBitwise:
         case Request::Type::RowSearch:
@@ -467,10 +469,12 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::RowMv:
         case Request::Type::ColMv:
         case Request::Type::RowAdd:
+        case Request::Type::RowAdd_RF:
         case Request::Type::ColAdd:
         case Request::Type::RowSub:
         case Request::Type::ColSub:
         case Request::Type::RowMul:
+        case Request::Type::RowMul_RF:
         case Request::Type::RowDiv:
         case Request::Type::ColMul:
         case Request::Type::ColDiv:
@@ -527,7 +531,13 @@ int System<T>::sendRequest(Request& req)
         case Request::Type::RowStore:
             ticks = sendChipReq(req, SEND);
             break;
+        case Request::Type::RowStore_RF:
+            ticks = sendChipReq(req, SEND);
+            break;
         case Request::Type::RowLoad:
+            ticks = sendChipReq(req, RECEIVE);
+            break;
+        case Request::Type::RowLoad_RF:
             ticks = sendChipReq(req, RECEIVE);
             break;
         //case Request::Type::SystemRowStore:
@@ -582,10 +592,12 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::RowMv:
             case Request::Type::ColMv:
             case Request::Type::RowAdd:
+            case Request::Type::RowAdd_RF:
             case Request::Type::ColAdd:
             case Request::Type::RowSub:
             case Request::Type::ColSub:
             case Request::Type::RowMul:
+            case Request::Type::RowMul_RF:
             case Request::Type::RowDiv:
             case Request::Type::ColMul:
             case Request::Type::ColDiv:
@@ -642,7 +654,13 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
             case Request::Type::RowStore:
                 ticks = sendChipReq(reqs[i], SEND);
                 break;
+            case Request::Type::RowStore_RF:
+                ticks = sendChipReq(reqs[i], SEND);
+                break;
             case Request::Type::RowLoad:
+                ticks = sendChipReq(reqs[i], RECEIVE);
+                break;
+            case Request::Type::RowLoad_RF:
                 ticks = sendChipReq(reqs[i], RECEIVE);
                 break;
             //case Request::Type::SystemRowStore:
@@ -1447,6 +1465,25 @@ void System<T>::test_tile0()
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowStore_RF);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowMul_RF);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd_RF);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);

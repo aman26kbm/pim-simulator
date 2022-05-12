@@ -22,6 +22,9 @@ public:
     //This is the bandwidth between DRAM chip and the CRAM chip
     //This is overridden from the config file.
     int _wordsize_dram = 1024;
+    //This is the amount of data we load into RF every time
+    //we read from DRAm (kinda like cache_line_size)
+    int _rf_chunk_size = 64;
 
     int _freq;
 

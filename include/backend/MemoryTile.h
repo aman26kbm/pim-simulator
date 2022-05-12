@@ -11,6 +11,7 @@
 #include "System.h"
 #include "MemoryBlock.h"
 #include "MemoryChip.h"
+#include "RegisterFile.h"
 #include "MemoryComponent.h"
 
 namespace pimsim {
@@ -19,6 +20,7 @@ class Request;
 class MemoryBlock;
 class MemoryChip;
 class MemoryComponent;
+class RegisterFile;
 
 class MemoryTile : public MemoryComponent {
 public:
@@ -66,6 +68,7 @@ public:
 
     /* Per-tile statistics */
     uint64_t n_reads = 0, n_writes = 0;
+    uint64_t n_loads = 0, n_stores = 0;
     uint64_t n_inter_block_transfers = 0, n_intra_block_transfers = 0;
     uint64_t n_pim_reqs = 0;
     uint64_t n_unexpected_reqs = 0;
