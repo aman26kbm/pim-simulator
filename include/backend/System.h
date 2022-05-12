@@ -73,6 +73,10 @@ public:
     int sendPIM_one_operand(Request& req);
     int sendPIM_two_operands(Request& req);
     int sendPimReq(Request& req);
+
+    int sendRF_one_operand(Request& req);
+    int sendRF_two_operands(Request& req);
+    int sendRFReq(Request& req);
     //int system_sendPimReq(Request& req);
 
     int sendTileReq(Request& req, int para);
@@ -110,6 +114,7 @@ public:
     void gemv_tile0();
     void gemv_tile1();
 
+    int NUM_FILTER_COEFFS = 8;
     void fir();
     void fir_tile0();
     void fir_tile1();
@@ -161,6 +166,16 @@ public:
     AddrT cram_addr_tile1_block3_row8; 
     AddrT cram_addr_tile1_block3_row16;
     AddrT cram_addr_tile1_block3_row24;
+
+    //RF base addresses. These are aliases
+    //for CRAM addresses for now. That's coz
+    //the simulator doesn't need the actual address
+    //of the RF. It only need to know which tile's
+    //RF it is.
+    AddrT rf_base_addr_tile0;
+    AddrT rf_base_addr_tile1;
+    AddrT rf_base_addr_tile2;
+    AddrT rf_base_addr_tile3;
 
 };
 

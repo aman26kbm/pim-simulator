@@ -143,11 +143,16 @@ public:
         RowShift,
         Signal,
         Wait,
+        Barrier,
+        ResetSync,
         NOP,
         RowLoad_RF,
         RowStore_RF,
-        RowMul_RF,
+        RowMul_CRAM_RF, //Multiplication between a value in CRAM and RF
+        RowAdd_CRAM_RF, //Addition between a value in CRAM and RF
+        RowRead_RF,
         RowAdd_RF,
+        RowSub_RF,
         MAX
     } type;
 
@@ -198,11 +203,16 @@ public:
             case 41: return        "RowShift";
             case 42: return        "Signal";
             case 43: return        "Wait";
-            case 44: return        "NOP";
-            case 45: return        "RowLoad_RF";
-            case 46: return        "RowStore_RF";
-            case 47: return        "RowMul_RF";
-            case 48: return        "RowAdd_RF";
+            case 44: return        "Barrier";
+            case 45: return        "ResetSync";
+            case 46: return        "NOP";
+            case 47: return        "RowLoad_RF";
+            case 48: return        "RowStore_RF";
+            case 49: return        "RowMul_CRAM_RF";
+            case 50: return        "RowAdd_CRAM_RF";
+            case 51: return        "RowRead_RF";
+            case 52: return        "RowAdd_RF";
+            case 53: return        "RowSub_RF";
             default: return        "None";
         };
 
@@ -220,17 +230,30 @@ public:
     int dst_chip, dst_tile, dst_block, dst_row, dst_col;
     Mailbox* mail;
 
+    enum class BroadcastType: int {
+        NONE,
+        ALL
+    } broadcast;
+
     Request() {}
 
-    Request(Type t) : type(t) {}
+    Request(Type t) {
+        type = t;
+    }
 
-    Request(Type t, AddrT addr) : type(t) {
+    Request(Type t, AddrT addr) {
+        type = t;
         addr_list.push_back(addr);
     }
 
     Request(Type t, Mailbox* m) {
         type = t;
         mail = m;
+    }
+
+    Request(Type t, BroadcastType b) {
+        type = t;
+        broadcast = b;
     }
 
 //    std::string reqToStr() {
@@ -333,12 +356,12 @@ public:
             case Type::RowWrite:
             case Type::ColWrite:
             case Type::RowAdd:
-            case Type::RowAdd_RF:
+            case Type::RowAdd_CRAM_RF:
             case Type::ColAdd:
             case Type::RowSub:
             case Type::ColSub:
             case Type::RowMul:
-            case Type::RowMul_RF:
+            case Type::RowMul_CRAM_RF:
             case Type::RowDiv:
             case Type::ColMul:
             case Type::ColDiv:
@@ -355,7 +378,14 @@ public:
     }
 
     bool isRF() {
-        if ((type == Type::RowMul_RF || type == Type::RowAdd_RF || type == Type::RowLoad_RF || type == Type::RowStore_RF))
+        if ((type == Type::RowMul_CRAM_RF || type == Type::RowAdd_CRAM_RF || type == Type::RowLoad_RF || type == Type::RowStore_RF))
+            return true;
+        else
+            return false;
+    }
+
+    bool isRFonly() {
+        if (type == Type::RowAdd_RF || type == Type::RowSub_RF || type == Type::RowRead_RF)
             return true;
         else
             return false;

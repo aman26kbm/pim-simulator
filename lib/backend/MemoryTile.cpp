@@ -161,6 +161,9 @@ MemoryTile::issueReq(Request& req)
     } else if (req.isPIM()) {
         req.process_time = cur_time;
         req.finish_time = cur_time + getReqTiming(req);
+    } else if (req.isRFonly()) {
+        req.process_time = cur_time;
+        req.finish_time = cur_time + getReqTiming(req);
     }
     else {
         std::cout<<"Unsupported request";
@@ -252,6 +255,9 @@ void MemoryTile::update_next(){
                 }
                 else if(req.type == Request::Type::Wait) {
                     next_state.status = MAIL_WAIT;
+                }
+                else if(req.type == Request::Type::ResetSync) {
+                    req.mail->reset();
                 }
                 else if(req.isChipDram()) {
                     if (_parent->dram_busy) {

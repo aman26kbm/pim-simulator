@@ -64,7 +64,7 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
             clocks = mantissa; //Not using +1 because the precision supplied already includes the carry bit
         }
     }
-    else if (op=="add_rf") {
+    else if (op=="add_cram_rf") {
         if (dtype=="float") {
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
@@ -80,7 +80,7 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
             clocks = mantissa * mantissa + 3 * mantissa - 2;
         }
     }
-    else if (op=="mul_rf") {
+    else if (op=="mul_cram_rf") {
         if (dtype=="float") {
             clocks = (mantissa * mantissa + 7 * mantissa + 3 * exponent + 5) / 2;
         }
@@ -126,103 +126,104 @@ int MemoryCharacteristics::getPrecisionBits(Request req) {
 
 //double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {
 double MemoryCharacteristics::getTiming(Request req) {
-    int idx = int(req.type);
     TimeT time = 0;
-    switch (idx) {
-        case 0: //RowSet
-        case 1: //ColSet
+    switch (req.type) {
+        case Request::Type::RowSet: 
+        case Request::Type::ColSet: 
             time = T_CLK;
             break;
-        case 2: //RowReset
-        case 3: //ColReset
+        case Request::Type::RowReset: 
+        case Request::Type::ColReset: 
             time = T_CLK;
             break;
-        case 4: //RowMv
-        case 5: //ColMv
+        case Request::Type::RowMv: 
+        case Request::Type::ColMv: 
             time = T_CLK;
             break;
-        case 6: //RowRead
-        case 7: //ColRead
+        case Request::Type::RowRead: 
+        case Request::Type::ColRead: 
             time = T_CLK * getPrecisionBits(req);
             break;
-        case 8: //RowWrite
-        case 9: //ColWrite
+        case Request::Type::RowWrite: 
+        case Request::Type::ColWrite: 
             time = T_CLK * getPrecisionBits(req);
             break;
-        case 10: //RowAdd
-        case 11: //ColAdd
-        case 12: //RowSub
-        case 13: //ColSub
+        case Request::Type::RowAdd: 
+        case Request::Type::ColAdd: 
+        case Request::Type::RowSub: 
+        case Request::Type::ColSub: 
            //Looking the precision of the second item in the list (the destination) for calculating the
            //number of cycles consumed.
            //Number of destination bits tells the right value for addition because it could be more
            //than the operands. (Eg. in case where accumulator is wider)
             time = getClocksForReq(req.precision_list[1], "add") * T_CLK;
             break;
-        case 14: //RowMul
-        case 15: //RowDiv
-        case 16: //ColMul
-        case 17: //ColDiv
+        case Request::Type::RowMul: 
+        case Request::Type::RowDiv: 
+        case Request::Type::ColMul: 
+        case Request::Type::ColDiv: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
            //Number of src bits gives the right value for multiplication cycles.
             time = getClocksForReq(req.precision_list[0], "mul") * T_CLK;
             break;
-        case 18: //RowBitwise
-        case 19: //ColBitwise
+        case Request::Type::RowBitwise: 
+        case Request::Type::ColBitwise: 
             time = T_CLK;
             break;
-        case 20: //RowSearch
-        case 21: //ColSearch
+        case Request::Type::RowSearch: 
+        case Request::Type::ColSearch: 
             time = T_CLK;
             break;
-        case 22: //BlockSend
-        case 23: //BlockReceive
-        case 24: //BlockSend_Receive
-        case 25: //TileSend
-        case 26: //TileReceive
-        case 27: //TileSend_Receive
-        case 28: //ChipSend_Receive
+        case Request::Type::BlockSend: 
+        case Request::Type::BlockReceive: 
+        case Request::Type::BlockSend_Receive: 
+        case Request::Type::TileSend: 
+        case Request::Type::TileReceive: 
+        case Request::Type::TileSend_Receive: 
+        case Request::Type::ChipSend_Receive: 
             time = T_CLK; // Assuming the global clock frequency is 1/T_CLK.
             break;
 
         //cases 29-37 are System commands
 
-        case 38: //RowReduce
+        case Request::Type::RowReduce: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
             time = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * T_CLK;
             break;
-        case 39: //RowLoad
+        case Request::Type::RowLoad: 
             time = DramLatency;
             break;
-        case 40: //RowStore
+        case Request::Type::RowStore: 
             time = DramLatency;
             break;
-        case 41: //RowShift
+        case Request::Type::RowShift: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of shifts
             time = getClocksForReq(req.precision_list[0], "read", req.size_list[0]) * T_CLK;
             break;
-        case 45: //RowLoad_RF
+        case Request::Type::RowLoad_RF: 
+        case Request::Type::RowStore_RF: 
             time = DramLatency;
             break;
-        case 46: //RowStore_RF
-            time = DramLatency;
-            break;
-        case 47: //RowMul_RF
+        case Request::Type::RowMul_CRAM_RF: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
            //Number of src bits gives the right value for multiplication cycles.
-            time = getClocksForReq(req.precision_list[0], "mul_rf") * T_CLK;
+            time = getClocksForReq(req.precision_list[0], "mul_cram_rf") * T_CLK;
             break;
-        case 48: //RowAdd_RF
+        case Request::Type::RowAdd_CRAM_RF: 
            //Looking the precision of the second item in the list (the destination) for calculating the
            //number of cycles consumed.
            //Number of destination bits tells the right value for addition because it could be more
            //than the operands. (Eg. in case where accumulator is wider)
-            time = getClocksForReq(req.precision_list[1], "add_rf") * T_CLK;
+            time = getClocksForReq(req.precision_list[1], "add_cram_rf") * T_CLK;
             break;
+        case Request::Type::RowAdd_RF: 
+        case Request::Type::RowSub_RF: 
+        case Request::Type::RowRead_RF: 
+            time = T_CLK; //Only 1 cycle is consumed in these RF only instructions
             break;
         default:
             time = T_CLK;
@@ -236,60 +237,60 @@ double MemoryCharacteristics::getEnergy(Request req) {
     double energy = 0.0;
     int idx = int(req.type);
     switch (idx) {
-        case 0: //RowSet
-        case 1: //ColSet
+        case Request::Type::RowSet: 
+        case Request::Type::ColSet: 
             energy = E_SET;
             break;
-        case 2: //RowReset
-        case 3: //ColReset
+        case Request::Type::RowReset: 
+        case Request::Type::ColReset: 
             energy = E_RESET;
             break;
-        case 4: //RowMv
-        case 5: //ColMv
+        case Request::Type::RowMv: 
+        case Request::Type::ColMv: 
             energy = E_NOR;
             break;
-        case 6: //RowRead
-        case 7: //ColRead
+        case Request::Type::RowRead: 
+        case Request::Type::ColRead: 
             energy = E_READ * getPrecisionBits(req);
             break;
-        case 8: //RowWrite
-        case 9: //ColWrite
+        case Request::Type::RowWrite: 
+        case Request::Type::ColWrite: 
             energy = E_WRITE * getPrecisionBits(req);
             break;
-        case 10: //RowAdd
-        case 11: //ColAdd
-        case 12: //RowSub
-        case 13: //ColSub
+        case Request::Type::RowAdd: 
+        case Request::Type::ColAdd: 
+        case Request::Type::RowSub: 
+        case Request::Type::ColSub: 
 
             //energy = (12 * N + 1) * E_NOR; //fixed-32
             //energy = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * E_NOR + (2 * N_m + 1) * E_SEARCH; //float-32
             energy = getClocksForReq(req.precision_list[1], "add") * E_CLK;
             break;
-        case 14: //RowMul
-        case 15: //RowDiv
-        case 16: //ColMul
-        case 17: //ColDiv
+        case Request::Type::RowMul: 
+        case Request::Type::RowDiv: 
+        case Request::Type::ColMul: 
+        case Request::Type::ColDiv: 
 
             //energy = (13 * N * N - 14 * N + 6) * E_NOR; // fixed-32 (full precision)
             //energy = (6.5 * N * N - 7.5 * N - 2) * E_NOR; // fixed-32 (half precision)
             //energy = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * E_NOR; // float-32
             energy = getClocksForReq(req.precision_list[0], "mul") * E_CLK;
             break;
-        case 18: //RowBitwise
-        case 19: //ColBitwise
+        case Request::Type::RowBitwise: 
+        case Request::Type::ColBitwise: 
             energy = E_NOR;
             break;
-        case 20: //RowSearch
-        case 21: //ColSearch
+        case Request::Type::RowSearch: 
+        case Request::Type::ColSearch: 
             energy = E_SEARCH;
             break;
-        case 22: //BlockSend
-        case 23: //BlockReceive
-        case 24: //BlockSend_Receive
-        case 25: //TileSend
-        case 26: //TileReceive
-        case 27: //TileSend_Receive
-        case 28: //ChipSend_Receive
+        case Request::Type::BlockSend: 
+        case Request::Type::BlockReceive: 
+        case Request::Type::BlockSend_Receive: 
+        case Request::Type::TileSend: 
+        case Request::Type::TileReceive: 
+        case Request::Type::TileSend_Receive: 
+        case Request::Type::ChipSend_Receive: 
 //            if (_configuration == Configuration::Bus)
 //                energy = E_internal_bus[(int) log(_wordsize / 32)] + E_switching_bus[(int) log(_wordsize / 32)];
 //            else if (_configuration == Configuration::HTree)
@@ -298,7 +299,7 @@ double MemoryCharacteristics::getEnergy(Request req) {
 //                energy = E_internal_htree[(int) log(_wordsize / 32)] + E_switching_htree[(int) log(_wordsize / 32)];
             energy = 0;
             break;
-        case 29: //RowReduce
+        case Request::Type::RowReduce: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
             energy = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * E_CLK;
