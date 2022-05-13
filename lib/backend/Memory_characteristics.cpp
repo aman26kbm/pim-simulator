@@ -9,11 +9,17 @@
 using namespace pimsim;
 using namespace std;
 
-MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int wordsize_dram, int freq) {
+MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, 
+                                             int wordsize_block2block, 
+                                             int wordsize_tile2tile, 
+                                             int wordsize_dram, 
+                                             int rf_chunk_size,
+                                             int freq) {
     _configuration = configuration;
     _wordsize_block2block = wordsize_block2block;
     _wordsize_tile2tile = wordsize_tile2tile;
     _wordsize_dram = wordsize_dram;
+    _rf_chunk_size = rf_chunk_size;
     _freq = freq;
 }
 

@@ -13,23 +13,29 @@ public:
         Ideal
     } _configuration;
 
-    //This is the inter block bandwidth.
+    //This is the inter block bandwidth (in bits).
     //This is overridden from the config file.
-    int _wordsize_block2block = 32;
-    //This is the inter tile bandwidth.
+    int _wordsize_block2block = 256;
+    //This is the inter tile bandwidth (in bits).
     //This is overridden from the config file.
-    int _wordsize_tile2tile = 32;
-    //This is the bandwidth between DRAM chip and the CRAM chip
+    int _wordsize_tile2tile = 1024;
+    //This is the bandwidth between DRAM chip and the CRAM chip (in bits).
     //This is overridden from the config file.
     int _wordsize_dram = 1024;
-    //This is the amount of data we load into RF every time
-    //we read from DRAm (kinda like cache_line_size)
-    int _rf_chunk_size = 64;
+    //This is the min number of bits we load into RF every time
+    //we read from DRAM (kinda like cache_line_size)
+    //This is overridden from the config file.
+    int _rf_chunk_size = 512;
 
     int _freq;
 
 	MemoryCharacteristics() {}
-    MemoryCharacteristics(Configuration configuration, int wordsize_block2block, int wordsize_tile2tile, int wordsize_dram, int freq);
+    MemoryCharacteristics(Configuration configuration, 
+                           int wordsize_block2block, 
+                           int wordsize_tile2tile, 
+                           int wordsize_dram, 
+                           int rf_chunk_size,
+                           int freq);
 
     //Assume DRAM latency is 10 cycles
     int DramLatency = 10;

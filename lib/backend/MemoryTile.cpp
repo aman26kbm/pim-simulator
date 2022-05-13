@@ -83,11 +83,35 @@ MemoryTile::issueReq(Request& req)
         //precision_list[0] effectively contains the number of rows to transfer.
         //1 "word" = 1 full dram interface width worth of data. 
         //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
+        int rounded_up_bits;
         if (req.isRF()) {
-            req.dram_words = int((_values->_rf_chunk_size * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+            int chunk_size = _values->_rf_chunk_size;
+            int num_elements = req.size_list[0];
+            int precision_bits = getPrecisionBits(req);
+            int actual_bits = num_elements * precision_bits;
+            if (actual_bits < chunk_size) {
+                rounded_up_bits = chunk_size;
+            }
+            else if (actual_bits % chunk_size == 0) {
+                rounded_up_bits = actual_bits;
+            }
+            else {
+                rounded_up_bits = (int(actual_bits/chunk_size)*chunk_size) + chunk_size;
+            }
         }
         else {
-            req.dram_words = int((_ncols * _nblocks * getPrecisionBits(req)) / _values->_wordsize_dram) ;
+            rounded_up_bits = _ncols * _nblocks * getPrecisionBits(req);
+        }
+
+        int dram_chunk_size = _values->_wordsize_dram;
+        if (rounded_up_bits < dram_chunk_size) {
+            req.dram_words = 1;
+        }
+        else if (rounded_up_bits % dram_chunk_size == 0) {
+            req.dram_words = rounded_up_bits / dram_chunk_size;
+        }
+        else {
+            req.dram_words = (int(rounded_up_bits/dram_chunk_size)) + 1;
         }
         _parent->dram_counter += req.dram_words;
         // getReqTiming gives us the dram latency

@@ -25,6 +25,7 @@ System<T>::System(Config* config) : _config(config)
     _wordsize_block2block = config->get_wordsize_block2block();
     _wordsize_tile2tile = config->get_wordsize_tile2tile();
     _wordsize_dram = config->get_wordsize_dram();
+    _rf_chunk_size = config->get_rf_chunk_size();
     if (!(_blockctrl || _tilectrl || _chipctrl))
         _blockctrl = true;
     _blocksize = _nrows * _ncols; // set the blocksize based on columns and rows
@@ -34,11 +35,11 @@ System<T>::System(Config* config) : _config(config)
     rstFile = fopen(config->get_rstfile().c_str(), "w");
 
     if (config->get_mem_configuration() == "htree") {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size, _clock_rate);
     } else if (config->get_mem_configuration() == "bus") {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size, _clock_rate);
     } else {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size, _clock_rate);
     }
 
     for (int i = 0; i < _nchips; i++) {
@@ -859,8 +860,8 @@ void System<T>::gemv_tile0() {
     //Now load vector values into RF.
     //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
     request = new Request(Request::Type::RowLoad_RF);
-    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addAddr(rf_base_addr_tile0, 0, PrecisionT::INT4); //dst
+    request->addAddr(DRAM_ADDR, 4, PrecisionT::INT4); //src
+    request->addAddr(rf_base_addr_tile0, 4, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //Initialize rows that'll hold the accumulator (accumulator size=16)
@@ -924,8 +925,8 @@ void System<T>::gemv_tile1() {
     //Now load vector values into RF.
     //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
     request = new Request(Request::Type::RowLoad_RF);
-    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addAddr(rf_base_addr_tile1, 0, PrecisionT::INT4); //dst
+    request->addAddr(DRAM_ADDR, 4, PrecisionT::INT4); //src
+    request->addAddr(rf_base_addr_tile1, 4, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //Initialize rows that'll hold the accumulator (accumulator size=16)
@@ -1023,11 +1024,10 @@ void System<T>::fir_tile0()
     //So, we can brodcast.
     //When we are broadcasting though, other tiles shouldn't do anything.
     //So they will wait for a semaphore.
-    //Assume the number of weights is less than rf_chunk_size, we 
-    //only need 1 rowload_rf instruction.
+    //Assume the number of weights is 8
     request = new Request(Request::Type::RowLoad_RF, Request::BroadcastType::ALL);
-    request->addAddr(DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addAddr(rf_base_addr_tile0, 0, PrecisionT::INT4); //dst
+    request->addAddr(DRAM_ADDR, 8, PrecisionT::INT4); //src
+    request->addAddr(rf_base_addr_tile0, 8, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //Signal that the load of filter coefficients from DRAM

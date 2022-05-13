@@ -1,1 +1,1 @@
-./PIM_simulator --cfg ../configs/level_4_512_1_0_0.cfg --fir |& tee fir.log
+./PIM_simulator --cfg ../configs/pimsim.cfg --fir |& tee fir.log

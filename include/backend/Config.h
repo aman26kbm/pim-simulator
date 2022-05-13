@@ -16,7 +16,7 @@ class Config {
 private:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
-    //int _wordsize, _datatype;
+    int _rf_chunk_size;
     int _wordsize_block2block;
     int _wordsize_tile2tile;
     int _wordsize_dram;
@@ -69,7 +69,7 @@ public:
     int get_wordsize_block2block() const {return _wordsize_block2block;}
     int get_wordsize_tile2tile() const {return _wordsize_tile2tile;}
     int get_wordsize_dram() const {return _wordsize_dram;}
-    //int get_datatype() const {return _datatype;}
+    int get_rf_chunk_size() const {return _rf_chunk_size;}
     int get_clock_rate() const {return _clock_rate;}
     bool get_compact() const {return _compact_alloc;}
     bool get_blockctrl() const {return _blockctrl;}

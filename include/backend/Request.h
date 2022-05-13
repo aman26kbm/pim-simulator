@@ -18,27 +18,31 @@ namespace pimsim {
 class Request {
 public:
     enum class Type : int {
+        //////////////////////////////////
+        //Basic PIM instructions
+        //////////////////////////////////
         RowSet,   //Sets (to 1) 1 row in a block. 
                   //"size" argument is not used.
                   //The address of the row is specified by the "addr" argument.
                   //Entire row is set. No way to set a few columns in the chunk of rows.
                   //It'd take the same time if either all columns or a few columns of the chunk of rows was needed to be set. 
                   //So setting a few columns of the chunk of rows is not modelled/supported.
-        ColSet,   //Same as above, but for column
+        ColSet,   //UNUSED
         RowReset, //Resets (to 0) a row in a block.
-        ColReset, //Same as above, but for row
-        RowMv,    //Moves a row in a block from src to dst. 
+        ColReset, //UNUSED
+        RowMv,    //UNUSED
+                  //Moves a row in a block from src to dst. 
                   //"size" argument is not used.
                   //The address of the row is specified by the "addr" argument.
-        ColMv,    //Same as above, but for column
+        ColMv,    //UNUSED
 
         RowRead,  //Read 1 row in a block and bring its contents into the row buffer of the block.
                   //The addr argument specifies the row ID. 
                   //"size" argument is not used.
                   //Can't specify a few columns within the row to read. Read all columns in the row.
-        ColRead,  //Same as above, but for column
+        ColRead,  //UNUSED
         RowWrite, //Write a row in a block; rest same as above 
-        ColWrite, //Same as above, but for column
+        ColWrite, //UNUSED
 
         RowAdd,   //Add multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
@@ -48,9 +52,9 @@ public:
                   //The "size" argument is unused.
                   //There is implicit parallellism here. This instruction involves multiple rows.
                   //Also, the add operation happens across all columns.
-        ColAdd,  
+        ColAdd,   //UNUSED
         RowSub,   //Same as above, but for Sub instead of Add
-        ColSub,
+        ColSub,   //UNUSED
 
         RowMul,   //Multiply multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
@@ -60,9 +64,9 @@ public:
                   //The "size" argument is unused.
                   //There is implicit parallellism here. This instruction involves multiple rows.
                   //Also, the add operation happens across all columns.
-        ColMul,
-        RowDiv,
-        ColDiv,
+        ColMul,   //UNUSED
+        RowDiv,   //UNUSED
+        ColDiv,   //UNUSED
 
         RowBitwise,//Perform a bitwise operation between multi-bit values stored over multiple rows.
                    //The entire row participates. Can't specify a few columns that will participate.
@@ -71,12 +75,25 @@ public:
                    //The time taken is specified to be X cycles in MemoryCharacteristics
                    //where X includes the cycles required to fully add multi-bit numbers.
                    //The "size" argument is unused.
-        ColBitwise,
+        ColBitwise,//UNUSED
 
-        RowSearch, //Ignoring this for now, coz PIMRA doesn't support the search operation
-        ColSearch,
+        RowSearch, //UNUSED
+        ColSearch, //UNUSED
+        RowReduce,  //Reduce internally within the array. Multi-bit elements present in multiple columns are reduced.
+                    //"Precision" argument specifies the precision of the data ([0] will be for src, [1] will be for destination).
+                    //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
+                    //The time taken is specified to be X cycles in MemoryCharacteristics
+                    //where X includes the cycles required to fully reduce multi-bit numbers.
+                    //The "precision" argument specifies precision.
+                    //The "size" argument specifies how many levels to stop after.
+                    //There is implicit parallellism here. This instruction involves multiple rows.
+        RowShift,   
 
-        BlockSend, //Doesn't mean send a whole block from one place to another.
+        //////////////////////////////////
+        //Data transfer instructions
+        //////////////////////////////////
+        BlockSend, //UNUSED
+                   //Doesn't mean send a whole block from one place to another.
                    //Send N rows from one block to another within a tile. 
                    //Bandwidth of the block-to-block interconnect is specified in memory characteristics (_wordsize).
                    //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
@@ -85,7 +102,8 @@ public:
                    //The "addr" argument will specify the row ID of row0.
                    //The "size" argument is unused.
                    //The "precision" argument will specify the number of rows to transfer.
-        BlockReceive, //Same as above; just for receive
+        BlockReceive, //UNUSED
+                      //Same as above; just for receive
         BlockSend_Receive, //Same as above; but for both send and receive
         TileSend, //Doesn't mean send a whole tile from one place to another.
                   //Doesn't mean send some bits from a block in one tile to another block in another tile.
@@ -95,13 +113,18 @@ public:
                   //isn't global across the entire chip; there is a hierarchy)
                   //size, precision and addr arguments have the same meaning as BlockSend.
         TileReceive, //Same as above; just for receive
-        TileSend_Receive,//Same as above; but for both send and receive
-        ChipSend_Receive,//This does not transfer some bits from one block to another in a different chip. 
+        TileSend_Receive, //UNUSED
+                          //Same as above; but for both send and receive
+        ChipSend_Receive,//UNUSED
+                         //This does not transfer some bits from one block to another in a different chip. 
                          //This only accounts for the transfer from a chip to another chip. 
                          //So, network delay is added.
                          //The transfer time from block to tile, tile to chip boundary is not included.
                          //size, precision and addr arguments have the same meaning as BlockSend.
 
+        //////////////////////////////////
+        //High level API for data transfer - UNUSED
+        //////////////////////////////////
         //The following request types form a higher level API. They just wrap the lower level types above.
         //So, there is no "time taken" mentioned for the following in Memorycharacteristics.cpp.
         SystemRow2Row, //Invokes system_sendRow_receiveRow, which if invokes:
@@ -122,14 +145,10 @@ public:
         SystemRowLoad,  //Loads rows from DRAM into a CRAM block. This is basically the same as
                         //SystemRowStore, just in the opposite direction.
         SystemColWrite, //Not supported
-        RowReduce,  //Reduce internally within the array. Multi-bit elements present in multiple columns are reduced.
-                    //"Precision" argument specifies the precision of the data ([0] will be for src, [1] will be for destination).
-                    //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
-                    //The time taken is specified to be X cycles in MemoryCharacteristics
-                    //where X includes the cycles required to fully reduce multi-bit numbers.
-                    //The "precision" argument specifies precision.
-                    //The "size" argument specifies how many levels to stop after.
-                    //There is implicit parallellism here. This instruction involves multiple rows.
+
+        //////////////////////////////////
+        //DRAM loads and stores 
+        //////////////////////////////////
         RowLoad,    //Load multiple rows from DRAM into a CRAM block.
                     //The "size" argument is ignored.
                     //The "precision" argument tells the number of rows to load
@@ -140,14 +159,28 @@ public:
                     //The "addr" argument will specify the row ID of row0.
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
-        RowShift,
+        
+        //////////////////////////////////
+        //Synchronization related instructions
+        //////////////////////////////////
         Signal,
         Wait,
         Barrier,
         ResetSync,
         NOP,
-        RowLoad_RF,
-        RowStore_RF,
+        
+        //////////////////////////////////
+        //RF related instructions
+        //////////////////////////////////
+        RowLoad_RF,     //Load a set of data elements from DRAM into RF.
+                        //The "precision" argument tells the precision of each element loaded.
+                        //The "size" argument tells how many such elements will be loaded.
+                        //Number of words loaded from DRAM depends on the total bytes requested
+                        //and the configured rf_chunk_size.
+                        //The "addr" argument specifies the location in the RF where the first
+                        //element will be saved.
+        RowStore_RF,    //Store a set of data elements from RF into DRAM
+                        //Rest of the details are the same as RowLoad_RF
         RowMul_CRAM_RF, //Multiplication between a value in CRAM and RF
         RowAdd_CRAM_RF, //Addition between a value in CRAM and RF
         RowRead_RF,
@@ -181,31 +214,34 @@ public:
             case 19: return        "ColBitwise";
             case 20: return        "RowSearch";
             case 21: return        "ColSearch";
-            case 22: return        "BlockSend";
-            case 23: return        "BlockReceive";
-            case 24: return        "BlockSend_Receive";
-            case 25: return        "TileSend";
-            case 26: return        "TileReceive";
-            case 27: return        "TileSend_Receive";
-            case 28: return        "ChipSend_Receive";
-            case 29: return        "SystemRow2Row";
-            case 30: return        "SystemRow2Col";
-            case 31: return        "SystemCol2Row";
-            case 32: return        "SystemCol2Col";
-            case 33: return        "SystemLookUpTable";
-            case 34: return        "SystemRowStore";
-            case 35: return        "SystemColRead";
-            case 36: return        "SystemRowLoad";
-            case 37: return        "SystemColWrite";
-            case 38: return        "RowReduce";
-            case 39: return        "RowLoad";
-            case 40: return        "RowStore";
-            case 41: return        "RowShift";
+            case 22: return        "RowReduce";
+            case 23: return        "RowShift";
+
+            case 24: return        "BlockSend";
+            case 25: return        "BlockReceive";
+            case 26: return        "BlockSend_Receive";
+            case 27: return        "TileSend";
+            case 28: return        "TileReceive";
+            case 29: return        "TileSend_Receive";
+            case 30: return        "ChipSend_Receive";
+            case 31: return        "SystemRow2Row";
+            case 32: return        "SystemRow2Col";
+            case 33: return        "SystemCol2Row";
+            case 34: return        "SystemCol2Col";
+            case 35: return        "SystemLookUpTable";
+            case 36: return        "SystemRowStore";
+            case 37: return        "SystemColRead";
+            case 38: return        "SystemRowLoad";
+            case 39: return        "SystemColWrite";
+
+            case 40: return        "RowLoad";
+            case 41: return        "RowStore";
             case 42: return        "Signal";
             case 43: return        "Wait";
             case 44: return        "Barrier";
             case 45: return        "ResetSync";
             case 46: return        "NOP";
+
             case 47: return        "RowLoad_RF";
             case 48: return        "RowStore_RF";
             case 49: return        "RowMul_CRAM_RF";
