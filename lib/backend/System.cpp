@@ -315,19 +315,6 @@ int System<T>::sendRF_two_operands(Request& req)
     return tot_clks;
 }
 
-/*
-//I don't think this function will be used standalone
-template <class T>
-int System<T>::system_sendChipReq(Request& req, int para)
-{
-    int tot_clks = 0;
-
-    tot_clks = sendChipReq(req, para);
-
-    return tot_clks;
-}
-*/
-
 template <class T>
 int System<T>::sendChipReq(Request& req, int para)
 {
@@ -381,19 +368,6 @@ int System<T>::sendChipReq(Request& req, int para)
 
     return tot_clks;
 }
-
-/*
-//I don't think this function will be used standalone
-template <class T>
-int System<T>::system_sendTileReq(Request& req, int para)
-{
-    int tot_clks = 0;
-
-    tot_clks = sendTileReq(req, para);
-
-    return tot_clks;
-}
-*/
 
 template <class T>
 int System<T>::sendTileReq(Request& req, int para)
@@ -489,18 +463,6 @@ int System<T>::sendSyncReq(Request& req)
     return tot_clks;
 }
 
-/*
-//Wrapper function for sendPimReq. Basically, we add synchronization
-//before and after calling sendPimReq.
-template <class T>
-int System<T>::system_sendPimReq(Request& req)
-{
-    int clks;
-    clks = sendPimReq(req);
-    return clks;
-}
-*/
-
 //Send a PIM request (will get executed by a block)
 //Returns number of clocks
 template <class T>
@@ -578,29 +540,29 @@ int System<T>::sendRequest(Request& req)
     tot_reqs++;
     switch (req.type) {
         case Request::Type::RowSet:
-        case Request::Type::ColSet:
+        //case Request::Type::ColSet:
         case Request::Type::RowReset:
-        case Request::Type::ColReset:
+        //case Request::Type::ColReset:
         case Request::Type::RowRead:
-        case Request::Type::ColRead:
+        //case Request::Type::ColRead:
         case Request::Type::RowWrite:
-        case Request::Type::ColWrite:
-        case Request::Type::RowMv:
-        case Request::Type::ColMv:
+        //case Request::Type::ColWrite:
+        //case Request::Type::RowMv:
+        //case Request::Type::ColMv:
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
-        case Request::Type::ColAdd:
+        //case Request::Type::ColAdd:
         case Request::Type::RowSub:
-        case Request::Type::ColSub:
+        //case Request::Type::ColSub:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
-        case Request::Type::RowDiv:
-        case Request::Type::ColMul:
-        case Request::Type::ColDiv:
+        //case Request::Type::RowDiv:
+        //case Request::Type::ColMul:
+        //case Request::Type::ColDiv:
         case Request::Type::RowBitwise:
-        case Request::Type::ColBitwise:
-        case Request::Type::RowSearch:
-        case Request::Type::ColSearch:
+        //case Request::Type::ColBitwise:
+        //case Request::Type::RowSearch:
+        //case Request::Type::ColSearch:
         case Request::Type::RowReduce:
         case Request::Type::RowShift:
             ticks = sendPimReq(req);
@@ -710,29 +672,29 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
         tot_reqs++;
         switch (reqs[i].type) {
             case Request::Type::RowSet:
-            case Request::Type::ColSet:
+            //case Request::Type::ColSet:
             case Request::Type::RowReset:
-            case Request::Type::ColReset:
+            //case Request::Type::ColReset:
             case Request::Type::RowRead:
-            case Request::Type::ColRead:
+            //case Request::Type::ColRead:
             case Request::Type::RowWrite:
-            case Request::Type::ColWrite:
-            case Request::Type::RowMv:
-            case Request::Type::ColMv:
+            //case Request::Type::ColWrite:
+            //case Request::Type::RowMv:
+            //case Request::Type::ColMv:
             case Request::Type::RowAdd:
             case Request::Type::RowAdd_CRAM_RF:
-            case Request::Type::ColAdd:
+            //case Request::Type::ColAdd:
             case Request::Type::RowSub:
-            case Request::Type::ColSub:
+            //case Request::Type::ColSub:
             case Request::Type::RowMul:
             case Request::Type::RowMul_CRAM_RF:
-            case Request::Type::RowDiv:
-            case Request::Type::ColMul:
-            case Request::Type::ColDiv:
+            //case Request::Type::RowDiv:
+            //case Request::Type::ColMul:
+            //case Request::Type::ColDiv:
             case Request::Type::RowBitwise:
-            case Request::Type::ColBitwise:
+            //case Request::Type::ColBitwise:
             case Request::Type::RowSearch:
-            case Request::Type::ColSearch:
+            //case Request::Type::ColSearch:
             case Request::Type::RowReduce:
             case Request::Type::RowShift:
                 ticks = sendPimReq(reqs[i]);
@@ -871,508 +833,6 @@ void System<T>::finish()
     }
 }
 
-/*
-template <class T>
-int System<T>::system_sendRow_receiveRow(Request& req) {
-    int tot_clks = 0;
-    int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i+=2) {
-        int src_chip = 0, src_tile = 0, src_block = 0, src_row = 0, src_col = 0;
-        int dst_chip = 0, dst_tile = 0, dst_block = 0, dst_row = 0, dst_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        if ((src_col + req.size_list[i] > _ncols) || (dst_col + req.size_list[i+1] > _ncols)) {
-            return -1;
-        }
-
-        if (src_chip != dst_chip) {
-
-            //We dont support this im PIMRA anymore.
-            //Only data transfer between blocks across tiles is supported.
-            cout<<"Unsupported code";
-            assert(0);
-
-            Request read_req(Request::Type::RowRead);
-            read_req.addAddr(req.addr_list[i], req.size_list[i]);
-            read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            read_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendPimReq(read_req);
-
-            Request block_send_req(Request::Type::BlockSend);
-            block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-            block_send_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendTileReq(block_send_req, SEND);
-
-            Request tile_send_req(Request::Type::TileSend);
-            tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-            tile_send_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendChipReq(tile_send_req, SEND);
-
-            Request chip_send_receive_req(Request::Type::ChipSend_Receive);
-            chip_send_receive_req.addAddr(req.addr_list[i], req.size_list[i]);
-            chip_send_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            chip_send_receive_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            chip_send_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            chip_send_receive_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendNetReq(chip_send_receive_req);
-
-            Request tile_receive_req(Request::Type::TileReceive);
-            tile_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            tile_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tile_receive_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendChipReq(tile_receive_req, RECEIVE);
-
-            Request block_receive_req(Request::Type::BlockReceive);
-            block_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            block_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            block_receive_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendTileReq(block_receive_req, RECEIVE);
-
-            Request write_req(Request::Type::RowWrite);
-            write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendPimReq(write_req);
-
-        } else if (src_chip == dst_chip && src_tile != dst_tile) {
-
-            Request read_req(Request::Type::RowRead);
-            read_req.addAddr(req.addr_list[i], req.size_list[i]);
-            read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            read_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendPimReq(read_req);
-
-            Request block_send_req(Request::Type::BlockSend);
-            block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-            block_send_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendTileReq(block_send_req, SEND);
-
-            Request tile_send_receive_req(Request::Type::TileSend_Receive);
-            tile_send_receive_req.addAddr(req.addr_list[i], req.size_list[i]);
-            tile_send_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            tile_send_receive_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tile_send_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tile_send_receive_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendChipReq(tile_send_receive_req, SEND_RECEIVE);
-
-            Request block_receive_req(Request::Type::BlockReceive);
-            block_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            block_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            block_receive_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendTileReq(block_receive_req, RECEIVE);
-
-            Request write_req(Request::Type::RowWrite);
-            write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendPimReq(write_req);
-
-        } else if (src_chip == dst_chip && src_tile == dst_tile && src_block != dst_block) {
-
-            Request read_req(Request::Type::RowRead);
-            read_req.addAddr(req.addr_list[i], req.size_list[i]);
-            read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            read_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendPimReq(read_req);
-
-            Request block_send_receive_req(Request::Type::BlockSend_Receive);
-            block_send_receive_req.addAddr(req.addr_list[i], req.size_list[i]);
-            block_send_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            block_send_receive_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            block_send_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            block_send_receive_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendTileReq(block_send_receive_req, SEND_RECEIVE);
-
-            Request write_req(Request::Type::RowWrite);
-            write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendPimReq(write_req);
-
-        } else if (src_chip == dst_chip && src_tile == dst_tile && src_block == dst_block) {
-
-            //We dont support this anymore.
-            //Only data transfer between blocks across tiles is supported.
-            cout<<"Unsupported code";
-            assert(0);
-
-            if (dst_col != src_col) {
-                Request mv_col_req(Request::Type::ColMv);
-                mv_col_req.addAddr(req.addr_list[i], req.size_list[i]);
-                mv_col_req.addAddr(req.addr_list[i]+(dst_col-src_col), req.size_list[i]);
-                mv_col_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-                mv_col_req.setDstLocation(dst_chip, dst_tile, dst_block, src_row, dst_col);
-                mv_col_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-                tot_clks += sendPimReq(mv_col_req);
-            }
-
-            Request mv_row_req(Request::Type::RowMv);
-            mv_row_req.addAddr(req.addr_list[i]+(dst_col-src_col), req.size_list[i]);
-            mv_row_req.addAddr(req.addr_list[i+1], req.size_list[i]);
-            mv_row_req.setSrcLocation(src_chip, src_tile, src_block, src_row, dst_col);
-            mv_row_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            mv_row_req.setLocation(src_chip, src_tile, src_block, src_row, dst_col);
-            tot_clks += sendPimReq(mv_row_req);
-        }
-    }
-    return tot_clks;
-}
-
-
-template <class T>
-int System<T>::system_sendRow_receiveCol(Request& req) {
-    int tot_clks = 0;
-    //This is not supported in PIMRA
-    cout<<"Unsupported code";
-    assert(0);
-    return tot_clks;
-}
-
-template <class T>
-int System<T>::system_sendCol_receiveRow(Request& req) {
-    int tot_clks = 0;
-    //This is not supported in PIMRA
-    cout<<"Unsupported code";
-    assert(0);
-    return tot_clks;
-}
-
-template <class T>
-int System<T>::system_sendCol_receiveCol(Request& req) {
-    int tot_clks = 0;
-
-    //This is not supported in PIMRA
-    cout<<"Unsupported code";
-    assert(0);
-
-    int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i+=2) {
-        int src_chip = 0, src_tile = 0, src_block = 0, src_row = 0, src_col = 0;
-        int dst_chip = 0, dst_tile = 0, dst_block = 0, dst_row = 0, dst_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        if ((src_row + req.size_list[i] > _nrows) || (dst_row + req.size_list[i+1] > _nrows)) {
-            return -1;
-        }
-
-        if (src_chip != dst_chip) {
-            Request read_req(Request::Type::ColRead);
-            read_req.addAddr(req.addr_list[i], req.size_list[i]);
-            read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            read_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendPimReq(read_req);
-
-            Request block_send_req(Request::Type::BlockSend);
-            block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-            block_send_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendTileReq(block_send_req, SEND);
-
-            Request tile_send_req(Request::Type::TileSend);
-            tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-            tile_send_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendChipReq(tile_send_req, SEND);
-
-            Request chip_send_receive_req(Request::Type::ChipSend_Receive);
-            chip_send_receive_req.addAddr(req.addr_list[i], req.size_list[i]);
-            chip_send_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            chip_send_receive_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            chip_send_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            chip_send_receive_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendNetReq(chip_send_receive_req);
-
-            Request tile_receive_req(Request::Type::TileReceive);
-            tile_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            tile_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tile_receive_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendChipReq(tile_receive_req, RECEIVE);
-
-            Request block_receive_req(Request::Type::BlockReceive);
-            block_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            block_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            block_receive_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendTileReq(block_receive_req, RECEIVE);
-
-            Request write_req(Request::Type::ColWrite);
-            write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendPimReq(write_req);
-
-        } else if (src_chip == dst_chip && src_tile != dst_tile) {
-            Request read_req(Request::Type::ColRead);
-            read_req.addAddr(req.addr_list[i], req.size_list[i]);
-            read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            read_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendPimReq(read_req);
-
-            Request block_send_req(Request::Type::BlockSend);
-            block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-            block_send_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendTileReq(block_send_req, SEND);
-
-            Request tile_send_receive_req(Request::Type::TileSend_Receive);
-            tile_send_receive_req.addAddr(req.addr_list[i], req.size_list[i]);
-            tile_send_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            tile_send_receive_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tile_send_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tile_send_receive_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendChipReq(tile_send_receive_req, SEND_RECEIVE);
-
-            Request block_receive_req(Request::Type::BlockReceive);
-            block_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            block_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            block_receive_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendTileReq(block_receive_req, RECEIVE);
-
-            Request write_req(Request::Type::ColWrite);
-            write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendPimReq(write_req);
-        } else if (src_chip == dst_chip && src_tile == dst_tile && src_block != dst_block) {
-            Request read_req(Request::Type::ColRead);
-            read_req.addAddr(req.addr_list[i], req.size_list[i]);
-            read_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            read_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendPimReq(read_req);
-
-            Request block_send_receive_req(Request::Type::BlockSend_Receive);
-            block_send_receive_req.addAddr(req.addr_list[i], req.size_list[i]);
-            block_send_receive_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            block_send_receive_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            block_send_receive_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            block_send_receive_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-            tot_clks += sendTileReq(block_send_receive_req, SEND_RECEIVE);
-
-            Request write_req(Request::Type::ColWrite);
-            write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-            write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            tot_clks += sendPimReq(write_req);
-        } else if (src_chip == dst_chip && src_tile == dst_tile && src_block == dst_block) {
-            if (dst_row != src_row) {
-                Request mv_row_req(Request::Type::RowMv);
-                mv_row_req.addAddr(req.addr_list[i], req.size_list[i]);
-                mv_row_req.addAddr(req.addr_list[i]+(dst_row-src_row), req.size_list[i]);
-                mv_row_req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-                mv_row_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, src_col);
-                mv_row_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-                tot_clks += sendPimReq(mv_row_req);
-            }
-
-            Request mv_col_req(Request::Type::ColMv);
-            mv_col_req.addAddr(req.addr_list[i]+(dst_col-src_col), req.size_list[i]);
-            mv_col_req.addAddr(req.addr_list[i+1], req.size_list[i]);
-            mv_col_req.setSrcLocation(src_chip, src_tile, src_block, dst_row, src_col);
-            mv_col_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-            mv_col_req.setLocation(src_chip, src_tile, src_block, src_row, dst_col);
-            tot_clks += sendPimReq(mv_col_req);
-        }
-    }
-    return tot_clks;
-}
-
-template <class T>
-int System<T>::system_DramStore(Request& req) {
-    int tot_clks = 0;
-    int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i=i+2) {
-        int src_chip = 0, src_tile = 0, src_block = 0, src_row = 0, src_col = 0;
-        int dst_chip = 0, dst_tile = 0, dst_block = 0, dst_row = 0, dst_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        if ((src_col + req.size_list[i] > _ncols) || (dst_col + req.size_list[i+1] > _ncols)) {
-            return -1;
-        }
-
-        //Only support single chip for now
-        assert(src_chip==dst_chip);
-
-        Request write_req(Request::Type::RowRead);
-        write_req.addAddr(req.addr_list[i], req.size_list[i]);
-        write_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        write_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendPimReq(write_req);
-
-        Request block_send_req(Request::Type::BlockSend);
-        block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        block_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendTileReq(block_send_req, SEND);
-
-        //This is not required. The tile-to-tile interconnect basically becomes tile-to-dram
-        //interconnect in this case, and it's time is already included in RowStore.
-        //Request tile_send_req(Request::Type::TileSend);
-        //tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        //tile_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        //tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        //tot_clks += sendChipReq(tile_send_req, SEND);
-
-        Request dram_store_req(Request::Type::RowStore);
-        dram_store_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-        dram_store_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        dram_store_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        tot_clks += sendChipReq(dram_store_req, RECEIVE);
-
-    }
-    return tot_clks;
-}
-
-
-template <class T>
-int System<T>::system_DramLoad(Request& req) {
-    int tot_clks = 0;
-    int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i=i+2) {
-        int src_chip = 0, src_tile = 0, src_block = 0, src_row = 0, src_col = 0;
-        int dst_chip = 0, dst_tile = 0, dst_block = 0, dst_row = 0, dst_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        if ((src_col + req.size_list[i] > _ncols) || (dst_col + req.size_list[i+1] > _ncols)) {
-            return -1;
-        }
-
-        //Only support single chip for now
-        assert(src_chip==dst_chip);
-
-        Request dram_load_req(Request::Type::RowLoad);
-        dram_load_req.addAddr(req.addr_list[i], req.size_list[i]);
-        dram_load_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        dram_load_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendChipReq(dram_load_req, SEND);
-
-        //This is not required. The tile-to-tile interconnect basically becomes tile-to-dram
-        //interconnect in this case, and it's time is already included in RowLoad.
-        //Request tile_send_req(Request::Type::TileReceive);
-        //tile_send_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-        //tile_send_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        //tile_send_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        //tot_clks += sendChipReq(tile_send_req, RECEIVE);
-
-        Request block_send_req(Request::Type::BlockReceive);
-        block_send_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-        block_send_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        block_send_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        tot_clks += sendTileReq(block_send_req, RECEIVE);
-
-        Request write_req(Request::Type::RowWrite);
-        write_req.addAddr(req.addr_list[i+1], req.size_list[i+1]);
-        write_req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        write_req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        tot_clks += sendPimReq(write_req);
-
-    }
-    return tot_clks;
-}
-
-template <class T>
-int System<T>::system_ColRead(Request& req) {
-    int tot_clks = 0;
-
-    //This is not supported in PIMRA
-    cout<<"Unsupported code";
-    assert(0);
-
-    int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i++) {
-        int src_chip = 0, src_tile = 0, src_block = 0, src_row = 0, src_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        if ((src_row + req.size_list[i] > _nrows)) {
-            return -1;
-        }
-
-        Request write_req(Request::Type::ColRead);
-        write_req.addAddr(req.addr_list[i], req.size_list[i]);
-        write_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        write_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendPimReq(write_req);
-
-        Request block_send_req(Request::Type::BlockSend);
-        block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        block_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendTileReq(block_send_req, SEND);
-
-        Request tile_send_req(Request::Type::TileSend);
-        tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        tile_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendChipReq(tile_send_req, SEND);
-    }
-    return tot_clks;
-}
-
-template <class T>
-int System<T>::system_ColWrite(Request& req) {
-    int tot_clks = 0;
-
-    //This is not supported in PIMRA
-    cout<<"Unsupported code";
-    assert(0);
-
-    int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i++) {
-        int src_chip = 0, src_tile = 0, src_block = 0, src_row = 0, src_col = 0;
-
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        if ((src_row + req.size_list[i] > _nrows)) {
-            return -1;
-        }
-
-        Request tile_send_req(Request::Type::TileReceive);
-        tile_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        tile_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tile_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendChipReq(tile_send_req, RECEIVE);
-
-        Request block_send_req(Request::Type::BlockReceive);
-        block_send_req.addAddr(req.addr_list[i], req.size_list[i]);
-        block_send_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        block_send_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendTileReq(block_send_req, RECEIVE);
-
-        Request write_req(Request::Type::ColWrite);
-        write_req.addAddr(req.addr_list[i], req.size_list[i]);
-        write_req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
-        write_req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-        tot_clks += sendPimReq(write_req);
-    }
-    return tot_clks;
-}
-*/
 
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile0
@@ -1874,107 +1334,3 @@ void System<T>::test()
     test_tile0();
     test_tile1();
 }
-
-/*
-template <class T>
-void System<T>::matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col)
-{
-}
-
-template <class T>
-void System<T>::matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col)
-{
-    AddrT storage_start_address =  (AddrT)_ncols *_nrows * _nblocks * _ntiles / 4 * 3; // use the last 3/4 for storage units
-
-    AddrT storage_start_address_A =  storage_start_address;
-    AddrT storage_start_address_B =  storage_start_address_A + A_row * A_col * 32;
-    AddrT storage_start_address_C =  storage_start_address_B + B_row * B_col * 32;
-
-    AddrT pim_start_address = 0;
-    AddrT block_size = _nrows * _ncols;
-    std::vector<Request> requests;
-    Request *request;
-
-    for (int i = 0; i < A_row; i++) {
-
-        request = new Request(Request::Type::SystemRow2Row);
-        for (int j = 0; j < B_col; j++) {
-            for (int m = 0; m < A_col; m++) {
-                request->addAddr(storage_start_address_A + (i * A_col + m) * _datatype, _datatype);
-                request->addAddr(pim_start_address + j * block_size + m * _ncols, _datatype);
-                request->addAddr(storage_start_address_B + (j * B_row + m) * _datatype, _datatype);
-                request->addAddr(pim_start_address + j * block_size + m * _ncols + _datatype, _datatype);
-            }
-        }
-        requests.push_back(*request);
-
-
-        request = new Request(Request::Type::RowMul);
-        for (int j = 0; j < B_col; j++) {
-            for (int m = 0; m < A_col; m++) {
-                request->addAddr(pim_start_address + j * block_size + m * _ncols, _datatype);
-                request->addAddr(pim_start_address + j * block_size + m * _ncols + _datatype, _datatype);
-            }
-        }
-        requests.push_back(*request);
-
-        int size = log2(A_col);
-        for (int exp = 1; exp < size; exp++) {
-
-            request = new Request(Request::Type::ColMv);
-            for (int j = 0; j < B_col; j++) {
-                for (int m = 0; m < A_col; m += pow(2, exp)) {
-                    AddrT shift_address = pim_start_address + j * block_size + (m + pow(2, exp - 1) )* _ncols;
-                    request->addAddr(shift_address, _datatype);
-                    request->addAddr(shift_address + _datatype * (exp - 1), _datatype);
-                }
-            }
-            requests.push_back(*request);
-
-            request = new Request(Request::Type::RowMv);
-            for (int j = 0; j < B_col; j++) {
-                for (int m = 0; m < A_col; m += pow(2, exp)) {
-                    AddrT src_addr = pim_start_address + j * block_size + (m + pow(2, exp - 1) ) * _ncols;
-                    AddrT dst_addr = pim_start_address + j * block_size + m * _ncols;
-                    request->addAddr(src_addr + _datatype * (exp - 1),  _datatype);
-                    request->addAddr(dst_addr + _datatype * (exp - 1),  _datatype);
-                }
-            }
-            requests.push_back(*request);
-
-            request = new Request(Request::Type::RowAdd);
-            for (int j = 0; j < B_col; j++) {
-                for (int m = 0; m < A_col; m += pow(2, exp)) {
-                    AddrT addr = pim_start_address + j * block_size + m * _ncols;
-                    request->addAddr(addr, _datatype);
-                    request->addAddr(addr + _datatype * (exp - 1),  _datatype);
-                }
-            }
-            requests.push_back(*request);
-
-        }
-
-        request = new Request(Request::Type::SystemRow2Row); // Send S back to storage units
-        for (int j = 0; j < B_col; j++) {
-            request->addAddr(pim_start_address, _datatype);
-            request->addAddr(storage_start_address_C + (i * A_row + j) * _datatype, _datatype);
-        }
-        requests.push_back(*request);
-    }
-
-//    sendRequests(requests); // cannot do this due to data dependency
-
-//    std::cout << requests.size() << std::endl;
-    for (unsigned int i = 0; i < requests.size(); i++) {
-//        std::cout << requests[i].reqToStr() << std::endl;
-        sendRequest(requests[i]);
-    }
-
-}
-
-template <class T>
-void System<T>::matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col)
-{
-}
-
-*/
