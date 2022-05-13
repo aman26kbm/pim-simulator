@@ -114,7 +114,6 @@ public:
     void gemv_tile0();
     void gemv_tile1();
 
-    int NUM_FILTER_COEFFS = 8;
     void fir();
     void fir_tile0();
     void fir_tile1();
