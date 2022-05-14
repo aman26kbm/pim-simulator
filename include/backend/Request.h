@@ -59,11 +59,11 @@ public:
         RowMul,   //Multiply multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
                   //The time taken is specified to be X cycles in MemoryCharacteristics
-                  //where X includes the cycles required to fully add multi-bit numbers.
+                  //where X includes the cycles required to fully multiply multi-bit numbers.
                   //The "precision" argument specifies precision.
                   //The "size" argument is unused.
                   //There is implicit parallellism here. This instruction involves multiple rows.
-                  //Also, the add operation happens across all columns.
+                  //Also, the multiply operation happens across all columns.
         ColMul,   //UNUSED
         RowDiv,   //UNUSED
         ColDiv,   //UNUSED
@@ -181,11 +181,28 @@ public:
                         //element will be saved.
         RowStore_RF,    //Store a set of data elements from RF into DRAM
                         //Rest of the details are the same as RowLoad_RF
-        RowMul_CRAM_RF, //Multiplication between a value in CRAM and RF
+        RowMul_CRAM_RF, //Multiplication between a value in CRAM and RF.
+                        //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
+                        //One operand comes from the RF (common for all columns). It's addr is not specified.
+                        //The time taken is specified to be X cycles in MemoryCharacteristics
+                        //where X includes the cycles required to fully multiply multi-bit numbers.
+                        //The "precision" argument specifies precision.
+                        //The "size" argument is unused.
+                        //There is implicit parallellism here. This instruction involves multiple rows.
+                        //Also, the multiply operation happens across all columns.
         RowAdd_CRAM_RF, //Addition between a value in CRAM and RF
-        RowRead_RF,
-        RowAdd_RF,
-        RowSub_RF,
+                        //Same as RowMul_CRAM_RF, but for addition
+        RowRead_RF,     //Read a row from the RF into a register (flops)
+                        //The addr argument specifies the row ID. 
+                        //"size" argument is not used.
+                        //"precision" argument specifies the precision of the value to read.
+        RowWrite_RF,    //Write a row from a register (flops) into RF
+        RowAdd_RF,      //Add two values sourced from the RF.
+                        //This is not used for computations, but used for control (e.g looping over other instructions, etc.)
+                        //"precision" argument specifies the precision of the operands.
+                        //"size" argument is not used
+                        //"addr" argument specifies the location of the operand in the RF
+        RowSub_RF,      //Same as RowAdd_RF, but for subtraction
         MAX
     } type;
 
@@ -247,8 +264,9 @@ public:
             case 49: return        "RowMul_CRAM_RF";
             case 50: return        "RowAdd_CRAM_RF";
             case 51: return        "RowRead_RF";
-            case 52: return        "RowAdd_RF";
-            case 53: return        "RowSub_RF";
+            case 52: return        "RowWrite_RF";
+            case 53: return        "RowAdd_RF";
+            case 54: return        "RowSub_RF";
             default: return        "None";
         };
 

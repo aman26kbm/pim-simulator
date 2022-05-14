@@ -224,19 +224,24 @@ MemoryTile::commitReq(Request& req)
         n_intra_block_transfers++;
     } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive)) {
         n_inter_block_transfers++;
-    } else if (req.type == Request::Type::RowStore) {
+    } else if (req.type == Request::Type::RowRead || req.type == Request::Type::RowRead_RF) {
         n_reads++;
-    } else if (req.type == Request::Type::RowWrite) {
+    } else if (req.type == Request::Type::RowWrite || req.type == Request::Type::RowWrite_RF) {
         n_writes++;
     } else if (req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF) {
         n_loads++;
     } else if (req.type == Request::Type::RowStore || req.type == Request::Type::RowStore_RF) {
         n_stores++;
     } else if ((req.type == Request::Type::RowAdd) 
+              || (req.type == Request::Type::RowSub)
               || (req.type == Request::Type::RowMul)
               || (req.type == Request::Type::RowBitwise)
               || (req.type == Request::Type::RowReduce)
               || (req.type == Request::Type::RowShift)
+              || (req.type == Request::Type::RowSet)
+              || (req.type == Request::Type::RowReset)
+              || (req.type == Request::Type::RowAdd_CRAM_RF)
+              || (req.type == Request::Type::RowMul_CRAM_RF)
               ) {
         n_pim_reqs++;
     }
