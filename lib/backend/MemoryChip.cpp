@@ -30,10 +30,10 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, Memory
         _children.push_back(tile);
     }
 
-    int htree_counter_size = h_tree_size(_ntiles);
-    htree_counters.clear();
-    for (int i = 0; i < htree_counter_size; i++)
-        htree_counters.push_back(0);
+    // int htree_counter_size = h_tree_size(_ntiles);
+    // htree_counters.clear();
+    // for (int i = 0; i < htree_counter_size; i++)
+    //     htree_counters.push_back(0);
 }
 
 

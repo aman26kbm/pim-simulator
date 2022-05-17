@@ -14,6 +14,8 @@
 #include "MemoryBlock.h"
 #include "MemoryComponent.h"
 
+#include "hTree.h"
+
 namespace pimsim {
 
 class Request;
@@ -23,6 +25,8 @@ class MemoryComponent;
 
 class MemoryChip : public MemoryComponent {
 public:
+
+    hTree hTree;
     MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);

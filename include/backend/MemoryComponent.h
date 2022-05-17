@@ -36,7 +36,7 @@ public:
 
     int bus_counter = 0; // counter for bus congestion ----
 
-    std::vector<int> htree_counters;
+    //std::vector<int> htree_counters;
 
     int dram_counter = 0; //counter for dram accesses
     bool dram_busy = false; //status signal for dram
