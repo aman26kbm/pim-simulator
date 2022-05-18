@@ -3,15 +3,23 @@
 
 using namespace pimsim;
 
+hTree::hTree(){}
+
 hTree::hTree(int depth){
-    // for(int i=0; i<n_blocks; i++){
-    //     EndPoint* block = new EndPoint(i);
-    //     block_list.push_back(block);
-    // }
-    // hTree_depth = 0;
-    // for(int i=n_blocks; i/4>0; i=i/4){
-    //     hTree_depth++;
-    // }
+    /*
+    wire -1 has index 0. This is the wire to dram.
+    wire 0 has index 1 (negative direction) and index 2 (positive)
+    wire 1 has index 3 (negative) and index 4 (positive)
+    wire 2 has index 5 (negative) and index 6 (positive)
+    wire 3 has index 7 (negative) and index 8 (positive)
+    wire 00 has index 9 (negative) and index 10 (positive)
+    ...
+    wire 33 has index 39 (negative) and index 40 (positive)
+    wire 000 has index 41 (negative) and index 42 (positive)
+    ...
+    wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (positive) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 - 1 (negative)
+    */
+    this->hTree_depth = depth;
     int index=0;
     for(int i=0; i<=depth; i++){
         for(int j=0; j<pow(4,i); i++){
@@ -85,9 +93,9 @@ int get_dest_index(Request req){
     }
 }
 
-bool hTree::try_configure(Request req){
-    int source_index = get_source_index(req);
-    int dest_index = get_dest_index(req);
+bool hTree::try_configure(Transmission trans){
+    int source_index = trans.source_index;
+    int dest_index = trans.dest_index;
     //block_index*2 is index of the positive wire attached to this block. This wire has the same path as this block.
     std::vector<int> source_path = index2path(source_index*2);
     std::vector<int> dest_path = index2path(dest_index*2);
@@ -141,9 +149,9 @@ bool hTree::try_configure(Request req){
     return true;
 }
 
-bool hTree::configure(Request req){
-    int source_index = get_source_index(req);
-    int dest_index = get_dest_index(req);
+bool hTree::configure(Transmission trans){
+    int source_index = trans.source_index;
+    int dest_index = trans.dest_index;
     //block_index*2 is index of the positive wire attached to this block. This wire has the same path as this block.
     std::vector<int> source_path = index2path(source_index*2);
     std::vector<int> dest_path = index2path(dest_index*2);
@@ -201,9 +209,9 @@ bool hTree::configure(Request req){
     return true;
 }
 
-bool hTree::disconfigure(Request req){
-    int source_index = get_source_index(req);
-    int dest_index = get_dest_index(req);
+bool hTree::disconfigure(Transmission trans){
+    int source_index = trans.source_index;
+    int dest_index = trans.dest_index;
     //block_index*2 is index of the positive wire attached to this block. This wire has the same path as this block.
     std::vector<int> source_path = index2path(source_index*2);
     std::vector<int> dest_path = index2path(dest_index*2);
@@ -274,21 +282,104 @@ bool hTree::disconfigure(Request req){
 
 
 void hTree::receive_request(Request* req){
-    request_list.push_back(req);
+    //request should be TileSend, TileReceive, BlockSend or BlockReceive
+    if(!(req->type == Request::Type::TileSend || req->type == Request::Type::BlockSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockReceive)){
+        assert(true);
+    }
+    int source_index = get_source_index(*req);
+    int dest_index = get_dest_index(*req);
+    //try to find paired request in current trans_list_list
+    //if there is any match, add request to reqPair
+    int match = false;
+    for(int i=0; i<trans_list_list.size(); i++){
+        if(trans_list_list[i][0].source_index == source_index && trans_list_list[i][0].dest_index == dest_index){
+            match = true;
+            if(req->type == Request::Type::TileSend || req->type == Request::Type::BlockSend){
+                reqPair_list[i]->send_req = req;
+            }
+            else{
+                reqPair_list[i]->receive_req = req;
+            }
+            //there should be only 1 match. 
+            //This is because once a send/receive request is send, the tile will wait until the request is finished and thus removed from reqPair_list and trans_list_list
+            //so break is not necessary
+            break;
+        }
+    }
+
+    //no match found: add entry to reqPair_list and trans_list_list
+    if(!match){
+        //add entry to reqPair_list
+        if(req->type == Request::Type::TileSend || req->type == Request::Type::BlockSend){
+            ReqPair* reqPair = new ReqPair;
+            reqPair->send_req = req;
+            reqPair_list.push_back(reqPair);
+        }
+        else{
+            ReqPair* reqPair = new ReqPair;
+            reqPair->receive_req = req;
+            reqPair_list.push_back(reqPair);
+        }
+        //add entry to trans_list_list
+        if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive){
+
+            //request is tileSend of tileReceive
+            //bias of all block indices:
+            //binary = +0, +01, +10, +11, + 100, + 101, +110, +111, +1000 ....
+            //bias =   +0, +1,  +4,  +5,  +16 ,  +17,   +20,  +21,  +64
+            //i->binary->as quaternary->bias
+            //total 2^hTree_depth blocks in a tile
+            std::vector<Transmission> trans_list;
+            for(int i=0; i<pow(2, hTree_depth); i++){
+                int pos = 0;
+                int binary = i;
+                int bias = 0;
+                while(binary){
+                    bias+= (int)pow(4,pos)*(binary%2);
+                    binary = (int)binary/2;
+                    pos++;
+                }
+                Transmission trans = {.source_index = source_index+bias, .dest_index = dest_index+bias};
+                trans_list.push_back(trans);
+            }
+            trans_list_list.push_back(trans_list);
+        }
+        //Request is blockSend or blockReceive
+        else{
+            std::vector<Transmission> trans_list;
+            Transmission trans = {.source_index = source_index, .dest_index = dest_index};
+            trans_list.push_back(trans);
+            trans_list_list.push_back(trans_list);
+        }
+    }
+
 }
 
 void hTree::tick(){
-    for(int i=0; i<request_list.size(); i++){
-        if (!request_list[i]->hTree_ready){
-            if(try_configure(*request_list[i])){
-                configure(*request_list[i]);
-                request_list[i]->hTree_ready = true;
+    for(int i=0; i<reqPair_list.size(); i++){
+        //if a reqPair has both send and receive request, and is not hTree_ready, try configure all transactions in it.
+        if (!reqPair_list[i]->send_req->hTree_ready && reqPair_list[i]->send_req && reqPair_list[i]->receive_req){
+            bool success = true;
+            for(int j=0; j<trans_list_list[i].size(); j++){
+                if(!try_configure(trans_list_list[i][j])){
+                    success = false;
+                }
+            }
+            if(success){
+                for(int j=0; j<trans_list_list[i].size(); j++){
+                    configure(trans_list_list[i][j]);
+                }
+                reqPair_list[i]->send_req->hTree_ready = true;
+                reqPair_list[i]->receive_req->hTree_ready = true;
             }
         }
-        if(request_list[i]->send_receive_finished){
-            disconfigure(*request_list[i]);
-            request_list[i]->hTree_ready = false;
-            request_list[i]->send_receive_finished = false;
+        //if a reqPair is finished, disconfigure it and remove from reqPair_list and trans_list_list
+        if(reqPair_list[i]->send_req->send_receive_finished){
+            for(int j=0; j<trans_list_list[i].size(); j++){
+                disconfigure(trans_list_list[i][j]);
+            }
+            reqPair_list.erase(reqPair_list.begin()+i); 
+            trans_list_list.erase(trans_list_list.begin()+i); 
         }
     }
 }

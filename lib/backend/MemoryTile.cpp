@@ -32,10 +32,10 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
     //Instantiate one RF in each tile
     RegisterFile* rf = new RegisterFile();
 
-    int htree_counter_size = h_tree_size(_nblocks);
-    htree_counters.clear();
-    for (int i = 0; i < htree_counter_size; i++)
-        htree_counters.push_back(0);
+    // int htree_counter_size = h_tree_size(_nblocks);
+    // htree_counters.clear();
+    // for (int i = 0; i < htree_counter_size; i++)
+    //     htree_counters.push_back(0);
 
     cur_state.status = IDLE;
     n_reads = 0; n_writes = 0; n_unexpected_reqs = 0;
@@ -128,22 +128,24 @@ MemoryTile::issueReq(Request& req)
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
             req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-            std::vector<int> switch_list;
+            // std::vector<int> switch_list;
 
-            if (req.type == Request::Type::TileSend)
-                switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
-            else if (req.type == Request::Type::TileReceive)
-                switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
-            else if (req.type == Request::Type::TileSend_Receive)
-                switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
+            // if (req.type == Request::Type::TileSend)
+            //     switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
+            // else if (req.type == Request::Type::TileReceive)
+            //     switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
+            // else if (req.type == Request::Type::TileSend_Receive)
+            //     switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
 
-            int jump = 1;
-            for (int i = 0; i < switch_list.size(); i++) {
-                htree_counters[switch_list[i]] += words;
-                jump += htree_counters[switch_list[i]];
-            }
-            req.finish_time = cur_time + getReqTiming(req) * jump;
-            switch_list.clear();
+            // int jump = 1;
+            // for (int i = 0; i < switch_list.size(); i++) {
+            //     htree_counters[switch_list[i]] += words;
+            //     jump += htree_counters[switch_list[i]];
+            // }
+            // req.finish_time = cur_time + getReqTiming(req) * jump;
+            // switch_list.clear();
+
+            req.finish_time = cur_time + getReqTiming(req) ;
         }
         else { //ideal
             req.finish_time = cur_time + 0;
@@ -160,22 +162,23 @@ MemoryTile::issueReq(Request& req)
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
             req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-            std::vector<int> switch_list;
+            // std::vector<int> switch_list;
 
-            if (req.type == Request::Type::BlockSend)
-                switch_list = h_tree_switches(req.src_block, _nblocks, _nblocks);
-            else if (req.type == Request::Type::BlockReceive)
-                switch_list = h_tree_switches(_nblocks, req.dst_block, _nblocks);
-            else if (req.type == Request::Type::BlockSend_Receive)
-                switch_list = h_tree_switches(req.src_block, req.dst_block, _nblocks);
+            // if (req.type == Request::Type::BlockSend)
+            //     switch_list = h_tree_switches(req.src_block, _nblocks, _nblocks);
+            // else if (req.type == Request::Type::BlockReceive)
+            //     switch_list = h_tree_switches(_nblocks, req.dst_block, _nblocks);
+            // else if (req.type == Request::Type::BlockSend_Receive)
+            //     switch_list = h_tree_switches(req.src_block, req.dst_block, _nblocks);
 
-            int jump = 1;
-            for (int i = 0; i < switch_list.size(); i++) {
-                htree_counters[switch_list[i]] += words;
-                jump += htree_counters[switch_list[i]];
-            }
-            req.finish_time = cur_time + getReqTiming(req) * jump;
-            switch_list.clear();
+            // int jump = 1;
+            // for (int i = 0; i < switch_list.size(); i++) {
+            //     htree_counters[switch_list[i]] += words;
+            //     jump += htree_counters[switch_list[i]];
+            // }
+            //req.finish_time = cur_time + getReqTiming(req) * jump;
+            req.finish_time = cur_time + getReqTiming(req);
+            //switch_list.clear();
         }
         else { //ideal
             req.finish_time = cur_time + 0;

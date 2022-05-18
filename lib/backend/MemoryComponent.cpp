@@ -126,66 +126,67 @@ MemoryComponent::outputStats(FILE* rstFile)
     }
 
 }
+//tick is moved to MemoryChip
 
-void 
-MemoryComponent::tick() 
-{
-#ifdef DEBUG_OUTPUT
-    //printf("%s_%d ticks once (%lu)!\n", level_str[int(_level)].c_str(), _id, _ctrl->getTime());
-#endif
-    if (getLevel() != MemoryComponent::Level::Chip) {
-        std::cout<<"tick() is illegal to call unless called by Chip";
-        assert(0);
-    }
+// void 
+// MemoryComponent::tick() 
+// {
+// #ifdef DEBUG_OUTPUT
+//     //printf("%s_%d ticks once (%lu)!\n", level_str[int(_level)].c_str(), _id, _ctrl->getTime());
+// #endif
+//     if (getLevel() != MemoryComponent::Level::Chip) {
+//         std::cout<<"tick() is illegal to call unless called by Chip";
+//         assert(0);
+//     }
 
-    //For each tile, execute/issue the instruction if we can.
-    //Also update the next state
-    for (int i = 0; i < _nchildren; i++) {
-        _children[i]->update_next();
-    }
+//     //For each tile, execute/issue the instruction if we can.
+//     //Also update the next state
+//     for (int i = 0; i < _nchildren; i++) {
+//         _children[i]->update_next();
+//     }
 
-    //Code that will collect stuff from multiple tiles for this clock period, before we update the current state.
-    //TODO: This needs to updated based on the new interconnect modelling (assuming FPGA like switches).
-    int total_counters = 0;
-    int htree_counter_size = h_tree_size(_nchildren);
-    for (int i = 0; i < htree_counter_size; i++) {
-        total_counters += htree_counters[i];
-        htree_counters[i] = 0;
-    }
+//     //Code that will collect stuff from multiple tiles for this clock period, before we update the current state.
+//     //TODO: This needs to updated based on the new interconnect modelling (assuming FPGA like switches).
+//     // int total_counters = 0;
+//     // int htree_counter_size = h_tree_size(_nchildren);
+//     // for (int i = 0; i < htree_counter_size; i++) {
+//     //     total_counters += htree_counters[i];
+//     //     htree_counters[i] = 0;
+//     // }
 
-    total_counters += bus_counter;
-    bus_counter = 0;
+//     // total_counters += bus_counter;
+//     // bus_counter = 0;
 
-    //If any tile says dram is busy, then dram is busy
-    dram_busy = false;
-    for (int i = 0; i < _nchildren; i++) {
-        dram_busy |= _children[i]->dram_busy;
-    }
+//     //If any tile says dram is busy, then dram is busy
+//     dram_busy = false;
+//     for (int i = 0; i < _nchildren; i++) {
+//         dram_busy |= _children[i]->dram_busy;
+//     }
 
-    /*
-    if (_level == MemoryComponent::Level::Chip) {
-        if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
-            inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_tile2tile / 32)]);
-        else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
-            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_tile2tile / 32)]);
-        else
-            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_tile2tile / 32)]);
-    } 
-    else if (_level == MemoryComponent::Level::Tile) {
-        if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
-            inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_block2block / 32)]);
-        else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
-            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
-        else
-            inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
-    }
-    */
+//     /*
+//     if (_level == MemoryComponent::Level::Chip) {
+//         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
+//             inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_tile2tile / 32)]);
+//         else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
+//             inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_tile2tile / 32)]);
+//         else
+//             inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_tile2tile / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_tile2tile / 32)]);
+//     } 
+//     else if (_level == MemoryComponent::Level::Tile) {
+//         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus)
+//             inter_connection_energy +=  (double) total_counters / _values->_freq * (_values->E_internal_bus[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_bus[(int) log(_values->_wordsize_block2block / 32)]);
+//         else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree)
+//             inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
+//         else
+//             inter_connection_energy += (double) total_counters / _values->_freq * (_values->E_internal_htree[(int) log(_values->_wordsize_block2block / 32)] + _values->E_switching_htree[(int) log(_values->_wordsize_block2block / 32)]);
+//     }
+//     */
 
-    //For each tile, update the current state
-    for (int i = 0; i < _nchildren; i++) {
-        _children[i]->update_current();
-    }
-}
+//     //For each tile, update the current state
+//     for (int i = 0; i < _nchildren; i++) {
+//         _children[i]->update_current();
+//     }
+// }
 
 bool 
 MemoryComponent::receiveReq(Request& req) 

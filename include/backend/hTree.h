@@ -3,7 +3,6 @@
 
 #include "Request.h"
 #include "Wire.h"
-#include "EndPoint.h"
 
 namespace pimsim {
 
@@ -11,12 +10,22 @@ class hTree{
 private:
     int hTree_depth;
     std::vector<Wire*> wire_list;
-    std::vector<Request*> request_list;
+    struct ReqPair{
+        Request* send_req;
+        Request* receive_req;
+    };
+    std::vector<ReqPair*> reqPair_list;
+    struct Transmission {
+        int source_index;
+        int dest_index;
+    };
+    std::vector<std::vector<Transmission>> trans_list_list;
+    bool try_configure(Transmission trans);
+    bool configure(Transmission trans);
+    bool disconfigure(Transmission trans);
 public:
+    hTree();
     hTree(int depth);
-    bool try_configure(Request req);
-    bool configure(Request req);
-    bool disconfigure(Request req);
     void receive_request(Request* req);
     void tick();
 };

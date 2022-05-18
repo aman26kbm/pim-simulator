@@ -26,7 +26,7 @@ class MemoryComponent;
 class MemoryChip : public MemoryComponent {
 public:
 
-    hTree hTree;
+    hTree* _hTree;
     MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);
@@ -58,6 +58,7 @@ public:
         std::cout<<"We shouldn't be here in update_current() of MemoryChip";
         assert(0);
     };
+    void tick();
 };
 
 }

@@ -17,7 +17,9 @@ add_library(PimBackend lib/backend/Config.cpp
         lib/backend/MemoryComponent.cpp
         lib/backend/Tool.cpp
         lib/backend/System.cpp
-        lib/backend/Memory_characteristics.cpp)
+        lib/backend/Memory_characteristics.cpp
+        lib/backend/hTree.cpp
+        )
 
 add_executable(PIM_simulator main.cpp)
 
