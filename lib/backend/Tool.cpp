@@ -177,10 +177,22 @@ void Mailbox::reset() {
     _time = 0;
     _count = 0;
 }
-
+/*
+    wire -1 has index 0 (negative direction) and 1(positive). This is the wire to dram.
+    wire 0 has index 2 (negative direction) and index 3 (positive)
+    wire 1 has index 4 (negative) and index 5 (positive)
+    wire 2 has index 6 (negative) and index 7 (positive)
+    wire 3 has index 8 (negative) and index 9 (positive)
+    wire 00 has index 10 (negative) and index 11 (positive)
+    ...
+    wire 33 has index 40 (negative) and index 41 (positive)
+    wire 000 has index 42 (negative) and index 43 (positive)
+    ...
+    wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
+    */
 std::vector<int> index2path(int index){
     std::vector<int> path;
-    index = (index+1)/2;
+    index = index/2;
     int depth = 0;
     while(index > pow(4,depth)){
         depth++;
@@ -191,7 +203,19 @@ std::vector<int> index2path(int index){
     }
     return path;
 }
-
+/*
+    wire -1 has index 0 (negative direction) and 1(positive). This is the wire to dram.
+    wire 0 has index 2 (negative direction) and index 3 (positive)
+    wire 1 has index 4 (negative) and index 5 (positive)
+    wire 2 has index 6 (negative) and index 7 (positive)
+    wire 3 has index 8 (negative) and index 9 (positive)
+    wire 00 has index 10 (negative) and index 11 (positive)
+    ...
+    wire 33 has index 40 (negative) and index 41 (positive)
+    wire 000 has index 42 (negative) and index 43 (positive)
+    ...
+    wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
+    */
 int path2index(std::vector<int> path, bool positive){
     int depth = path.size();
     int index = 0;
@@ -199,10 +223,10 @@ int path2index(std::vector<int> path, bool positive){
         index += path[i]*pow(4,depth-1-i);
     }
     if(positive){
-        return index*2;
+        return index*2+1;
     }
     else{
-        return index*2-1;
+        return index*2;
     }
 }
 

@@ -7,90 +7,121 @@ hTree::hTree(){}
 
 hTree::hTree(int depth){
     /*
-    wire -1 has index 0. This is the wire to dram.
-    wire 0 has index 1 (negative direction) and index 2 (positive)
-    wire 1 has index 3 (negative) and index 4 (positive)
-    wire 2 has index 5 (negative) and index 6 (positive)
-    wire 3 has index 7 (negative) and index 8 (positive)
-    wire 00 has index 9 (negative) and index 10 (positive)
+    wire -1 has index 0 (negative direction) and 1(positive). This is the wire to dram.
+    wire 0 has index 2 (negative direction) and index 3 (positive)
+    wire 1 has index 4 (negative) and index 5 (positive)
+    wire 2 has index 6 (negative) and index 7 (positive)
+    wire 3 has index 8 (negative) and index 9 (positive)
+    wire 00 has index 10 (negative) and index 11 (positive)
     ...
-    wire 33 has index 39 (negative) and index 40 (positive)
-    wire 000 has index 41 (negative) and index 42 (positive)
+    wire 33 has index 40 (negative) and index 41 (positive)
+    wire 000 has index 42 (negative) and index 43 (positive)
     ...
-    wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (positive) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 - 1 (negative)
+    wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
     */
     this->hTree_depth = depth;
     int index=0;
     for(int i=0; i<=depth; i++){
         for(int j=0; j<pow(4,i); i++){
-            Wire* wire = new Wire(index, 256*pow(2,depth-i));
-            wire_list.push_back(wire);
+            Wire* wire_negative = new Wire(index, 256*pow(2,depth-i));
+            wire_list.push_back(wire_negative);
+            index++;
+            Wire* wire_positive = new Wire(index, 256*pow(2,depth-i));
+            wire_list.push_back(wire_positive);
             index++;
         }
     }
 }
 
 
-int get_source_index(Request req){
+int hTree::get_source_index(Request req){
     int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
     AddrT addr;
     //Source
     int _ncols = 256;
     int _nrows = 256;
-    int _nblocks = 4;
-    int _ntiles = 2;
     addr = req.addr_list[0];
     int block_index = addr/(_ncols*_nrows);
     //change block index into new index in h_tree
-    switch(block_index){
-        case 0:return 0;
-        case 1:return 1;
-        case 2:return 4;
-        case 3:return 5;
-        case 4:return 2;
-        case 5:return 3;
-        case 6:return 6;
-        case 7:return 7;
-        case 8:return 8;
-        case 9:return 9;
-        case 10:return 12;
-        case 11:return 13;
-        case 12:return 10;
-        case 13:return 11;
-        case 14:return 14;
-        case 15:return 15;
+    int row_col_num = pow(2, hTree_depth);
+    int row = block_index/row_col_num;
+    int col = block_index%row_col_num;
+    //base = row->binary->multiply each bit to 2->explain as quaternary 
+    int pos = 0;
+    int binary = row;
+    int base = 0;
+    while(binary){
+        base+= (int)pow(4,pos)*2*(binary%2);
+        binary = (int)binary/2;
+        pos++;
     }
+    //bias = col->binary->explain as quaternary
+    pos = 0;
+    binary = col;
+    int bias = 0;
+    while(binary){
+        bias+= (int)pow(4,pos)*(binary%2);
+        binary = (int)binary/2;
+        pos++;
+    }
+    //index = base + bias
+    int index = base+bias;
+    return index;
+    
+
+    // switch(block_index){
+    //     case 0:return 0;
+    //     case 1:return 1;
+    //     case 2:return 4;
+    //     case 3:return 5;
+    //     case 4:return 2;
+    //     case 5:return 3;
+    //     case 6:return 6;
+    //     case 7:return 7;
+    //     case 8:return 8;
+    //     case 9:return 9;
+    //     case 10:return 12;
+    //     case 11:return 13;
+    //     case 12:return 10;
+    //     case 13:return 11;
+    //     case 14:return 14;
+    //     case 15:return 15;
+    // }
 }
 
-int get_dest_index(Request req){
+int hTree::get_dest_index(Request req){
     int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
     AddrT addr;
     //Source
     int _ncols = 256;
     int _nrows = 256;
-    int _nblocks = 4;
-    int _ntiles = 2;
     addr = req.addr_list[1];
     int block_index = addr/(_ncols*_nrows);
     //change block index into new index in h_tree
-    switch(block_index){
-        case 0:return 0;
-        case 1:return 1;
-        case 2:return 4;
-        case 3:return 5;
-        case 4:return 2;
-        case 5:return 3;
-        case 6:return 6;
-        case 7:return 7;
-        case 8:return 8;
-        case 9:return 9;
-        case 10:return 12;
-        case 11:return 13;
-        case 12:return 10;
-        case 13:return 11;
-        case 14:return 14;
-        case 15:return 15;
+    int row_col_num = pow(2, hTree_depth);
+    int row = block_index/row_col_num;
+    int col = block_index%row_col_num;
+    //base = row->binary->multiply each bit to 2->explain as quaternary 
+    int pos = 0;
+    int binary = row;
+    int base = 0;
+    while(binary){
+        base+= (int)pow(4,pos)*2*(binary%2);
+        binary = (int)binary/2;
+        pos++;
     }
+    //bias = col->binary->explain as quaternary
+    pos = 0;
+    binary = col;
+    int bias = 0;
+    while(binary){
+        bias+= (int)pow(4,pos)*(binary%2);
+        binary = (int)binary/2;
+        pos++;
+    }
+    //index = base + bias
+    int index = base+bias;
+    return index;
 }
 
 bool hTree::try_configure(Transmission trans){

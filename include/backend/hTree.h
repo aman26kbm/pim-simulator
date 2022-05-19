@@ -23,6 +23,8 @@ private:
     bool try_configure(Transmission trans);
     bool configure(Transmission trans);
     bool disconfigure(Transmission trans);
+    int get_source_index(Request req);
+    int get_dest_index(Request req);
 public:
     hTree();
     hTree(int depth);
