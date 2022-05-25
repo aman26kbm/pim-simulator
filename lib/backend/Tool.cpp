@@ -190,7 +190,7 @@ void Mailbox::reset() {
     ...
     wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
     */
-std::vector<int> index2path(int index){
+std::vector<int> wire_index2path(int index){
     std::vector<int> path;
     index = index/2;
     int depth = 0;
@@ -199,6 +199,14 @@ std::vector<int> index2path(int index){
     }
     for(int i = depth-1; i>=0; i--){
         path.push_back(index/(int)pow(4, i)-1);
+        index = index % (int)pow(4,i);
+    }
+    return path;
+}
+std::vector<int> block_index2path(int index, int depth){
+    std::vector<int> path;
+    for(int i = depth-1; i>=0; i--){
+        path.push_back(index/(int)pow(4, i));
         index = index % (int)pow(4,i);
     }
     return path;

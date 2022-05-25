@@ -8,8 +8,8 @@ namespace pimsim {
 
 class Wire{
 public:
-    /*if wire's path is 021, positive=false, index=((0+1)*4^2 + (2+1)*4^1 + (1+1)*4^0)*2-1 = (16 + 12 + 2)*2-1 =59
-    if wire's path is 021, positive=true, index=((0+1)*4^2 + (2+1)*4^1 + (1+1)*4^0)*2 = (16 + 12 + 2)*2-1 =60*/
+    /*if wire's path is 021, positive=false, index=((0+1)*4^2 + (2+1)*4^1 + (1+1)*4^0)*2 = (16 + 12 + 2)*2-1 =60
+    if wire's path is 021, positive=true, index=((0+1)*4^2 + (2+1)*4^1 + (1+1)*4^0)*2 = (16 + 12 + 2)*2+1 =61*/
     int index;
     std::vector<int> path;
     /*index of the connected wire which is at a higher or same level*/
@@ -28,7 +28,7 @@ public:
         //this->child_side = -1;
         this->bitwidth = width;
         this->available_bitwidth = width;
-        this->positive = !(index%2);
+        this->positive = (index%2);
     }
 };
 

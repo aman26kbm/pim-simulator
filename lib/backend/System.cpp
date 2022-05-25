@@ -117,9 +117,9 @@ System<T>::~System()
 }
 
 template <class T>
-void System<T>::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols) {
+void System<T>::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block) {
     int global_chip_id = _chips.size();
-    MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, _values);
+    MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, wordsize_block2block, _values );
     Controller* ctrl = new Controller(chip);
     chip->setId(global_chip_id);
     chip->setController(ctrl);

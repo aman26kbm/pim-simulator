@@ -63,7 +63,7 @@ public:
     System(Config* config);
     ~System();
 
-    void addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols);
+    void addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block);
 
     TimeT getTime() {return _time;}
     void getLocation(AddrT addr, int&, int&, int&);

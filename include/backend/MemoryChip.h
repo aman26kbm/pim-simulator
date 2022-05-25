@@ -27,7 +27,7 @@ class MemoryChip : public MemoryComponent {
 public:
 
     hTree* _hTree;
-    MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
+    MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);
     bool isReady(Request& req);

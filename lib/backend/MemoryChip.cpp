@@ -3,7 +3,7 @@
 using namespace pimsim;
 using namespace std;
 
-MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values)
+MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, MemoryCharacteristics* values)
     : MemoryComponent(MemoryComponent::Level::Chip)
 {
     _ntiles= n_tiles;
@@ -34,7 +34,7 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, Memory
     // htree_counters.clear();
     // for (int i = 0; i < htree_counter_size; i++)
     //     htree_counters.push_back(0);
-    _hTree = new hTree(h_tree_height(n_blocks));
+    _hTree = new hTree(h_tree_height(n_blocks), wordsize_block2block, _ncols, _nrows);
 }
 
 
