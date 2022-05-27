@@ -43,7 +43,7 @@ System<T>::System(Config* config) : _config(config)
     }
 
     for (int i = 0; i < _nchips; i++) {
-        MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _values);
+        MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _wordsize_block2block, _values);
         chip->setValues(_values);
         //We don't need a controller per chip
         //Controller* ctrl = new Controller(chip);
@@ -1333,4 +1333,76 @@ void System<T>::test()
 {
     test_tile0();
     test_tile1();
+}
+
+
+/////////////////////////////////////////////////////////////////////
+///////////////////Synchronization Test//////////////////////////////
+///////////////////////////////////////////////////////////////////////
+template <class T>
+void System<T>::sync_tile0()
+{
+    std::vector<Request> requests;
+    Request *request;
+
+    //1. tilesend tile0 row0-> tile1 row8
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //2. tileReceive tile1 row0 -> tile0 row8
+    //should execute after the previous request
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+    
+    //3. blocksend tile0 block0 row8 -> block2 row8
+    //should execute after the previous request
+    request = new Request(Request::Type::BlockSend_Receive);
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+
+template <class T>
+void System<T>::sync_tile1()
+{
+    std::vector<Request> requests;
+    Request *request;
+
+    //1. tileReceive tile0 row0-> tile1 row8
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //4. blocksend tile1 block0 row8 -> block2 row8
+    //should execute after the previous request
+    request = new Request(Request::Type::BlockSend_Receive);
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //2. tileSend tile1 row0 -> tile0 row8
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+
+template <class T>
+void System<T>::sync()
+{
+    printf("adding tile0 requests:\n");
+    sync_tile0();
+    printf("adding tile1 requests:\n");
+    sync_tile1();
 }

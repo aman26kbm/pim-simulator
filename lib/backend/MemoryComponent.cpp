@@ -121,7 +121,7 @@ MemoryComponent::outputStats(FILE* rstFile)
     for (int i = 0; i < int(Request::Type::MAX); i++) {
         if (req_cnt[i] != 0) {
             fprintf(rstFile, "%s, %lu, %.4lf, %.4lf, %.4lf\n",
-                Request::print_name(i).c_str(), req_cnt[i], req_proctime[i], req_waittime[i], req_energy[i]);
+                Request::print_name((Request::Type)i).c_str(), req_cnt[i], req_proctime[i], req_waittime[i], req_energy[i]);
         }
     }
 

@@ -20,16 +20,20 @@ hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows){
     ...
     wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
     */
+    printf("creating hTree with depth %d, wordsize_block2block %d, ncols %d, nrows %d:\n", depth, wordsize_block2block, _ncols, _nrows);
     this->hTree_depth = depth;
     this->wordsize_block2block = wordsize_block2block;
     this->_ncols = _ncols;
     this->_nrows = _nrows;
     int index=0;
     for(int i=0; i<=depth; i++){
-        for(int j=0; j<pow(4,i); i++){
+        printf("at depth %d:\n", i);
+        for(int j=0; j<pow(4,i); j++){
+            //printf("create wire %d!\n", index);
             Wire* wire_negative = new Wire(index, wordsize_block2block*pow(2,depth-i));
             wire_list.push_back(wire_negative);
             index++;
+            //printf("create wire %d!\n", index);
             Wire* wire_positive = new Wire(index, wordsize_block2block*pow(2,depth-i));
             wire_list.push_back(wire_positive);
             index++;
@@ -355,7 +359,7 @@ bool hTree::disconfigure(Transmission trans){
     wire_list[wire2_index]->available_bitwidth += this->wordsize_block2block;
     // if all bits are freed in wire1 and wire2, disconnect them
     if(wire_list[wire1_index]->available_bitwidth == wire_list[wire1_index]->bitwidth && wire_list[wire2_index]->available_bitwidth == wire_list[wire2_index]->bitwidth){
-        assert(!wire_disconnect(wire_list[wire1_index], wire_list[wire2_index]));
+        assert(wire_disconnect(wire_list[wire1_index], wire_list[wire2_index]));
     }
 
     
@@ -380,10 +384,10 @@ bool hTree::disconfigure(Transmission trans){
 
         std::vector<int> dest_wire1_path = dest_path;
         dest_wire1_path.resize(i+1);
-        int dest_wire1_index = path2index(dest_wire1_path, false);
+        int dest_wire1_index = path2index(dest_wire1_path, true);
         std::vector<int> dest_wire2_path = dest_path;
         dest_wire2_path.resize(i+1+1);
-        int dest_wire2_index = path2index(dest_wire2_path, false);
+        int dest_wire2_index = path2index(dest_wire2_path, true);
         Wire* dest_wire1 = wire_list[dest_wire1_index];
         Wire* dest_wire2 = wire_list[dest_wire2_index];
         //dest_wire2 should have >=this->wordsize_block2block bits used
@@ -404,41 +408,57 @@ bool hTree::disconfigure(Transmission trans){
 
 void hTree::receive_request(Request* req){
     //request should be TileSend, TileReceive, BlockSend or BlockReceive
-    assert(req->type == Request::Type::TileSend || req->type == Request::Type::BlockSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockReceive);
+    assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive);
     
     int source_index = get_source_index(*req);
     int dest_index = get_dest_index(*req);
+
+    //for tileSend or tileReceive
     //try to find paired request in current trans_list_list
     //if there is any match, add request to reqPair
+    //for blockSend_Receive
+    //match = false
     int match = false;
-    for(int i=0; i<trans_list_list.size(); i++){
-        if(trans_list_list[i][0].source_index == source_index && trans_list_list[i][0].dest_index == dest_index){
-            match = true;
-            if(req->type == Request::Type::TileSend || req->type == Request::Type::BlockSend){
-                assert(reqPair_list[i]->receive_req!=NULL && reqPair_list[i]->send_req == NULL);
-                reqPair_list[i]->send_req = req;
+    if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive){
+        for(int i=0; i<trans_list_list.size(); i++){
+            if(trans_list_list[i][0].source_index == source_index && trans_list_list[i][0].dest_index == dest_index){
+                match = true;
+                if(req->type == Request::Type::TileSend){
+                    assert(reqPair_list[i]->receive_req!=NULL && reqPair_list[i]->send_req == NULL);
+                    reqPair_list[i]->send_req = req;
+                }
+                else{
+                    assert(reqPair_list[i]->send_req!=NULL && reqPair_list[i]->receive_req == NULL);
+                    reqPair_list[i]->receive_req = req;
+                }
+                //there should be only 1 match. 
+                //This is because once a send/receive request is send, the tile will wait until the request is finished and thus removed from reqPair_list and trans_list_list
+                //so break is not necessary
+                break;
             }
-            else{
-                assert(reqPair_list[i]->send_req!=NULL && reqPair_list[i]->receive_req == NULL);
-                reqPair_list[i]->receive_req = req;
-            }
-            //there should be only 1 match. 
-            //This is because once a send/receive request is send, the tile will wait until the request is finished and thus removed from reqPair_list and trans_list_list
-            //so break is not necessary
-            break;
         }
     }
+    
 
     //no match found: add entry to reqPair_list and trans_list_list
     if(!match){
         //add entry to reqPair_list
-        if(req->type == Request::Type::TileSend || req->type == Request::Type::BlockSend){
-            ReqPair* reqPair = new ReqPair;
+        //if BlockSend_Receive, add to both send and receive_req
+        if(req->type == Request::Type::BlockSend_Receive){
+            ReqPair* reqPair = new ReqPair{NULL, NULL};
+            reqPair->send_req = req;
+            reqPair->receive_req = req;
+            reqPair_list.push_back(reqPair);
+        }
+        //if TileSend, add to send_req
+        else if(req->type == Request::Type::TileSend){
+            ReqPair* reqPair = new ReqPair{NULL, NULL};
             reqPair->send_req = req;
             reqPair_list.push_back(reqPair);
         }
+        //if TileReceive, add to receive_req
         else{
-            ReqPair* reqPair = new ReqPair;
+            ReqPair* reqPair = new ReqPair{NULL, NULL};
             reqPair->receive_req = req;
             reqPair_list.push_back(reqPair);
         }
@@ -466,7 +486,7 @@ void hTree::receive_request(Request* req){
             }
             trans_list_list.push_back(trans_list);
         }
-        //Request is blockSend or blockReceive
+        //Request is blockSend_Receive
         else{
             std::vector<Transmission> trans_list;
             Transmission trans = {.source_index = source_index, .dest_index = dest_index};
@@ -479,8 +499,12 @@ void hTree::receive_request(Request* req){
 
 void hTree::tick(){
     for(int i=0; i<reqPair_list.size(); i++){
-        //if a reqPair has both send and receive request, and is not hTree_ready, try configure all transactions in it.
-        if (!reqPair_list[i]->send_req->hTree_ready && reqPair_list[i]->send_req && reqPair_list[i]->receive_req){
+        //if a reqPair doesn't have both send and receive request, just continue to next reqPair
+        if(!reqPair_list[i]->send_req || !reqPair_list[i]->receive_req){
+            continue;
+        }
+        //if not hTree_ready, try configure all transactions in it.
+        if (!reqPair_list[i]->send_req->hTree_ready){
             bool isTile = false;
             if(reqPair_list[i]->send_req->type == Request::Type::TileSend){
                 isTile = true;

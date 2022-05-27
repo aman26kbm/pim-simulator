@@ -1,7 +1,7 @@
 #ifndef _SYSTEM_H_
 #define _SYSTEM_H_
 
-//#define DEBUG_OUTPUT
+#define DEBUG_OUTPUT
 
 #include "Util.h"
 #include "Tool.h"
@@ -122,6 +122,10 @@ public:
     void test();
     void test_tile0();
     void test_tile1();
+
+    void sync();
+    void sync_tile0();
+    void sync_tile1();
 
     AddrT cram_base_addr_tile0_block0; 
     AddrT cram_addr_tile0_block0_row0;  

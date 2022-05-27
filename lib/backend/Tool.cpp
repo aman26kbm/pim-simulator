@@ -192,15 +192,20 @@ void Mailbox::reset() {
     */
 std::vector<int> wire_index2path(int index){
     std::vector<int> path;
+    std::vector<int> zero_path;
+    
+    zero_path.push_back(0);
+    while(index >= path2index(zero_path, false)){
+        zero_path.push_back(0);
+    }
+    int depth = zero_path.size() - 1;
+
     index = index/2;
-    int depth = 0;
-    while(index > pow(4,depth)){
-        depth++;
+    for(int i = depth-1; i>0; i--){
+        path.push_back((index-(int)pow(4, i-1))/(int)pow(4, i)-1);
+        index = (index-(int)pow(4, i-1)) % (int)pow(4,i) + (int)pow(4, i-1);
     }
-    for(int i = depth-1; i>=0; i--){
-        path.push_back(index/(int)pow(4, i)-1);
-        index = index % (int)pow(4,i);
-    }
+    path.push_back(index-1);
     return path;
 }
 std::vector<int> block_index2path(int index, int depth){
@@ -228,7 +233,7 @@ int path2index(std::vector<int> path, bool positive){
     int depth = path.size();
     int index = 0;
     for(int i=0; i<depth; i++){
-        index += path[i]*pow(4,depth-1-i);
+        index += (path[i]+1)*pow(4,depth-1-i);
     }
     if(positive){
         return index*2+1;

@@ -34,7 +34,7 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wo
     // htree_counters.clear();
     // for (int i = 0; i < htree_counter_size; i++)
     //     htree_counters.push_back(0);
-    _hTree = new hTree(h_tree_height(n_blocks), wordsize_block2block, _ncols, _nrows);
+    _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows);
 }
 
 
@@ -152,6 +152,7 @@ MemoryChip::tick()
 {
 #ifdef DEBUG_OUTPUT
     //printf("%s_%d ticks once (%lu)!\n", level_str[int(_level)].c_str(), _id, _ctrl->getTime());
+    printf("tick\n");
 #endif
     if (getLevel() != MemoryComponent::Level::Chip) {
         std::cout<<"tick() is illegal to call unless called by Chip";

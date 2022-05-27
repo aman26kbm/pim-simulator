@@ -39,8 +39,6 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
 
     cur_state.status = IDLE;
     n_reads = 0; n_writes = 0; n_unexpected_reqs = 0;
-    cur_state.receive_ready = false;
-    cur_state.send_done = false;
 }
 
 bool
@@ -128,22 +126,6 @@ MemoryTile::issueReq(Request& req)
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
             req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-            // std::vector<int> switch_list;
-
-            // if (req.type == Request::Type::TileSend)
-            //     switch_list = h_tree_switches(req.src_tile, _ntiles, _ntiles);
-            // else if (req.type == Request::Type::TileReceive)
-            //     switch_list = h_tree_switches(_ntiles, req.dst_tile, _ntiles);
-            // else if (req.type == Request::Type::TileSend_Receive)
-            //     switch_list = h_tree_switches(req.src_tile, req.dst_tile, _ntiles);
-
-            // int jump = 1;
-            // for (int i = 0; i < switch_list.size(); i++) {
-            //     htree_counters[switch_list[i]] += words;
-            //     jump += htree_counters[switch_list[i]];
-            // }
-            // req.finish_time = cur_time + getReqTiming(req) * jump;
-            // switch_list.clear();
 
             req.finish_time = cur_time + getReqTiming(req) ;
         }
@@ -162,21 +144,7 @@ MemoryTile::issueReq(Request& req)
             //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
             req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-            // std::vector<int> switch_list;
-
-            // if (req.type == Request::Type::BlockSend)
-            //     switch_list = h_tree_switches(req.src_block, _nblocks, _nblocks);
-            // else if (req.type == Request::Type::BlockReceive)
-            //     switch_list = h_tree_switches(_nblocks, req.dst_block, _nblocks);
-            // else if (req.type == Request::Type::BlockSend_Receive)
-            //     switch_list = h_tree_switches(req.src_block, req.dst_block, _nblocks);
-
-            // int jump = 1;
-            // for (int i = 0; i < switch_list.size(); i++) {
-            //     htree_counters[switch_list[i]] += words;
-            //     jump += htree_counters[switch_list[i]];
-            // }
-            //req.finish_time = cur_time + getReqTiming(req) * jump;
+            
             req.finish_time = cur_time + getReqTiming(req);
             //switch_list.clear();
         }
@@ -200,7 +168,7 @@ MemoryTile::issueReq(Request& req)
 #ifdef DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
                     level_str[int(_level)].c_str(), _id, 
-                    req.reqToStr().c_str(), req.arrive_time, req.process_time, req.finish_time);
+                    req.print_name(req.type).c_str(), req.arrive_time, req.process_time, req.finish_time);
 #endif
     ////////////////////////
     //This is very important
@@ -262,6 +230,7 @@ MemoryTile::outputStats(FILE* rstFile)
 }
 
 
+//state machine
 void MemoryTile::update_next(){
         next_state = cur_state;
 
@@ -274,13 +243,13 @@ void MemoryTile::update_next(){
                 req = _ctrl->_tile_q->pop_front();
                 dest = (MemoryTile*)_parent->getDestTile(req);
                 source = (MemoryTile*)_parent->getSourceTile(req);
-                if (req.type == Request::Type::TileSend){
-                    //send_done = false;
-                    next_state.status = SEND_WAIT;
-                }
-                else if(req.type == Request::Type::TileReceive){
-                    next_state.status = RECEIVE_WAIT;
-                    next_state.receive_ready = true;
+                // if this request is tilesend/receive or blocksend/receive, give request to hTree and enter HTREE_WAIT
+                if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                 || req.type == Request::Type::BlockSend_Receive){
+                     req.send_receive_finished = false;
+                     req.hTree_ready = false;
+                    ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                    next_state.status = HTREE_WAIT;
                 }
                 else if(req.type == Request::Type::Signal) {
                     req.mail->signal(_ctrl->getTime());
@@ -305,37 +274,30 @@ void MemoryTile::update_next(){
                     issueReq(req);
                 }
                 break;
-            case SEND_DONE:
-                next_state.status = IDLE;
-                next_state.send_done = false;
+
+            case HTREE_WAIT:
+                if(!req.hTree_ready){
+                    next_state.status = HTREE_WAIT;
+                }
+                else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                     || req.type == Request::Type::BlockSend_Receive){
+                    next_state.status = REQ_MODE;
+                    issueReq(req);
+                }
+                // uncomment when adding dram support
+                // else if(req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore){
+                //     next_state.status = REQ_MODE;
+                //     issueReq(*req);
+                // }
+                else{
+                    printf("Should not be here!\n");
+                    assert(false);
+                }
                 break;
             case REQ_MODE:
                 if (_ctrl->getTime() == _next_available){
                     next_state.status = IDLE;
-                }
-                break;
-            case SEND_WAIT:
-                if (dest->cur_state.receive_ready){
-                    next_state.status =  SEND_MODE;
-                    issueReq(req);
-                }
-                break;
-            case SEND_MODE:
-                if(_ctrl->getTime() == _next_available){
-                    next_state.status = SEND_DONE;
-                    next_state.send_done = true;
-                }
-                break;
-            case RECEIVE_WAIT:
-                if(source->cur_state.send_done){
-                    next_state.status = RECEIVE_MODE;
-                    next_state.receive_ready=false;
-                    issueReq(req);
-                }
-                break;
-            case RECEIVE_MODE:
-                if(_ctrl->getTime() == _next_available){
-                    next_state.status = IDLE;
+                    req.send_receive_finished = true;
                 }
                 break;
             case MAIL_WAIT:
@@ -377,7 +339,7 @@ void MemoryTile::update_current(){
     _ctrl->getTime(), _id, 
     print_name(cur_state.status).c_str(),
     print_name(next_state.status).c_str(),
-    Request::print_name(int(req.type)).c_str(),
+    Request::print_name(req.type).c_str(),
     _parent->dram_busy);
     cur_state = next_state;
 }

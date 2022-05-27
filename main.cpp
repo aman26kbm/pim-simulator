@@ -15,10 +15,13 @@ using namespace pimsim;
 
 int main(int argc, char *argv[]) {
 
+    printf("simulator start:\n");
+
     string config_file = "";
     bool gemv_program = false;
     bool fir_program = false;
     bool test_program = false;
+    bool sync_program = false;
 
     //Parse command line options
     // Wrap everything in a try block.  Do this every time,
@@ -41,6 +44,9 @@ int main(int argc, char *argv[]) {
         TCLAP::SwitchArg test_program_arg("t", "test", "Run the test program", false);
         cmd.add(test_program_arg);
 
+        TCLAP::SwitchArg sync_program_arg("s", "sync", "Run the sync program", false);
+        cmd.add(sync_program_arg);
+
         // Parse the args.
         cmd.parse(argc, argv);
 
@@ -49,6 +55,7 @@ int main(int argc, char *argv[]) {
         gemv_program = gemv_program_arg.getValue();
         fir_program = fir_program_arg.getValue();
         test_program = test_program_arg.getValue();
+        sync_program = sync_program_arg.getValue();
 
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     {
@@ -78,6 +85,12 @@ int main(int argc, char *argv[]) {
         system->test();
     }
 
+    if(sync_program) {
+        std::cout<<"Running sync program"<<std::endl;
+        system->sync();
+    }
+
+    printf("starting executing user program:\n");
     //Execute the requests queued by the workload above
     system->run();
 

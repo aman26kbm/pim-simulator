@@ -22,14 +22,8 @@ public:
     wires of path 000-333 has bitwidth 256*/
     int bitwidth;
     int available_bitwidth;
-    Wire(int index, int width){
-        this->index = index;
-        this->parent_side = -1;
-        //this->child_side = -1;
-        this->bitwidth = width;
-        this->available_bitwidth = width;
-        this->positive = (index%2);
-    }
+    Wire();
+    Wire(int index, int width);
 };
 
 }

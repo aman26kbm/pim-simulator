@@ -188,7 +188,7 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::TileReceive: 
         case Request::Type::TileSend_Receive: 
         case Request::Type::ChipSend_Receive: 
-            time = T_CLK; // Assuming the global clock frequency is 1/T_CLK.
+            time = getPrecisionBits(req) * T_CLK ; // Assuming the global clock frequency is 1/T_CLK. 10 is for testing
             break;
 
         //cases 29-37 are System commands
