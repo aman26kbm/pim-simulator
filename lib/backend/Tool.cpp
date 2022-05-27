@@ -201,11 +201,46 @@ std::vector<int> wire_index2path(int index){
     int depth = zero_path.size() - 1;
 
     index = index/2;
-    for(int i = depth-1; i>0; i--){
-        path.push_back((index-(int)pow(4, i-1))/(int)pow(4, i)-1);
-        index = (index-(int)pow(4, i-1)) % (int)pow(4,i) + (int)pow(4, i-1);
+    // for(int i = depth-1; i>0; i--){
+    //     int sum_of_pow=0;
+    //     for(int j=0; j<=i-1; j++){
+    //         sum_of_pow += (int)pow(4, j);
+    //     }
+    //     path.push_back((index-(int)pow(4, i-1))/(int)pow(4, i)-1);
+    //     index = (index-sum_of_pow) % (int)pow(4,i) + sum_of_pow;
+    // }
+
+    //convert to 4 base
+    for(int i = depth-1; i>=0; i--){
+        path.push_back(index/(int)pow(4, i));
+        index = index % (int)pow(4,i);
     }
-    path.push_back(index-1);
+    //make sure all bits are >= 1
+    //borrow 1 from previous bit if current bit is 0
+    bool all_bits_greater_than_one = true;
+    for(int i = 0; i<depth; i++){
+        if(path[i]==0){
+            all_bits_greater_than_one = false;
+        }
+    }
+    while(!all_bits_greater_than_one){
+        for(int i = 0; i<depth-1; i++){
+            if(path[i+1]==0){
+                path[i]--;
+                path[i+1] = 4;
+            }
+        }
+        all_bits_greater_than_one = true;
+        for(int i = 0; i<depth; i++){
+            if(path[i]==0){
+                all_bits_greater_than_one = false;
+            }
+        }
+    }
+    for(int i = 0; i<depth; i++){
+        path[i]--;
+    }
+    //path.push_back(index-1);
     return path;
 }
 std::vector<int> block_index2path(int index, int depth){
