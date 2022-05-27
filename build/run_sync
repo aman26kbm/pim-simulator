@@ -1,0 +1,1 @@
+./PIM_simulator --cfg ../configs/pimsim.cfg --sync |& tee sync.log
