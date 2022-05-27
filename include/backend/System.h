@@ -126,7 +126,10 @@ public:
     void sync();
     void sync_tile0();
     void sync_tile1();
+    void sync_tile2();
+    void sync_tile3();
 
+//tile0
     AddrT cram_base_addr_tile0_block0; 
     AddrT cram_addr_tile0_block0_row0;  
     AddrT cram_addr_tile0_block0_row4;  
@@ -153,7 +156,7 @@ public:
     AddrT cram_addr_tile1_block0_row0; 
     AddrT cram_addr_tile1_block0_row4; 
     AddrT cram_addr_tile1_block0_row8; 
-
+//tile1
     AddrT cram_base_addr_tile1_block1; 
     AddrT cram_addr_tile1_block1_row0; 
     AddrT cram_addr_tile1_block1_row4; 
@@ -170,6 +173,51 @@ public:
     AddrT cram_addr_tile1_block3_row8; 
     AddrT cram_addr_tile1_block3_row16;
     AddrT cram_addr_tile1_block3_row24;
+//tile2
+    AddrT cram_base_addr_tile2_block0; 
+    AddrT cram_addr_tile2_block0_row0; 
+    AddrT cram_addr_tile2_block0_row4; 
+    AddrT cram_addr_tile2_block0_row8; 
+
+    AddrT cram_base_addr_tile2_block1; 
+    AddrT cram_addr_tile2_block1_row0; 
+    AddrT cram_addr_tile2_block1_row4; 
+    AddrT cram_addr_tile2_block1_row8;
+
+    AddrT cram_base_addr_tile2_block2; 
+    AddrT cram_addr_tile2_block2_row0; 
+    AddrT cram_addr_tile2_block2_row4; 
+    AddrT cram_addr_tile2_block2_row8; 
+
+    AddrT cram_base_addr_tile2_block3; 
+    AddrT cram_addr_tile2_block3_row0; 
+    AddrT cram_addr_tile2_block3_row4; 
+    AddrT cram_addr_tile2_block3_row8; 
+    AddrT cram_addr_tile2_block3_row16;
+    AddrT cram_addr_tile2_block3_row24;
+//tile3
+    AddrT cram_base_addr_tile3_block0; 
+    AddrT cram_addr_tile3_block0_row0; 
+    AddrT cram_addr_tile3_block0_row4; 
+    AddrT cram_addr_tile3_block0_row8; 
+
+    AddrT cram_base_addr_tile3_block1; 
+    AddrT cram_addr_tile3_block1_row0; 
+    AddrT cram_addr_tile3_block1_row4; 
+    AddrT cram_addr_tile3_block1_row8;
+
+    AddrT cram_base_addr_tile3_block2; 
+    AddrT cram_addr_tile3_block2_row0; 
+    AddrT cram_addr_tile3_block2_row4; 
+    AddrT cram_addr_tile3_block2_row8; 
+
+
+    AddrT cram_base_addr_tile3_block3; 
+    AddrT cram_addr_tile3_block3_row0; 
+    AddrT cram_addr_tile3_block3_row4; 
+    AddrT cram_addr_tile3_block3_row8; 
+    AddrT cram_addr_tile3_block3_row16;
+    AddrT cram_addr_tile3_block3_row24;
 
     //RF base addresses. These are aliases
     //for CRAM addresses for now. That's coz

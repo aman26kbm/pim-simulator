@@ -407,6 +407,8 @@ bool hTree::disconfigure(Transmission trans){
 
 
 void hTree::receive_request(Request* req){
+     printf("hTree receives a request (%s), src_tile %d, dest_tile %d\n",  
+                    req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
     //request should be TileSend, TileReceive, BlockSend or BlockReceive
     assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive);
     
@@ -535,13 +537,28 @@ void hTree::tick(){
                 reqPair_list[i]->receive_req->hTree_ready = true;
             }
         }
-        //if a reqPair is finished, disconfigure it and remove from reqPair_list and trans_list_list
+        
+    }
+    //if a reqPair is finished, disconfigure it and remove from reqPair_list and trans_list_list
+    int i=0;
+    while(i<reqPair_list.size()){
+        if(!reqPair_list[i]->send_req || !reqPair_list[i]->receive_req){
+            i++;
+            continue;
+        }
         if(reqPair_list[i]->send_req->send_receive_finished){
             for(int j=0; j<trans_list_list[i].size(); j++){
                 disconfigure(trans_list_list[i][j]);
             }
+            printf("hTree removes a request (%s), src_tile %d, dest_tile %d\n",  
+                    reqPair_list[i]->send_req->print_name(reqPair_list[i]->send_req->type).c_str(), reqPair_list[i]->send_req->src_tile, reqPair_list[i]->send_req->dst_tile);
+            printf("hTree removes a request (%s), src_tile %d, dest_tile %d\n",  
+                    reqPair_list[i]->receive_req->print_name(reqPair_list[i]->receive_req->type).c_str(), reqPair_list[i]->receive_req->src_tile, reqPair_list[i]->receive_req->dst_tile);
             reqPair_list.erase(reqPair_list.begin()+i); 
-            trans_list_list.erase(trans_list_list.begin()+i); 
+            trans_list_list.erase(trans_list_list.begin()+i);
+        }
+        else{
+            i++;
         }
     }
 }

@@ -104,6 +104,52 @@ System<T>::System(Config* config) : _config(config)
     cram_addr_tile1_block3_row16 =getAddress(1,3,16);
     cram_addr_tile1_block3_row24 =getAddress(1,3,24);
 
+    //                                      t, b, r
+    cram_base_addr_tile2_block0 = getAddress(2,0,0); 
+    cram_addr_tile2_block0_row0 = getAddress(2,0,0);  //src1
+    cram_addr_tile2_block0_row4 = getAddress(2,0,4);  //src2
+    cram_addr_tile2_block0_row8 = getAddress(2,0,8);  //dst
+
+    cram_base_addr_tile2_block1 = getAddress(2,1,0); 
+    cram_addr_tile2_block1_row0 = getAddress(2,1,0); 
+    cram_addr_tile2_block1_row4 = getAddress(2,1,4); 
+    cram_addr_tile2_block1_row8 = getAddress(2,1,8); 
+
+    cram_base_addr_tile2_block2 = getAddress(2,2,0); 
+    cram_addr_tile2_block2_row0 = getAddress(2,2,0); 
+    cram_addr_tile2_block2_row4 = getAddress(2,2,4); 
+    cram_addr_tile2_block2_row8 = getAddress(2,2,8); 
+
+    cram_base_addr_tile2_block3 = getAddress(2,3,0); 
+    cram_addr_tile2_block3_row0 = getAddress(2,3,0); 
+    cram_addr_tile2_block3_row4 = getAddress(2,3,4); 
+    cram_addr_tile2_block3_row8 = getAddress(2,3,8); 
+    cram_addr_tile2_block3_row16 =getAddress(2,3,16);
+    cram_addr_tile2_block3_row24 =getAddress(2,3,24);
+
+    //                                      t, b, r
+    cram_base_addr_tile3_block0 = getAddress(3,0,0); 
+    cram_addr_tile3_block0_row0 = getAddress(3,0,0);  //src1
+    cram_addr_tile3_block0_row4 = getAddress(3,0,4);  //src2
+    cram_addr_tile3_block0_row8 = getAddress(3,0,8);  //dst
+
+    cram_base_addr_tile3_block1 = getAddress(3,1,0); 
+    cram_addr_tile3_block1_row0 = getAddress(3,1,0); 
+    cram_addr_tile3_block1_row4 = getAddress(3,1,4); 
+    cram_addr_tile3_block1_row8 = getAddress(3,1,8); 
+
+    cram_base_addr_tile3_block2 = getAddress(3,2,0); 
+    cram_addr_tile3_block2_row0 = getAddress(3,2,0); 
+    cram_addr_tile3_block2_row4 = getAddress(3,2,4); 
+    cram_addr_tile3_block2_row8 = getAddress(3,2,8); 
+
+    cram_base_addr_tile3_block3 = getAddress(3,3,0); 
+    cram_addr_tile3_block3_row0 = getAddress(3,3,0); 
+    cram_addr_tile3_block3_row4 = getAddress(3,3,4); 
+    cram_addr_tile3_block3_row8 = getAddress(3,3,8); 
+    cram_addr_tile3_block3_row16 =getAddress(3,3,16);
+    cram_addr_tile3_block3_row24 =getAddress(3,3,24);
+
     rf_base_addr_tile0 = getAddress(0,0,0); 
     rf_base_addr_tile1 = getAddress(1,0,0); 
     rf_base_addr_tile2 = getAddress(2,0,0); 
@@ -1399,10 +1445,73 @@ void System<T>::sync_tile1()
 }
 
 template <class T>
+void System<T>::sync_tile2()
+{
+    std::vector<Request> requests;
+    Request *request;
+
+    //1. tilesend tile2 row0-> tile3 row8
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //2. tileReceive tile3 row0 -> tile2 row8
+    //should execute after the previous request
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+    
+    //3. blocksend tile2 block0 row8 -> block2 row8
+    //should execute after the previous request
+    request = new Request(Request::Type::BlockSend_Receive);
+    request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile2_block2_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+
+template <class T>
+void System<T>::sync_tile3()
+{
+    std::vector<Request> requests;
+    Request *request;
+
+    //1. tileReceive tile2 row0-> tile3 row8
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //4. blocksend tile3 block0 row8 -> block2 row8
+    //should execute after the previous request
+    request = new Request(Request::Type::BlockSend_Receive);
+    request->addAddr(cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile3_block2_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //2. tileSend tile3 row0 -> tile2 row8
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+
+template <class T>
 void System<T>::sync()
 {
     printf("adding tile0 requests:\n");
     sync_tile0();
     printf("adding tile1 requests:\n");
     sync_tile1();
+    printf("adding tile1 requests:\n");
+    sync_tile2();
+    printf("adding tile1 requests:\n");
+    sync_tile3();
 }
