@@ -35,6 +35,7 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wo
     // for (int i = 0; i < htree_counter_size; i++)
     //     htree_counters.push_back(0);
     _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows);
+    _Dram = new Dram(4,10);
 }
 
 
@@ -165,6 +166,7 @@ MemoryChip::tick()
         _children[i]->update_next();
     }
     _hTree->tick();
+    _Dram->tick();
 
     //Code that will collect stuff from multiple tiles for this clock period, before we update the current state.
     //TODO: This needs to updated based on the new interconnect modelling (assuming FPGA like switches).

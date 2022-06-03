@@ -19,6 +19,7 @@
 #include "Message.h"
 #include "Request.h"
 #include "Memory_characteristics.h"
+//#include "global.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ class System {
 public:
     FILE* rstFile;
     uint64_t tot_reqs = 0;
-    TimeT _time; // Global cycles for processing
+    //TimeT _time; // Global cycles for processing
     Config* _config;
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
@@ -65,7 +66,7 @@ public:
 
     void addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block);
 
-    TimeT getTime() {return _time;}
+    //TimeT getTime() {return _time;}
     void getLocation(AddrT addr, int&, int&, int&);
     void getLocation(AddrT addr, int&, int&, int&, int&, int&);
     AddrT getAddress(int, int, int);

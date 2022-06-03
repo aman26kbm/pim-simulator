@@ -15,6 +15,7 @@
 #include "MemoryComponent.h"
 
 #include "hTree.h"
+#include "Dram.h"
 
 namespace pimsim {
 
@@ -27,6 +28,7 @@ class MemoryChip : public MemoryComponent {
 public:
 
     hTree* _hTree;
+    Dram* _Dram;
     MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);

@@ -1,4 +1,5 @@
 #include "backend/System.h"
+#include "backend/global.h"
 #include <chrono>
 #include <algorithm>
 //#include <thread>
@@ -669,10 +670,10 @@ int System<T>::sendRequest(Request& req)
             ticks = sendChipReq(req, SEND);
             break;
         case Request::Type::RowLoad:
-            ticks = sendChipReq(req, RECEIVE);
+            ticks = sendChipReq(req, SEND);
             break;
         case Request::Type::RowLoad_RF:
-            ticks = sendChipReq(req, RECEIVE);
+            ticks = sendChipReq(req, SEND);
             break;
         //case Request::Type::SystemRowStore:
         //    ticks = system_DramStore(req);
@@ -801,10 +802,10 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
                 ticks = sendChipReq(reqs[i], SEND);
                 break;
             case Request::Type::RowLoad:
-                ticks = sendChipReq(reqs[i], RECEIVE);
+                ticks = sendChipReq(reqs[i], SEND);
                 break;
             case Request::Type::RowLoad_RF:
-                ticks = sendChipReq(reqs[i], RECEIVE);
+                ticks = sendChipReq(reqs[i], SEND);
                 break;
             //case Request::Type::SystemRowStore:
             //    ticks = system_DramStore(reqs[i]);
@@ -844,10 +845,28 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
 template <class T>
 void System<T>::run()
 {
-
-    for (int i = 0; i < _nchips; i++) {
-        while (!_chips[i]->isFinished())
+    int finished = false;
+    
+    
+    while(!finished){
+        //update chip status
+        for (int i = 0; i < _nchips; i++) {
+            
             _chips[i]->tick();
+            
+        }
+        //update time
+        _time++;
+        //check if all chips finished
+        finished = true;
+        for(int i=0; i< _nchips; i++){
+            if (!_chips[i]->isFinished()){
+                finished = false;
+            }
+        }
+    }
+    //print stats
+    for (int i = 0; i < _nchips; i++) {
         _chips[i]->outputStats(rstFile);
     }
 
@@ -868,7 +887,7 @@ void System<T>::finish()
         fprintf(rstFile, "--------------------------------\n");
 
         for (int j = 0; j < _chips[i]->_nchildren; j++) {
-            fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks\n", i, j, _chips[i]->_children[j]->getTime());
+            fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks\n", i, j, _time);
             fprintf(rstFile, "--------------------------------\n");
 
             //for (int k = 0; k < _chips[i]->_children[j]->_nchildren; k++) {
@@ -1390,6 +1409,11 @@ void System<T>::sync_tile0()
 {
     std::vector<Request> requests;
     Request *request;
+    
+    //0. rowLoad fram->tile0 row0
+    request = new Request(Request::Type::RowLoad);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
 
     //1. tilesend tile0 row0-> tile1 row8
     request = new Request(Request::Type::TileSend);
@@ -1421,6 +1445,11 @@ void System<T>::sync_tile1()
     std::vector<Request> requests;
     Request *request;
 
+    //0. rowLoad dram -> tile1 row0 
+    request = new Request(Request::Type::RowLoad);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
     //1. tileReceive tile0 row0-> tile1 row8
     request = new Request(Request::Type::TileReceive);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
@@ -1449,6 +1478,11 @@ void System<T>::sync_tile2()
 {
     std::vector<Request> requests;
     Request *request;
+
+    //0. rowLoad dram->tile2 row0
+    request = new Request(Request::Type::RowLoad);
+    request->addAddr(cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
 
     //1. tilesend tile2 row0-> tile3 row8
     request = new Request(Request::Type::TileSend);
@@ -1479,6 +1513,11 @@ void System<T>::sync_tile3()
 {
     std::vector<Request> requests;
     Request *request;
+
+    //0. rowLoad dram -> tile3 row0
+    request = new Request(Request::Type::RowLoad);
+    request->addAddr(cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
 
     //1. tileReceive tile2 row0-> tile3 row8
     request = new Request(Request::Type::TileReceive);

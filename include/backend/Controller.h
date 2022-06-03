@@ -17,7 +17,7 @@ class MemoryComponent;
 
 class Controller {
 private:
-    TimeT _time = 0;
+    //TimeT _time = 0;
     TimeT _decoder_time = 0;
 
     // For QuadTree Block
@@ -35,14 +35,14 @@ public:
 
     ~Controller();
 
-    TimeT getTime() {return _time;}
-    void setTime(TimeT time) { _time = time;}
+    //TimeT getTime() {return _time;}
+    //void setTime(TimeT time) { _time = time;}
     TimeT getDecoderTime() {return _decoder_time;}
     void setDecoderTime(TimeT time) { _decoder_time = time;}
 
     bool receiveReq(Request& req);
 
-    void proceed(TimeT t);
+    //void proceed(TimeT t);
     bool isEmpty();
 };
 

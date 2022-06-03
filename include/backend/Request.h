@@ -288,6 +288,8 @@ public:
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     bool send_receive_finished;
 
+    bool dram_ready;
+
     enum class BroadcastType: int {
         NONE,
         ALL

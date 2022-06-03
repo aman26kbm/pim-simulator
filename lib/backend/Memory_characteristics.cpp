@@ -199,10 +199,10 @@ double MemoryCharacteristics::getTiming(Request req) {
             time = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
-            time = DramLatency;
+            time = getPrecisionBits(req) * T_CLK;
             break;
         case Request::Type::RowStore: 
-            time = DramLatency;
+            time = getPrecisionBits(req) * T_CLK;
             break;
         case Request::Type::RowShift: 
             // precision_list[0] tells the number of bits in the operand

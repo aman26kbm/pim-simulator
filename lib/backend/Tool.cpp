@@ -304,8 +304,10 @@ bool wire_try_connect(Wire* wire1, Wire* wire2){
     else if(path1.size() < path2.size()){
         //path2 should have path1 as prefix and only has 1 more entry
         assert(path1.size()==path2.size()-1);
-        for(int i=0; i<path1.size()-1;i++){
-            assert(path1[i]==path2[i]);
+        if(path1.size()!=0){
+            for(int i=0; i<path1.size()-1;i++){
+                assert(path1[i]==path2[i]);
+            }
         }
         //try connect wire1's child side to wire2's parent side:
         //if wire2's parent side is already connected to wire1, return true
@@ -323,8 +325,10 @@ bool wire_try_connect(Wire* wire1, Wire* wire2){
     else {
         //path1 should have path2 as prefix and only has 1 more entry
         assert(path2.size()==path1.size()-1);
-        for(int i=0; i<path2.size()-1;i++){
-            assert(path2[i]==path1[i]);
+        if(path2.size()!=0){
+            for(int i=0; i<path2.size()-1;i++){
+                assert(path2[i]==path1[i]);
+            }
         }
         //try connect wire2's child side to wire1's parent side:
         //if wire1's parent side is already connected to wire2, return true
@@ -368,8 +372,10 @@ bool wire_connect(Wire* wire1, Wire* wire2){
     else if(path1.size() < path2.size()){
         //path2 should have path1 as prefix and only has 1 more entry
         assert(path1.size()==path2.size()-1);
-        for(int i=0; i<path1.size()-1;i++){
-            assert(path1[i]==path2[i]);
+        if(path1.size()!=0){
+            for(int i=0; i<path1.size()-1;i++){
+                assert(path1[i]==path2[i]);
+            }
         }
         //try connect wire1's child side to wire2's parent side:
         //if wire2's parent side is already connected to wire1, return true
@@ -388,8 +394,10 @@ bool wire_connect(Wire* wire1, Wire* wire2){
     else {
         //path1 should have path2 as prefix and only has 1 more entry
         assert(path2.size()==path1.size()-1);
-        for(int i=0; i<path2.size()-1;i++){
-            assert(path2[i]==path1[i]);
+        if(path2.size()!=0){
+            for(int i=0; i<path2.size()-1;i++){
+                assert(path2[i]==path1[i]);
+            }
         }
         //try connect wire2's child side to wire1's parent side:
         //if wire1's parent side is already connected to wire2, return true
@@ -428,8 +436,10 @@ bool wire_disconnect(Wire* wire1, Wire* wire2){
     else if(path1.size() < path2.size()){
         //path2 should have path1 as prefix and only has 1 more entry
         assert(path1.size()==path2.size()-1);
-        for(int i=0; i<path1.size()-1;i++){
-            assert(path1[i]==path2[i]);
+        if(path1.size()!=0){
+            for(int i=0; i<path1.size()-1;i++){
+                assert(path1[i]==path2[i]);
+            }
         }
         // wire1's child side should be connected to wire2's parent side
         assert(wire2->parent_side == wire1->index);
@@ -441,8 +451,10 @@ bool wire_disconnect(Wire* wire1, Wire* wire2){
     else {
         //path1 should have path2 as prefix and only has 1 more entry
         assert(path1.size()-1==path2.size());
-        for(int i=0; i<path2.size()-1;i++){
-            assert(path1[i]==path2[i]);
+        if(path2.size()!=0){
+            for(int i=0; i<path2.size()-1;i++){
+                assert(path1[i]==path2[i]);
+            }
         }
         // wire2's child side should be connected to wire1's parent side
         assert(wire1->parent_side == wire2->index);

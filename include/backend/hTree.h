@@ -23,6 +23,7 @@ private:
         int dest_index;
     };
     std::vector<std::vector<Transmission>> trans_list_list;
+    bool dram_try_configure(Transmission trans);
     bool tile_try_configure(Transmission trans);
     bool block_try_configure(Transmission trans);
     bool configure(Transmission trans);

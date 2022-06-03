@@ -1,4 +1,5 @@
 #include "backend/Controller.h"
+#include "backend/global.h"
 
 using namespace std;
 using namespace pimsim;
@@ -20,14 +21,14 @@ Controller::receiveReq(Request& req)
     return true;
 }
 
-void 
-Controller::proceed(TimeT t) 
-{
-    _time += t;
-    //while (_time < t) {
-    //    tick();
-    //}
-}
+// void 
+// Controller::proceed(TimeT t) 
+// {
+//     _time += t;
+//     //while (_time < t) {
+//     //    tick();
+//     //}
+// }
 
 bool
 Controller::isEmpty()

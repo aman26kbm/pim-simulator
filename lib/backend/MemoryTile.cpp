@@ -1,4 +1,5 @@
 #include "backend/MemoryTile.h"
+#include "backend/global.h"
 #include <cstring>
 
 using namespace std;
@@ -55,7 +56,7 @@ MemoryTile::isReady(Request& req)
     cout<<"Unused code";
     assert(0);
     //_ctrl refers to the controller of the tile
-    TimeT cur_time = _ctrl->getTime();
+    TimeT cur_time = _time;
     if (req.isTile()) {
         TimeT next = getNextGlobalTime();
         if (next <= cur_time) {
@@ -73,50 +74,50 @@ void
 MemoryTile::issueReq(Request& req)
 {
     //_ctrl refers to the controller of the tile.
-    TimeT cur_time = _ctrl->getTime();
+    TimeT cur_time = _time;
         
     //if this chip-level request is for a DRAM access, then we call a different set of functions
-    if (req.isChipDram()) {
-        req.process_time = cur_time;
-        //precision_list[0] effectively contains the number of rows to transfer.
-        //1 "word" = 1 full dram interface width worth of data. 
-        //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
-        int rounded_up_bits;
-        if (req.isRF()) {
-            int chunk_size = _values->_rf_chunk_size;
-            int num_elements = req.size_list[0];
-            int precision_bits = getPrecisionBits(req);
-            int actual_bits = num_elements * precision_bits;
-            if (actual_bits < chunk_size) {
-                rounded_up_bits = chunk_size;
-            }
-            else if (actual_bits % chunk_size == 0) {
-                rounded_up_bits = actual_bits;
-            }
-            else {
-                rounded_up_bits = (int(actual_bits/chunk_size)*chunk_size) + chunk_size;
-            }
-        }
-        else {
-            rounded_up_bits = _ncols * _nblocks * getPrecisionBits(req);
-        }
+    // if (req.isChipDram()) {
+    //     req.process_time = cur_time;
+    //     //precision_list[0] effectively contains the number of rows to transfer.
+    //     //1 "word" = 1 full dram interface width worth of data. 
+    //     //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
+    //     int rounded_up_bits;
+    //     if (req.isRF()) {
+    //         int chunk_size = _values->_rf_chunk_size;
+    //         int num_elements = req.size_list[0];
+    //         int precision_bits = getPrecisionBits(req);
+    //         int actual_bits = num_elements * precision_bits;
+    //         if (actual_bits < chunk_size) {
+    //             rounded_up_bits = chunk_size;
+    //         }
+    //         else if (actual_bits % chunk_size == 0) {
+    //             rounded_up_bits = actual_bits;
+    //         }
+    //         else {
+    //             rounded_up_bits = (int(actual_bits/chunk_size)*chunk_size) + chunk_size;
+    //         }
+    //     }
+    //     else {
+    //         rounded_up_bits = _ncols * _nblocks * getPrecisionBits(req);
+    //     }
 
-        int dram_chunk_size = _values->_wordsize_dram;
-        if (rounded_up_bits < dram_chunk_size) {
-            req.dram_words = 1;
-        }
-        else if (rounded_up_bits % dram_chunk_size == 0) {
-            req.dram_words = rounded_up_bits / dram_chunk_size;
-        }
-        else {
-            req.dram_words = (int(rounded_up_bits/dram_chunk_size)) + 1;
-        }
-        _parent->dram_counter += req.dram_words;
-        // getReqTiming gives us the dram latency
-        req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
-    }
+    //     int dram_chunk_size = _values->_wordsize_dram;
+    //     if (rounded_up_bits < dram_chunk_size) {
+    //         req.dram_words = 1;
+    //     }
+    //     else if (rounded_up_bits % dram_chunk_size == 0) {
+    //         req.dram_words = rounded_up_bits / dram_chunk_size;
+    //     }
+    //     else {
+    //         req.dram_words = (int(rounded_up_bits/dram_chunk_size)) + 1;
+    //     }
+    //     _parent->dram_counter += req.dram_words;
+    //     // getReqTiming gives us the dram latency
+    //     req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
+    // }
 
-    else if (req.isChip()) {
+    if (req.isChip() || req.isChipDram()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
         //precision_list[0] effectively contains the number of rows to transfer.
@@ -252,7 +253,7 @@ void MemoryTile::update_next(){
                     next_state.status = HTREE_WAIT;
                 }
                 else if(req.type == Request::Type::Signal) {
-                    req.mail->signal(_ctrl->getTime());
+                    req.mail->signal(_time);
                 }
                 else if(req.type == Request::Type::Wait) {
                     next_state.status = MAIL_WAIT;
@@ -260,14 +261,16 @@ void MemoryTile::update_next(){
                 else if(req.type == Request::Type::ResetSync) {
                     req.mail->reset();
                 }
-                else if(req.isChipDram()) {
-                    if (_parent->dram_busy) {
-                        next_state.status = DRAM_WAIT1;
-                    }
-                    else {
-                        next_state.status = DRAM_WAIT2;
-                        issueReq(req);
-                    }
+                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore) {
+                    // if (_parent->dram_busy) {
+                    //     next_state.status = DRAM_WAIT1;
+                    // }
+                    // else {
+                    //     next_state.status = DRAM_WAIT2;
+                    //     issueReq(req);
+                    // }
+                    ((MemoryChip*)_parent)->_Dram->receive_request(&req);
+                    next_state.status = DRAM_WAIT;
                 }
                 else {
                     next_state.status = REQ_MODE;
@@ -280,7 +283,9 @@ void MemoryTile::update_next(){
                     next_state.status = HTREE_WAIT;
                 }
                 else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                     || req.type == Request::Type::BlockSend_Receive){
+                     || req.type == Request::Type::BlockSend_Receive 
+                     || req.type == Request::Type::RowLoad
+                     || req.type == Request::Type::RowStore){
                     next_state.status = REQ_MODE;
                     issueReq(req);
                 }
@@ -295,7 +300,7 @@ void MemoryTile::update_next(){
                 }
                 break;
             case REQ_MODE:
-                if (_ctrl->getTime() == _next_available){
+                if (_time == _next_available){
                     next_state.status = IDLE;
                     req.send_receive_finished = true;
                 }
@@ -308,35 +313,48 @@ void MemoryTile::update_next(){
                     next_state.status = MAIL_WAIT;
                 }
                 break;
-            case DRAM_WAIT1:
-                    //stay here until dram_busy lowers down
-                    if (_parent->dram_busy) {
-                        next_state.status = DRAM_WAIT1;
-                    }
-                    else {
-                        next_state.status = DRAM_WAIT2;
-                        issueReq(req);
-                    }
-                break;
-            case DRAM_WAIT2:
-                if (_ctrl->getTime() == _next_available){
-                    next_state.status = IDLE;
-                    dram_busy = false; //dram_busy local to this tile
-                    _parent->dram_counter -= req.dram_words;
+            case DRAM_WAIT:
+                if(!req.dram_ready){
+                    next_state.status = DRAM_WAIT;
                 }
-                else {
-                    next_state.status = DRAM_WAIT2;
-                    dram_busy = true; //dram_busy local to this tile
+                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore){
+                    ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                    next_state.status = HTREE_WAIT;
+                }
+                else{
+                    printf("Should not be here!\n");
+                    assert(false);
                 }
                 break;
+            // case DRAM_WAIT1:
+            //         //stay here until dram_busy lowers down
+            //         if (_parent->dram_busy) {
+            //             next_state.status = DRAM_WAIT1;
+            //         }
+            //         else {
+            //             next_state.status = DRAM_WAIT2;
+            //             issueReq(req);
+            //         }
+            //     break;
+            // case DRAM_WAIT2:
+            //     if (_time == _next_available){
+            //         next_state.status = IDLE;
+            //         dram_busy = false; //dram_busy local to this tile
+            //         _parent->dram_counter -= req.dram_words;
+            //     }
+            //     else {
+            //         next_state.status = DRAM_WAIT2;
+            //         dram_busy = true; //dram_busy local to this tile
+            //     }
+            //     break;
         }
-        _ctrl->proceed(1);
+        //_ctrl->proceed(1);
     //}
 }
 
 void MemoryTile::update_current(){
     printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. DRAM busy %d\n", 
-    _ctrl->getTime(), _id, 
+   _time, _id, 
     print_name(cur_state.status).c_str(),
     print_name(next_state.status).c_str(),
     Request::print_name(req.type).c_str(),

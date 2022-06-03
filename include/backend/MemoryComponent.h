@@ -85,11 +85,11 @@ public:
 
     Level getLevel() {return _level;}   
 
-    TimeT getTime();
+    //TimeT getTime();
     TimeT getDecoderTime();
     void setDecoderTime(TimeT time);
     TimeT getNextGlobalTime();
-    void updateTime();
+    //void updateTime();
 
     virtual void outputStats(FILE* rstFile);
     void tick();

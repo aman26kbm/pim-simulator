@@ -43,11 +43,11 @@ double MemoryComponent::getReqEnergy(Request req) {
 }
 */
 
-TimeT 
-MemoryComponent::getTime() 
-{
-    return _ctrl->getTime();
-}
+// TimeT 
+// MemoryComponent::getTime() 
+// {
+//     return _ctrl->getTime();
+// }
 
 TimeT
 MemoryComponent::getDecoderTime()
@@ -78,35 +78,35 @@ MemoryComponent::getNextGlobalTime()
 //Update the time for blocks, tiles and the chip.
 //Basically the max time of all blocks in a tile gets assigned to the tile
 //and the max time of all tiles gets assigned to the chip.
-void 
-MemoryComponent::updateTime() 
-{
-    TimeT max_chip_time = 0;
-    if (_level == MemoryComponent::Level::Chip) {
+// void 
+// MemoryComponent::updateTime() 
+// {
+//     TimeT max_chip_time = 0;
+//     if (_level == MemoryComponent::Level::Chip) {
 
-        //Iterate over all tiles (children of this chip)
-        for (int i = 0 ; i < this->_nchildren; i++) {
+//         //Iterate over all tiles (children of this chip)
+//         for (int i = 0 ; i < this->_nchildren; i++) {
             
-            TimeT max_tile_time = 0;
-            //Iterate over all blocks (children of this tile)
-            for (int j = 0; j < this->_children[i]->_nchildren; j++) {
-                TimeT block_time = this->_children[i]->_children[j]->getTime();
-                if (block_time > max_tile_time) {
-                    max_tile_time = block_time;
-                }
-            }
-            this->_children[i]->_ctrl->setTime(max_tile_time);
+//             TimeT max_tile_time = 0;
+//             //Iterate over all blocks (children of this tile)
+//             for (int j = 0; j < this->_children[i]->_nchildren; j++) {
+//                 TimeT block_time = this->_children[i]->_children[j]->getTime();
+//                 if (block_time > max_tile_time) {
+//                     max_tile_time = block_time;
+//                 }
+//             }
+//             this->_children[i]->_ctrl->setTime(max_tile_time);
 
-            if (max_tile_time > max_chip_time) {
-                max_chip_time = max_tile_time;
-            }
-        }
-        this->_ctrl->setTime(max_chip_time);
-    }
-    else 
-        _parent->updateTime();
+//             if (max_tile_time > max_chip_time) {
+//                 max_chip_time = max_tile_time;
+//             }
+//         }
+//         this->_ctrl->setTime(max_chip_time);
+//     }
+//     else 
+//         _parent->updateTime();
 
-}
+// }
 
 void 
 MemoryComponent::outputStats(FILE* rstFile) 
