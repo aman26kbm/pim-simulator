@@ -17,11 +17,12 @@ int main(int argc, char *argv[]) {
 
     printf("simulator start:\n");
 
-    string config_file = "";
+    string config_file;
     bool gemv_program = false;
     bool fir_program = false;
     bool test_program = false;
     bool sync_program = false;
+    string to_simulate;
 
     //Parse command line options
     // Wrap everything in a try block.  Do this every time,
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
         TCLAP::ValueArg<string> config_file_arg("c", "cfg", "name of config file", true, "mycfg", "string");
         cmd.add(config_file_arg);
 
-        TCLAP::ValueArg<string> simulate_arg("i", "sim", "simulate the target", true, "simulated", "string");
+        TCLAP::ValueArg<string> simulate_arg("m", "sim", "simulate the target", false, "simulated", "string");
         cmd.add(simulate_arg);
 
         // Define a switch and add it to the command line.
@@ -60,8 +61,16 @@ int main(int argc, char *argv[]) {
         test_program = test_program_arg.getValue();
         sync_program = sync_program_arg.getValue();
 
-    } catch (TCLAP::ArgException &e)  // catch any exceptions
-    {
+        try {
+          to_simulate = simulate_arg.getValue();
+          if (!Registry::registeredSimulation().count(to_simulate)) {
+            std::cerr << "cannot simulate " << to_simulate << std::endl;
+          }
+        } catch (TCLAP::ArgException &e) {
+          std::cout << "It is ok to not have " << e.argId() << std::endl;
+        }
+
+    } catch (TCLAP::ArgException &e) {
         cerr << "Error: " << e.error() << " for arg " << e.argId() << endl;
     }
 
