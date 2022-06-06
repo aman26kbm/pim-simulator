@@ -8,21 +8,10 @@ include_directories(include/backend)
 include_directories(include/tclap)
 include_directories(lib/backend)
 
-add_library(PimBackend lib/backend/Config.cpp
-        lib/backend/Controller.cpp
-        lib/backend/MemoryBlock.cpp
-        lib/backend/RegisterFile.cpp
-        lib/backend/MemoryTile.cpp
-        lib/backend/MemoryChip.cpp
-        lib/backend/MemoryComponent.cpp
-        lib/backend/Tool.cpp
-        lib/backend/System.cpp
-        lib/backend/Memory_characteristics.cpp
-        lib/backend/hTree.cpp
-        lib/backend/Wire.cpp
-        lib/backend/global.cpp
-        lib/backend/Dram.cpp
-        )
+message(WARN ${CMAKE_SOURCE_DIR})
+file(GLOB_RECURSE LIB_SRCS ${CMAKE_SOURCE_DIR}/lib/backend/*.cpp)
+
+add_library(PimBackend ${LIB_SRCS})
 
 add_executable(PIM_simulator main.cpp)
 

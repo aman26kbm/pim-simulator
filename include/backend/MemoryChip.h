@@ -10,8 +10,6 @@
 #include "Message.h"
 #include "Request.h"
 
-#include "MemoryTile.h"
-#include "MemoryBlock.h"
 #include "MemoryComponent.h"
 
 #include "hTree.h"

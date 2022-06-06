@@ -8,8 +8,6 @@
 #include "Message.h"
 #include "Request.h"
 
-#include "System.h"
-#include "MemoryTile.h"
 #include "MemoryChip.h"
 #include "MemoryComponent.h"
 

@@ -34,6 +34,9 @@ int main(int argc, char *argv[]) {
         TCLAP::ValueArg<string> config_file_arg("c", "cfg", "name of config file", true, "mycfg", "string");
         cmd.add(config_file_arg);
 
+        TCLAP::ValueArg<string> simulate_arg("i", "sim", "simulate the target", true, "simulated", "string");
+        cmd.add(simulate_arg);
+
         // Define a switch and add it to the command line.
         TCLAP::SwitchArg gemv_program_arg("g", "gemv", "Run the GEMV program", false);
         cmd.add(gemv_program_arg);
@@ -63,7 +66,7 @@ int main(int argc, char *argv[]) {
     }
 
     Config* config = new Config(config_file);
-    System<float>* system = new System<float>(config);
+    System* system = new System(config);
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
