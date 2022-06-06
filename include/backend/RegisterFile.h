@@ -13,13 +13,13 @@
 
 namespace pimsim {
 
-class Request;
-class MemoryComponent;
-
 class RegisterFile {
 public:
 
+    int num_regs_per_rf;
+    int num_bits_per_reg;
     RegisterFile();
+    RegisterFile(int num_regs_per_rf, int num_regs_per_reg);
 
 };
 

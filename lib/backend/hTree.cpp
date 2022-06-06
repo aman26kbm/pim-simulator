@@ -6,7 +6,7 @@ using namespace pimsim;
 
 hTree::hTree(){}
 
-hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows){
+hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows, int num_regs_per_rf, int num_bits_per_reg){
     /*
     wire -1 has index 0 (negative direction) and 1(positive). This is the wire to dram.
     wire 0 has index 2 (negative direction) and index 3 (positive)
@@ -25,6 +25,8 @@ hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows){
     this->wordsize_block2block = wordsize_block2block;
     this->_ncols = _ncols;
     this->_nrows = _nrows;
+    this->num_regs_per_rf = num_regs_per_rf;
+    this->num_bits_per_reg = num_bits_per_reg;
     int index=0;
     for(int i=0; i<=depth; i++){
         printf("at depth %d:\n", i);
@@ -43,58 +45,55 @@ hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows){
 
 
 int hTree::get_source_index(Request req){
-    int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
-    AddrT addr;
-    //Source
-    int _ncols = this->_ncols;
-    int _nrows = this->_nrows;
-    addr = req.addr_list[0];
-    int block_index = addr/(_ncols*_nrows);
-    //change block index into new index in h_tree
-    int row_col_num = pow(2, hTree_depth);
-    int row = block_index/row_col_num;
-    int col = block_index%row_col_num;
-    //base = row->binary->multiply each bit to 2->explain as quaternary 
-    int pos = 0;
-    int binary = row;
-    int base = 0;
-    while(binary){
-        base+= (int)pow(4,pos)*2*(binary%2);
-        binary = (int)binary/2;
-        pos++;
+    if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
+        AddrT addr;
+        addr = req.addr_list[0];
+        int row = addr/this->num_regs_per_rf;
+        int pos = 0;
+        int binary = row;
+        int block_index = 0;
+        while(binary){
+            block_index+= (int)pow(4,pos)*2*(binary%2);
+            binary = (int)binary/2;
+            pos++;
+        }
+        return block_index;
     }
-    //bias = col->binary->explain as quaternary
-    pos = 0;
-    binary = col;
-    int bias = 0;
-    while(binary){
-        bias+= (int)pow(4,pos)*(binary%2);
-        binary = (int)binary/2;
-        pos++;
+    else{
+        int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
+        AddrT addr;
+        //Source
+        int _ncols = this->_ncols;
+        int _nrows = this->_nrows;
+        addr = req.addr_list[0];
+        int block_index = addr/(_ncols*_nrows);
+        //change block index into new index in h_tree
+        int row_col_num = pow(2, hTree_depth);
+        int row = block_index/row_col_num;
+        int col = block_index%row_col_num;
+        //base = row->binary->multiply each bit to 2->explain as quaternary 
+        int pos = 0;
+        int binary = row;
+        int base = 0;
+        while(binary){
+            base+= (int)pow(4,pos)*2*(binary%2);
+            binary = (int)binary/2;
+            pos++;
+        }
+        //bias = col->binary->explain as quaternary
+        pos = 0;
+        binary = col;
+        int bias = 0;
+        while(binary){
+            bias+= (int)pow(4,pos)*(binary%2);
+            binary = (int)binary/2;
+            pos++;
+        }
+        //index = base + bias
+        int index = base+bias;
+        return index;
     }
-    //index = base + bias
-    int index = base+bias;
-    return index;
     
-
-    // switch(block_index){
-    //     case 0:return 0;
-    //     case 1:return 1;
-    //     case 2:return 4;
-    //     case 3:return 5;
-    //     case 4:return 2;
-    //     case 5:return 3;
-    //     case 6:return 6;
-    //     case 7:return 7;
-    //     case 8:return 8;
-    //     case 9:return 9;
-    //     case 10:return 12;
-    //     case 11:return 13;
-    //     case 12:return 10;
-    //     case 13:return 11;
-    //     case 14:return 14;
-    //     case 15:return 15;
-    // }
 }
 
 int hTree::get_dest_index(Request req){
@@ -749,7 +748,9 @@ void hTree::receive_request(Request* req){
      printf("hTree receives a request (%s), src_tile %d, dest_tile %d\n",  
                     req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
     //request should be TileSend, TileReceive, BlockSend or BlockReceive
-    assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore);
+    assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
+    || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
+    || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF);
     if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive){
         int source_index = get_source_index(*req);
         int dest_index = get_dest_index(*req);
@@ -836,8 +837,8 @@ void hTree::receive_request(Request* req){
             }
         }
     }
-    //Request is DRAM request
-    else{
+    //Request is DRAM rowLoad/Store request
+    else if(req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore){
         int block_index = get_source_index(*req);
         ReqPair* reqPair = new ReqPair{NULL, NULL};
         reqPair->send_req = req;
@@ -867,6 +868,24 @@ void hTree::receive_request(Request* req){
             }
             trans_list.push_back(trans);
         }
+        trans_list_list.push_back(trans_list);
+    }
+    else{
+        //RowLoad_RF or RowStore_RF
+        int block_index = get_source_index(*req);
+        ReqPair* reqPair = new ReqPair{NULL, NULL};
+        reqPair->send_req = req;
+        reqPair->receive_req = req;
+        reqPair_list.push_back(reqPair);
+        std::vector<Transmission> trans_list;
+        Transmission trans;
+        if(req->type == Request::Type::RowLoad_RF){
+                trans = {.source_index = -1, .dest_index = block_index};
+        }
+        else if(req->type == Request::Type::RowStore){
+                trans = {.source_index = block_index, .dest_index = -1};
+        }
+        trans_list.push_back(trans);
         trans_list_list.push_back(trans_list);
     }
 

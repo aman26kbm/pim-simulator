@@ -127,6 +127,9 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
 }
 
 int MemoryCharacteristics::getPrecisionBits(Request req) {
+    if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
+        return req.precision_bits;
+    }
     return getClocksForReq(req.precision_list[0], "read");
 }
 
@@ -211,7 +214,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::RowLoad_RF: 
         case Request::Type::RowStore_RF: 
-            time = DramLatency;
+            time = getPrecisionBits(req) * T_CLK;
             break;
         case Request::Type::RowMul_CRAM_RF: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the

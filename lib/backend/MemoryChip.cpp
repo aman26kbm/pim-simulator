@@ -3,7 +3,7 @@
 using namespace pimsim;
 using namespace std;
 
-MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, MemoryCharacteristics* values)
+MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number, MemoryCharacteristics* values)
     : MemoryComponent(MemoryComponent::Level::Chip)
 {
     _ntiles= n_tiles;
@@ -34,8 +34,9 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wo
     // htree_counters.clear();
     // for (int i = 0; i < htree_counter_size; i++)
     //     htree_counters.push_back(0);
-    _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows);
-    _Dram = new Dram(4,10);
+    _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows, num_regs_per_rf, num_bits_per_reg);
+    _Dram = new Dram(dram_bank_number, dram_row_open_latency);
+    _regFile = new RegisterFile(num_regs_per_rf, num_bits_per_reg);
 }
 
 

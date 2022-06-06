@@ -12,6 +12,8 @@ private:
     int wordsize_block2block;
     int _ncols;
     int _nrows;
+    int num_regs_per_rf;
+    int num_bits_per_reg;
     std::vector<Wire*> wire_list;
     struct ReqPair{
         Request* send_req;
@@ -32,7 +34,7 @@ private:
     int get_dest_index(Request req);
 public:
     hTree();
-    hTree(int depth, int wordsize_block2block, int _ncols, int _nrows);
+    hTree(int depth, int wordsize_block2block, int _ncols, int _nrows, int num_regs_per_rf, int num_bits_per_reg);
     void receive_request(Request* req);
     void tick();
 };

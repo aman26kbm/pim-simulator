@@ -16,6 +16,7 @@
 
 #include "hTree.h"
 #include "Dram.h"
+#include "RegisterFile.h"
 
 namespace pimsim {
 
@@ -29,7 +30,8 @@ public:
 
     hTree* _hTree;
     Dram* _Dram;
-    MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, MemoryCharacteristics* values);
+    RegisterFile* _regFile;
+    MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number, MemoryCharacteristics* values);
 
     bool send2Child(Request& req);
     bool isReady(Request& req);

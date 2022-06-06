@@ -279,6 +279,7 @@ public:
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list
     std::vector<PrecisionT> precision_list;
+    int precision_bits;//only used for rowLoad_RF and rowStore_RF. Indicates how many times of transfer is needed
     int chip, tile, block, row, col;
     int src_chip, src_tile, src_block, src_row, src_col;
     int dst_chip, dst_tile, dst_block, dst_row, dst_col;

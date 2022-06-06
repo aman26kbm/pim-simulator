@@ -261,7 +261,8 @@ void MemoryTile::update_next(){
                 else if(req.type == Request::Type::ResetSync) {
                     req.mail->reset();
                 }
-                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore) {
+                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
+                || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF) {
                     // if (_parent->dram_busy) {
                     //     next_state.status = DRAM_WAIT1;
                     // }
@@ -285,7 +286,9 @@ void MemoryTile::update_next(){
                 else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
                      || req.type == Request::Type::BlockSend_Receive 
                      || req.type == Request::Type::RowLoad
-                     || req.type == Request::Type::RowStore){
+                     || req.type == Request::Type::RowStore
+                     || req.type == Request::Type::RowLoad_RF
+                     || req.type == Request::Type::RowStore_RF){
                     next_state.status = REQ_MODE;
                     issueReq(req);
                 }
@@ -317,7 +320,8 @@ void MemoryTile::update_next(){
                 if(!req.dram_ready){
                     next_state.status = DRAM_WAIT;
                 }
-                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore){
+                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
+                || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
                     ((MemoryChip*)_parent)->_hTree->receive_request(&req);
                     next_state.status = HTREE_WAIT;
                 }
@@ -353,12 +357,12 @@ void MemoryTile::update_next(){
 }
 
 void MemoryTile::update_current(){
-    printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. DRAM busy %d\n", 
+    printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. \n", 
    _time, _id, 
     print_name(cur_state.status).c_str(),
     print_name(next_state.status).c_str(),
-    Request::print_name(req.type).c_str(),
-    _parent->dram_busy);
+    Request::print_name(req.type).c_str()
+    );
     cur_state = next_state;
 }
 

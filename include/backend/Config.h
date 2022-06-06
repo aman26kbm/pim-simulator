@@ -17,9 +17,15 @@ private:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _rf_chunk_size;
+    int _num_regs_per_rf;
+    int _num_bits_per_reg;
     int _wordsize_block2block;
+    //not used by hTree
     int _wordsize_tile2tile;
+    //not used
     int _wordsize_dram;
+    int _dram_row_open_latency;
+    int _dram_bank_number;
     int _clock_rate;
     std::string _result_file = "STDOUT";
     bool _compact_alloc = false, _blockctrl = false, _tilectrl = false, _chipctrl = false, _sync = false;
@@ -69,7 +75,11 @@ public:
     int get_wordsize_block2block() const {return _wordsize_block2block;}
     int get_wordsize_tile2tile() const {return _wordsize_tile2tile;}
     int get_wordsize_dram() const {return _wordsize_dram;}
+    int get_dram_row_open_latency() const {return _dram_row_open_latency;}
+    int get_dram_bank_number() const {return _dram_bank_number;}
     int get_rf_chunk_size() const {return _rf_chunk_size;}
+    int get_num_regs_per_rf() const {return _num_regs_per_rf;}
+    int get_num_bits_per_reg() const {return _num_bits_per_reg;}
     int get_clock_rate() const {return _clock_rate;}
     bool get_compact() const {return _compact_alloc;}
     bool get_blockctrl() const {return _blockctrl;}

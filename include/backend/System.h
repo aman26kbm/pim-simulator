@@ -50,7 +50,14 @@ public:
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
     int _nchips, _ntiles, _nblocks, _nrows, _ncols;
-    int _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size;
+    int _wordsize_block2block, _wordsize_tile2tile; 
+    //should match with hTree
+    int _wordsize_dram;
+    int _dram_row_open_latency;
+    int _dram_bank_number;
+    //not used
+    int _rf_chunk_size;
+    int _num_regs_per_rf, _num_bits_per_reg;
     AddrT _chipsize, _tilesize, _blocksize;
     int _clock_rate = 0;
     bool _blockctrl, _tilectrl, _chipctrl;
@@ -64,7 +71,7 @@ public:
     System(Config* config);
     ~System();
 
-    void addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block);
+    void addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number);
 
     //TimeT getTime() {return _time;}
     void getLocation(AddrT addr, int&, int&, int&);

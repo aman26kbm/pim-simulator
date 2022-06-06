@@ -26,7 +26,11 @@ System<T>::System(Config* config) : _config(config)
     _wordsize_block2block = config->get_wordsize_block2block();
     _wordsize_tile2tile = config->get_wordsize_tile2tile();
     _wordsize_dram = config->get_wordsize_dram();
+    _dram_row_open_latency = config->get_dram_row_open_latency();
+    _dram_bank_number = config->get_dram_bank_number();
     _rf_chunk_size = config->get_rf_chunk_size();
+    _num_regs_per_rf = config->get_num_regs_per_rf();
+    _num_bits_per_reg = config->get_num_bits_per_reg();
     if (!(_blockctrl || _tilectrl || _chipctrl))
         _blockctrl = true;
     _blocksize = _nrows * _ncols; // set the blocksize based on columns and rows
@@ -44,7 +48,7 @@ System<T>::System(Config* config) : _config(config)
     }
 
     for (int i = 0; i < _nchips; i++) {
-        MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _wordsize_block2block, _values);
+        MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _wordsize_block2block, _num_regs_per_rf, _num_bits_per_reg, _dram_row_open_latency, _dram_bank_number, _values);
         chip->setValues(_values);
         //We don't need a controller per chip
         //Controller* ctrl = new Controller(chip);
@@ -151,10 +155,10 @@ System<T>::System(Config* config) : _config(config)
     cram_addr_tile3_block3_row16 =getAddress(3,3,16);
     cram_addr_tile3_block3_row24 =getAddress(3,3,24);
 
-    rf_base_addr_tile0 = getAddress(0,0,0); 
-    rf_base_addr_tile1 = getAddress(1,0,0); 
-    rf_base_addr_tile2 = getAddress(2,0,0); 
-    rf_base_addr_tile3 = getAddress(3,0,0); 
+    rf_base_addr_tile0 = 0; 
+    rf_base_addr_tile1 = _num_regs_per_rf; 
+    rf_base_addr_tile2 = _num_regs_per_rf*2; 
+    rf_base_addr_tile3 = _num_regs_per_rf*3; 
 }
 
 template <class T>
@@ -164,9 +168,9 @@ System<T>::~System()
 }
 
 template <class T>
-void System<T>::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block) {
+void System<T>::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number) {
     int global_chip_id = _chips.size();
-    MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, wordsize_block2block, _values );
+    MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, wordsize_block2block, num_regs_per_rf, num_bits_per_reg, dram_row_open_latency, dram_bank_number,  _values );
     Controller* ctrl = new Controller(chip);
     chip->setId(global_chip_id);
     chip->setController(ctrl);
@@ -366,55 +370,70 @@ int System<T>::sendRF_two_operands(Request& req)
 template <class T>
 int System<T>::sendChipReq(Request& req, int para)
 {
-    int tot_clks = 0;
-
-    int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-    int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-
-    Request* inter_tile_req = new Request(req.type);
-
-    if (para == SEND) {
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        //setLocation is used to tell which tile owns this request
-        inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
-    } 
-    else if (para == RECEIVE) {
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-
-        inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        //setLocation is used to tell which tile owns this request
-        inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+    if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
+        int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+        int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+        Request* rf_req = new Request(req.type);
+        rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
+        rf_req->setDstLocation(0, 0, 0, 0, 0);
+        rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
+        rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
+        bool res = _chips[chip_index]->receiveReq(*rf_req);
+        return res;
     }
-    else {
-        std::cout<<"Unsupported request type/direction"<<std::endl;
-        assert(0);
+    else{
+        int tot_clks = 0;
+
+        int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+        int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
+
+        Request* inter_tile_req = new Request(req.type);
+
+        if (para == SEND) {
+            getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
+            getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
+            req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+            req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
+
+            inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+            inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+            inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            //setLocation is used to tell which tile owns this request
+            inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+        } 
+        else if (para == RECEIVE) {
+            getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
+            getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
+            req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+            req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+
+            inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+            inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+            inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            //setLocation is used to tell which tile owns this request
+            inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        }
+        else {
+            std::cout<<"Unsupported request type/direction"<<std::endl;
+            assert(0);
+        }
+
+
+        tot_clks++;
+        bool res = _chips[src_chip]->receiveReq(*inter_tile_req);
+
+        delete inter_tile_req;
+
+        return tot_clks;
     }
-
-
-    tot_clks++;
-    bool res = _chips[src_chip]->receiveReq(*inter_tile_req);
-
-    delete inter_tile_req;
-
-    return tot_clks;
 }
 
 template <class T>
@@ -1410,7 +1429,12 @@ void System<T>::sync_tile0()
     std::vector<Request> requests;
     Request *request;
     
-    //0. rowLoad fram->tile0 row0
+    //rowLoad_RF dram->tile0 RF
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(rf_base_addr_tile0, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
+    //0. rowLoad dram->tile0 row0
     request = new Request(Request::Type::RowLoad);
     request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     requests.push_back(*request);
@@ -1435,6 +1459,11 @@ void System<T>::sync_tile0()
     request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //4. rowStore tile0 row8
+    request = new Request(Request::Type::RowStore);
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);
 }
@@ -1445,6 +1474,11 @@ void System<T>::sync_tile1()
     std::vector<Request> requests;
     Request *request;
 
+    //rowLoad_RF dram->tile1 RF
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(rf_base_addr_tile1, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+    
     //0. rowLoad dram -> tile1 row0 
     request = new Request(Request::Type::RowLoad);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
@@ -1469,6 +1503,11 @@ void System<T>::sync_tile1()
     request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //4. rowStore tile1 row8
+    request = new Request(Request::Type::RowStore);
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);
 }
@@ -1478,6 +1517,11 @@ void System<T>::sync_tile2()
 {
     std::vector<Request> requests;
     Request *request;
+
+    //rowLoad_RF dram->tile2 RF
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(rf_base_addr_tile2, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
 
     //0. rowLoad dram->tile2 row0
     request = new Request(Request::Type::RowLoad);
@@ -1504,6 +1548,11 @@ void System<T>::sync_tile2()
     request->addAddr(cram_addr_tile2_block2_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //4. rowStore tile2 row8
+    request = new Request(Request::Type::RowStore);
+    request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);
 }
@@ -1513,6 +1562,11 @@ void System<T>::sync_tile3()
 {
     std::vector<Request> requests;
     Request *request;
+
+    //rowLoad_RF dram->tile3 RF
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(rf_base_addr_tile3, 0, PrecisionT::INT4); //src
+    requests.push_back(*request);
 
     //0. rowLoad dram -> tile3 row0
     request = new Request(Request::Type::RowLoad);
@@ -1536,6 +1590,11 @@ void System<T>::sync_tile3()
     request = new Request(Request::Type::TileSend);
     request->addAddr(cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //4. rowStore tile3 row8
+    request = new Request(Request::Type::RowStore);
+    request->addAddr(cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)

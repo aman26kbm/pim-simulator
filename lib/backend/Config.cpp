@@ -59,8 +59,18 @@ void Config::parse(const string& fname) {
             _wordsize_tile2tile = atoi(tokens[1].c_str());
         } else if (tokens[0] == "wordsize_dram") {
             _wordsize_dram = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "dram_row_open_latency") {
+            _dram_row_open_latency = atoi(tokens[1].c_str());
+         }else if (tokens[0] == "dram_bank_number") {
+            _dram_bank_number = atoi(tokens[1].c_str());
         } else if (tokens[0] == "rf_chunk_size") {
             _rf_chunk_size = atoi(tokens[1].c_str());
+        }
+        else if (tokens[0] == "num_regs_per_rf") {
+            _num_regs_per_rf = atoi(tokens[1].c_str());
+        }
+        else if (tokens[0] == "num_bits_per_reg") {
+            _num_bits_per_reg = atoi(tokens[1].c_str());
         } else if (tokens[0] == "clock_rate") {
             _clock_rate = atoi(tokens[1].c_str());
         } else if (tokens[0] == "result_file") {
