@@ -5,13 +5,11 @@
 
 #include "backend/Config.h"
 #include "backend/System.h"
-#include "System.cpp"
 
 #include <chrono>
 
 using namespace std;
 using namespace pimsim;
-
 
 int main(int argc, char *argv[]) {
 
@@ -24,6 +22,8 @@ int main(int argc, char *argv[]) {
     bool sync_program = false;
     string to_simulate;
 
+    Config* config = nullptr;
+    System* system = nullptr;
     //Parse command line options
     // Wrap everything in a try block.  Do this every time,
     // because exceptions will be thrown for problems.
@@ -61,10 +61,16 @@ int main(int argc, char *argv[]) {
         test_program = test_program_arg.getValue();
         sync_program = sync_program_arg.getValue();
 
+        config = new Config(config_file);
+        system = new System(config);
+
         try {
           to_simulate = simulate_arg.getValue();
           if (!Registry::registeredSimulation().count(to_simulate)) {
             std::cerr << "cannot simulate " << to_simulate << std::endl;
+            return 1;
+          } else {
+            Registry::registeredSimulation()[to_simulate].f(system);
           }
         } catch (TCLAP::ArgException &e) {
           std::cout << "It is ok to not have " << e.argId() << std::endl;
@@ -73,9 +79,6 @@ int main(int argc, char *argv[]) {
     } catch (TCLAP::ArgException &e) {
         cerr << "Error: " << e.error() << " for arg " << e.argId() << endl;
     }
-
-    Config* config = new Config(config_file);
-    System* system = new System(config);
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 

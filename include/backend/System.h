@@ -240,11 +240,20 @@ public:
 };
 
 struct Registry {
-  static std::map<std::string, std::function<void(System*)>> &registeredSimulation();
-  struct RegisterEntry {
-    RegisterEntry(const std::string &ky, std::function<void(System*)> func);
+
+  struct Entry {
+    std::string name;
+    std::function<int32_t(System*)> f;
+
+    Entry() {}
+    Entry(const Entry &re);
+    Entry(const std::string &name, std::function<int32_t(System*)> f);
   };
+
+  static std::map<std::string, Entry> &registeredSimulation();
 };
+
+Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System*)> func);
 
 
 }

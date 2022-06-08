@@ -1640,15 +1640,26 @@ void System::sync()
     sync_tile3();
 }
 
-std::map<std::string, std::function<void(System*)>> & Registry::registeredSimulation() {
-  static std::map<std::string, std::function<void(System*)>> *res = nullptr;
+std::map<std::string, Registry::Entry> & Registry::registeredSimulation() {
+  static std::map<std::string, Registry::Entry> *res = nullptr;
   if (res == nullptr) {
-    res = new std::map<std::string, std::function<void(System*)>>();
+    res = new std::map<std::string, Registry::Entry>();
   }
   return *res;
 }
 
-Registry::RegisterEntry::RegisterEntry(const std::string &ky, std::function<void (System*)> func) {
-  registeredSimulation()[ky] = func;
+
+Registry::Entry::Entry(const Registry::Entry &re) : name(re.name), f(re.f) {}
+
+Registry::Entry::Entry(const std::string &s, std::function<int32_t(System*)> f) :
+ name(s), f(f) {}
+
+namespace pimsim {
+
+Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System *)> func) {
+  Registry::Entry entry(ky, func);
+  Registry::registeredSimulation()[ky] = entry;
+  return Registry::registeredSimulation()[ky];
 }
 
+}
