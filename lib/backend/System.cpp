@@ -270,23 +270,23 @@ int System<T>::sendPIM_two_operands(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i+=2) {
+    //for (int i = 0; i < n_ops; i+=2) {
         int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
         int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
       
         // First address is considered as src1.
         // Second address is the dst.
         // src2 isn't specified because it isn't required to model performance (time) and power (energy)
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col); 
-        getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col); 
+        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[i], req.size_list[i], req.precision_list[i]);
-        pim_req->addAddr(req.addr_list[i+1], req.size_list[i+1], req.precision_list[i+1]);
+        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        pim_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -300,7 +300,7 @@ int System<T>::sendPIM_two_operands(Request& req)
         //The cycle spending happens via the tick().
         bool res = _chips[src_chip]->receiveReq(*pim_req);
 	    delete pim_req;
-    }
+    //}
     return tot_clks;
 }
 
@@ -309,22 +309,22 @@ int System<T>::sendRF_one_operand(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i++) {
+    //for (int i = 0; i < n_ops; i++) {
         int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
 
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[i], req.size_list[i], req.precision_list[i]);
+        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
         bool res = _chips[src_chip]->receiveReq(*pim_req);
 
 	    delete pim_req;
-    }
+    //}
     return tot_clks;
 }
 
@@ -333,23 +333,23 @@ int System<T>::sendRF_two_operands(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i+=2) {
+    //for (int i = 0; i < n_ops; i+=2) {
         int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
         int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
       
         // First address is considered as src1.
         // Second address is the dst.
         // src2 isn't specified because it isn't required to model performance (time) and power (energy)
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col); 
-        getLocation(req.addr_list[i+1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col); 
+        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[i], req.size_list[i], req.precision_list[i]);
-        pim_req->addAddr(req.addr_list[i+1], req.size_list[i+1], req.precision_list[i+1]);
+        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        pim_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -363,7 +363,7 @@ int System<T>::sendRF_two_operands(Request& req)
         //The cycle spending happens via the tick().
         bool res = _chips[src_chip]->receiveReq(*pim_req);
 	    delete pim_req;
-    }
+    //}
     return tot_clks;
 }
 
@@ -1459,6 +1459,13 @@ void System<T>::sync_tile0()
     request->addAddr(cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //RowAdd INT8
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile0_block0_row0, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addAddr(cram_addr_tile0_block2_row0, 0, PrecisionT::INT8); //src2 not used
+    requests.push_back(*request);
+
     //4. rowStore tile0 row8
     request = new Request(Request::Type::RowStore);
     request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
@@ -1501,6 +1508,13 @@ void System<T>::sync_tile1()
     request = new Request(Request::Type::TileSend);
     request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //RowAdd INT8
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile1_block0_row0, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_tile1_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addAddr(cram_addr_tile1_block2_row0, 0, PrecisionT::INT8); //src2 not used
     requests.push_back(*request);
 
     //4. rowStore tile1 row8
@@ -1548,6 +1562,13 @@ void System<T>::sync_tile2()
     request->addAddr(cram_addr_tile2_block2_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
+    //RowAdd INT8
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile2_block0_row0, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addAddr(cram_addr_tile2_block2_row0, 0, PrecisionT::INT8); //src2 not used
+    requests.push_back(*request);
+
     //4. rowStore tile2 row8
     request = new Request(Request::Type::RowStore);
     request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //src
@@ -1590,6 +1611,13 @@ void System<T>::sync_tile3()
     request = new Request(Request::Type::TileSend);
     request->addAddr(cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+    requests.push_back(*request);
+
+    //RowAdd INT8
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(cram_addr_tile3_block0_row0, 0, PrecisionT::INT8); //src
+    request->addAddr(cram_addr_tile3_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addAddr(cram_addr_tile3_block2_row0, 0, PrecisionT::INT8); //src2 not used
     requests.push_back(*request);
 
     //4. rowStore tile3 row8
