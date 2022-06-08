@@ -877,15 +877,35 @@ void hTree::receive_request(Request* req){
         reqPair->send_req = req;
         reqPair->receive_req = req;
         reqPair_list.push_back(reqPair);
+        // std::vector<Transmission> trans_list;
+        // Transmission trans;
+        // if(req->type == Request::Type::RowLoad_RF){
+        //         trans = {.source_index = -1, .dest_index = block_index};
+        // }
+        // else if(req->type == Request::Type::RowStore){
+        //         trans = {.source_index = block_index, .dest_index = -1};
+        // }
+        // trans_list.push_back(trans);
+        // trans_list_list.push_back(trans_list);
         std::vector<Transmission> trans_list;
-        Transmission trans;
-        if(req->type == Request::Type::RowLoad_RF){
-                trans = {.source_index = -1, .dest_index = block_index};
+        for(int i=0; i<pow(2, hTree_depth); i++){
+            int pos = 0;
+            int binary = i;
+            int bias = 0;
+            while(binary){
+                bias+= (int)pow(4,pos)*(binary%2);
+                binary = (int)binary/2;
+                pos++;
+            }
+            Transmission trans;
+            if(req->type == Request::Type::RowLoad){
+                trans = {.source_index = -1, .dest_index = block_index+bias};
+            }
+            else if(req->type == Request::Type::RowStore){
+                trans = {.source_index = block_index+bias, .dest_index = -1};
+            }
+            trans_list.push_back(trans);
         }
-        else if(req->type == Request::Type::RowStore){
-                trans = {.source_index = block_index, .dest_index = -1};
-        }
-        trans_list.push_back(trans);
         trans_list_list.push_back(trans_list);
     }
 
