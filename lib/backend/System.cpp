@@ -11,8 +11,7 @@ AddrT DRAM_ADDR;
 using namespace pimsim;
 using namespace std;
 
-template <class T>
-System<T>::System(Config* config) : _config(config)
+System::System(Config* config) : _config(config)
 {
     _nchips = _config->get_nchips();
     _ntiles = _config->get_ntiles();
@@ -161,14 +160,13 @@ System<T>::System(Config* config) : _config(config)
     rf_base_addr_tile3 = _num_regs_per_rf*3; 
 }
 
-template <class T>
-System<T>::~System()
+System::~System()
 {
     fclose(rstFile);
 }
 
-template <class T>
-void System<T>::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number) {
+void System::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number) {
+
     int global_chip_id = _chips.size();
     MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, wordsize_block2block, num_regs_per_rf, num_bits_per_reg, dram_row_open_latency, dram_bank_number,  _values );
     Controller* ctrl = new Controller(chip);
@@ -181,8 +179,8 @@ void System<T>::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks
 
 //Form an address for the given tile, block, row
 //Chip and row numbers are assumed to be 0.
-template <class T>
-AddrT System<T>::getAddress(int tile, int block, int row)
+
+AddrT System::getAddress(int tile, int block, int row)
 {
     AddrT addr = 0;
     addr *= _ntiles;
@@ -197,8 +195,8 @@ AddrT System<T>::getAddress(int tile, int block, int row)
 }
 
 //Form an address for the given chip, tile, block, row, column
-template <class T>
-AddrT System<T>::getAddress(int chip, int tile, int block, int row, int col)
+
+AddrT System::getAddress(int chip, int tile, int block, int row, int col)
 {
     AddrT addr = chip;
     addr *= _ntiles;
@@ -212,8 +210,8 @@ AddrT System<T>::getAddress(int chip, int tile, int block, int row, int col)
     return addr;
 }
 
-template <class T>
-void System<T>::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_idx, int &row_idx, int &col_idx)
+
+void System::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_idx, int &row_idx, int &col_idx)
 {
     /* Here is the code for memory mapping
      * */
@@ -228,8 +226,8 @@ void System<T>::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block
     chip_idx = addr % _nchips;
 }
 
-template <class T>
-void System<T>::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_idx)
+
+void System::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_idx)
 {
     /* Here is the code for memory mapping
      * */
@@ -241,8 +239,8 @@ void System<T>::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block
     chip_idx = addr % _nchips;
 }
 
-template <class T>
-int System<T>::sendPIM_one_operand(Request& req)
+
+int System::sendPIM_one_operand(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
@@ -265,8 +263,8 @@ int System<T>::sendPIM_one_operand(Request& req)
     return tot_clks;
 }
 
-template <class T>
-int System<T>::sendPIM_two_operands(Request& req)
+
+int System::sendPIM_two_operands(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
@@ -304,8 +302,8 @@ int System<T>::sendPIM_two_operands(Request& req)
     return tot_clks;
 }
 
-template <class T>
-int System<T>::sendRF_one_operand(Request& req)
+
+int System::sendRF_one_operand(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
@@ -328,8 +326,8 @@ int System<T>::sendRF_one_operand(Request& req)
     return tot_clks;
 }
 
-template <class T>
-int System<T>::sendRF_two_operands(Request& req)
+
+int System::sendRF_two_operands(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
@@ -367,8 +365,8 @@ int System<T>::sendRF_two_operands(Request& req)
     return tot_clks;
 }
 
-template <class T>
-int System<T>::sendChipReq(Request& req, int para)
+
+int System::sendChipReq(Request& req, int para)
 {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
         int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
@@ -436,8 +434,8 @@ int System<T>::sendChipReq(Request& req, int para)
     }
 }
 
-template <class T>
-int System<T>::sendTileReq(Request& req, int para)
+
+int System::sendTileReq(Request& req, int para)
 {
     int tot_clks = 0;
 
@@ -474,8 +472,8 @@ int System<T>::sendTileReq(Request& req, int para)
     return tot_clks;
 }
 
-template <class T>
-int System<T>::sendSyncReq(Request& req)
+
+int System::sendSyncReq(Request& req)
 {
     int tot_clks = 0;
 
@@ -532,8 +530,8 @@ int System<T>::sendSyncReq(Request& req)
 
 //Send a PIM request (will get executed by a block)
 //Returns number of clocks
-template <class T>
-int System<T>::sendPimReq(Request& req)
+
+int System::sendPimReq(Request& req)
 {
     int return_value = 0;
     switch (req.type) {
@@ -576,8 +574,8 @@ int System<T>::sendPimReq(Request& req)
 
 //Send a RF only request (will get executed by the RF block)
 //Returns number of clocks
-template <class T>
-int System<T>::sendRFReq(Request& req)
+
+int System::sendRFReq(Request& req)
 {
     int return_value = 0;
     switch (req.type) {
@@ -597,8 +595,8 @@ int System<T>::sendRFReq(Request& req)
 
 //This is the main API using which an application program will queue
 //requests to be executed on the pimra accelerator
-template <class T>
-int System<T>::sendRequest(Request& req)
+
+int System::sendRequest(Request& req)
 {
 #ifdef DEBUG_OUTPUT
     // std::cout << "The system is sending a request - " ;
@@ -728,8 +726,8 @@ int System<T>::sendRequest(Request& req)
     return ticks;
 }
 
-template <class T>
-int System<T>::sendRequests(std::vector<Request>& reqs)
+
+int System::sendRequests(std::vector<Request>& reqs)
 {
 #ifdef DEBUG_OUTPUT
     // std::cout << "The system is sending a request - " ;
@@ -861,8 +859,8 @@ int System<T>::sendRequests(std::vector<Request>& reqs)
     return ticks;
 }
 
-template <class T>
-void System<T>::run()
+
+void System::run()
 {
     int finished = false;
     
@@ -891,8 +889,8 @@ void System<T>::run()
 
 }
 
-template <class T>
-void System<T>::finish()
+
+void System::finish()
 {
 
     fprintf(rstFile, "\n############# Summary #############\n");
@@ -906,7 +904,7 @@ void System<T>::finish()
         fprintf(rstFile, "--------------------------------\n");
 
         for (int j = 0; j < _chips[i]->_nchildren; j++) {
-            fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks\n", i, j, _time);
+            fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks\n", i, j, (long) _time);
             fprintf(rstFile, "--------------------------------\n");
 
             //for (int k = 0; k < _chips[i]->_children[j]->_nchildren; k++) {
@@ -922,8 +920,8 @@ void System<T>::finish()
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile0
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::gemv_tile0() {
+
+void System::gemv_tile0() {
 
     std::vector<Request> requests;
     Request *request;
@@ -987,8 +985,8 @@ void System<T>::gemv_tile0() {
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile1
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::gemv_tile1() {
+
+void System::gemv_tile1() {
 
     std::vector<Request> requests;
     Request *request;
@@ -1065,8 +1063,8 @@ void System<T>::gemv_tile1() {
 /////////////////////////////////////////////////////////////
 // Simple program to perform a matrix-vector mul 
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::gemv()
+
+void System::gemv()
 {
 
     //We have 2 tiles
@@ -1096,8 +1094,8 @@ void System<T>::gemv()
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile0
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::fir_tile0()
+
+void System::fir_tile0()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1183,8 +1181,8 @@ void System<T>::fir_tile0()
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile1
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::fir_tile1()
+
+void System::fir_tile1()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1256,8 +1254,8 @@ void System<T>::fir_tile1()
 /////////////////////////////////////////////////////////////
 // Simple program to perform an FIR filter
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::fir()
+
+void System::fir()
 {
     //We have 2 tiles
     //Each has 4 CRAMs.
@@ -1279,8 +1277,8 @@ void System<T>::fir()
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile0
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::test_tile0()
+
+void System::test_tile0()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1355,8 +1353,8 @@ void System<T>::test_tile0()
 /////////////////////////////////////////////////////////////
 // Queuing requests for tile1
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::test_tile1()
+
+void System::test_tile1()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1412,8 +1410,8 @@ void System<T>::test_tile1()
 /////////////////////////////////////////////////////////////
 // Simple program to perform an test filter
 /////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::test()
+
+void System::test()
 {
     test_tile0();
     test_tile1();
@@ -1423,8 +1421,8 @@ void System<T>::test()
 /////////////////////////////////////////////////////////////////////
 ///////////////////Synchronization Test//////////////////////////////
 ///////////////////////////////////////////////////////////////////////
-template <class T>
-void System<T>::sync_tile0()
+
+void System::sync_tile0()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1475,8 +1473,8 @@ void System<T>::sync_tile0()
         sendRequest(requests[i]);
 }
 
-template <class T>
-void System<T>::sync_tile1()
+
+void System::sync_tile1()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1526,8 +1524,8 @@ void System<T>::sync_tile1()
         sendRequest(requests[i]);
 }
 
-template <class T>
-void System<T>::sync_tile2()
+
+void System::sync_tile2()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1578,8 +1576,8 @@ void System<T>::sync_tile2()
         sendRequest(requests[i]);
 }
 
-template <class T>
-void System<T>::sync_tile3()
+
+void System::sync_tile3()
 {
     std::vector<Request> requests;
     Request *request;
@@ -1629,8 +1627,8 @@ void System<T>::sync_tile3()
         sendRequest(requests[i]);
 }
 
-template <class T>
-void System<T>::sync()
+
+void System::sync()
 {
     printf("adding tile0 requests:\n");
     sync_tile0();
@@ -1640,4 +1638,28 @@ void System<T>::sync()
     sync_tile2();
     printf("adding tile1 requests:\n");
     sync_tile3();
+}
+
+std::map<std::string, Registry::Entry> & Registry::registeredSimulation() {
+  static std::map<std::string, Registry::Entry> *res = nullptr;
+  if (res == nullptr) {
+    res = new std::map<std::string, Registry::Entry>();
+  }
+  return *res;
+}
+
+
+Registry::Entry::Entry(const Registry::Entry &re) : name(re.name), f(re.f) {}
+
+Registry::Entry::Entry(const std::string &s, std::function<int32_t(System*)> f) :
+ name(s), f(f) {}
+
+namespace pimsim {
+
+Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System *)> func) {
+  Registry::Entry entry(ky, func);
+  Registry::registeredSimulation()[ky] = entry;
+  return Registry::registeredSimulation()[ky];
+}
+
 }

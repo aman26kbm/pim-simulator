@@ -36,3 +36,7 @@ build/
 
 # Everything inside .vscode
 .vscode/
+
+# Compilation database
+compile_commands.json
+.cache/*

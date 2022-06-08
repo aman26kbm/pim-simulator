@@ -10,6 +10,7 @@
 #include <vector>
 #include <utility>
 #include <math.h>
+#include <functional>
 
 #include "Config.h"
 #include "MemoryChip.h"
@@ -40,7 +41,6 @@ class MemoryChip;
  * 3. Executions in different tiles/blocks can be parallelized, in same tiles/blocks can be pipelined.
  * 4. Memory operations support burst transmission.
  * */
-template <class T>
 class System {
 public:
     FILE* rstFile;
@@ -238,6 +238,23 @@ public:
     AddrT rf_base_addr_tile3;
 
 };
+
+struct Registry {
+
+  struct Entry {
+    std::string name;
+    std::function<int32_t(System*)> f;
+
+    Entry() {}
+    Entry(const Entry &re);
+    Entry(const std::string &name, std::function<int32_t(System*)> f);
+  };
+
+  static std::map<std::string, Entry> &registeredSimulation();
+};
+
+Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System*)> func);
+
 
 }
 

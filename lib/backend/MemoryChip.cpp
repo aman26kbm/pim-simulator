@@ -1,4 +1,5 @@
 #include "backend/MemoryChip.h"
+#include "backend/MemoryTile.h"
 
 using namespace pimsim;
 using namespace std;

@@ -6,7 +6,6 @@
 #include "Message.h"
 #include "Request.h"
 
-#include "System.h"
 #include "MemoryBlock.h"
 #include "MemoryChip.h"
 #include "MemoryComponent.h"
