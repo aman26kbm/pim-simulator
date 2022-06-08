@@ -131,11 +131,11 @@ public:
     void test_tile0();
     void test_tile1();
 
-    void sync();
-    void sync_tile0();
-    void sync_tile1();
-    void sync_tile2();
-    void sync_tile3();
+    // void sync();
+    // void sync_tile0();
+    // void sync_tile1();
+    // void sync_tile2();
+    // void sync_tile3();
 
 //tile0
     AddrT cram_base_addr_tile0_block0; 

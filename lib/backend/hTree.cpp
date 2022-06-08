@@ -898,10 +898,10 @@ void hTree::receive_request(Request* req){
                 pos++;
             }
             Transmission trans;
-            if(req->type == Request::Type::RowLoad){
+            if(req->type == Request::Type::RowLoad_RF){
                 trans = {.source_index = -1, .dest_index = block_index+bias};
             }
-            else if(req->type == Request::Type::RowStore){
+            else if(req->type == Request::Type::RowStore_RF){
                 trans = {.source_index = block_index+bias, .dest_index = -1};
             }
             trans_list.push_back(trans);
