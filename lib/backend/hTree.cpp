@@ -214,7 +214,7 @@ bool hTree::dram_try_configure(Transmission trans){
 
         std::vector<int> wire2_path = dest_path;
         wire2_path.resize(i+1);
-        int wire2_index = path2index(wire2_path, false);
+        int wire2_index = path2index(wire2_path, true);
 
         //rowLoad use wire with index 1 because the wire is positive
         int wire1_index = 1;
