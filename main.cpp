@@ -100,10 +100,10 @@ int main(int argc, char *argv[]) {
         system->test();
     }
 
-    if(sync_program) {
-        std::cout<<"Running sync program"<<std::endl;
-        system->sync();
-    }
+    // if(sync_program) {
+    //     std::cout<<"Running sync program"<<std::endl;
+    //     system->sync();
+    // }
 
     printf("starting executing user program:\n");
     //Execute the requests queued by the workload above
