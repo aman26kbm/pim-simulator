@@ -6,8 +6,8 @@
 #include "Message.h"
 #include "Request.h"
 
-#include "MemoryBlock.h"
-#include "MemoryChip.h"
+// #include "MemoryBlock.h"
+// #include "MemoryChip.h"
 #include "MemoryComponent.h"
 
 namespace pimsim {
