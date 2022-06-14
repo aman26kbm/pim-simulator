@@ -3,6 +3,7 @@
 //
 
 #include "Memory_characteristics.h"
+#include "backend/Config.h"
 #include <iostream>
 #include <cmath>
 
@@ -233,6 +234,9 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowSub_RF: 
         case Request::Type::RowRead_RF: 
             time = T_CLK; //Only 1 cycle is consumed in these RF only instructions
+            break;
+        case Request::Type::PopCountReduce_RF:
+            time = T_CLK*(req.precision_list[0]+5);//assumes the popcount hardware is a pipeline with 5 stages
             break;
         default:
             time = T_CLK;

@@ -5,11 +5,12 @@
 
 #include "backend/Config.h"
 #include "backend/System.h"
-
 #include <chrono>
 
 using namespace std;
 using namespace pimsim;
+
+
 
 int main(int argc, char *argv[]) {
 
@@ -82,23 +83,23 @@ int main(int argc, char *argv[]) {
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    //GEMV application
-    if (gemv_program) {
-        std::cout<<"Running GEMV program"<<std::endl;
-        system->gemv();
-    }
+    // //GEMV application
+    // if (gemv_program) {
+    //     std::cout<<"Running GEMV program"<<std::endl;
+    //     system->gemv();
+    // }
 
-    //FIR application
-    if (fir_program) {
-        std::cout<<"Running fir program"<<std::endl;
-        system->fir();
-    }
+    // //FIR application
+    // if (fir_program) {
+    //     std::cout<<"Running fir program"<<std::endl;
+    //     system->fir();
+    // }
 
-    //Test application
-    if (test_program) {
-        std::cout<<"Running test program"<<std::endl;
-        system->test();
-    }
+    // //Test application
+    // if (test_program) {
+    //     std::cout<<"Running test program"<<std::endl;
+    //     system->test();
+    // }
 
     // if(sync_program) {
     //     std::cout<<"Running sync program"<<std::endl;

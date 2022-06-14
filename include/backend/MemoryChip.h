@@ -6,7 +6,6 @@
 #include <deque>
 #include <string>
 
-#include "Config.h"
 #include "Message.h"
 #include "Request.h"
 

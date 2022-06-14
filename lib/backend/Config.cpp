@@ -3,6 +3,8 @@
 using namespace pimsim;
 using namespace std;
 
+
+
 Config::Config(const string& fname) {
     parse(fname);
 }
@@ -99,6 +101,8 @@ void Config::parse(const string& fname) {
         } else if (tokens[0] == "mem_configuration") {
             _mem_configuration = tokens[1];
         } else if (tokens[0] == "net_configuration") {
+            _net_configuration = tokens[1];
+        }else if (tokens[0] == "popcount_pipeline_stages") {
             _net_configuration = tokens[1];
         }
     }

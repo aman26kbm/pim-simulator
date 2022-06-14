@@ -203,6 +203,7 @@ public:
                         //"size" argument is not used
                         //"addr" argument specifies the location of the operand in the RF
         RowSub_RF,      //Same as RowAdd_RF, but for subtraction
+        PopCountReduce_RF,//popcount reduce several rows. Result stored in RF.
         MAX
     } type;
 
@@ -267,6 +268,7 @@ public:
             case Type::RowWrite_RF: return        "RowWrite_RF";
             case Type::RowAdd_RF: return        "RowAdd_RF";
             case Type::RowSub_RF: return        "RowSub_RF";
+            case Type::PopCountReduce_RF: return  "PopCountReduce_RF";
             default: return        "None";
         };
 
@@ -439,7 +441,9 @@ public:
     }
 
     bool isRF() {
-        if ((type == Type::RowMul_CRAM_RF || type == Type::RowAdd_CRAM_RF || type == Type::RowLoad_RF || type == Type::RowStore_RF))
+        if ((type == Type::RowMul_CRAM_RF || type == Type::RowAdd_CRAM_RF 
+        || type == Type::RowLoad_RF || type == Type::RowStore_RF
+        || type == Type::PopCountReduce_RF))
             return true;
         else
             return false;

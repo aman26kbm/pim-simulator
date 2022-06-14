@@ -10,7 +10,6 @@
 #include <cassert>
 
 #include "Tool.h"
-#include "Config.h"
 #include "Message.h"
 #include "Request.h"
 #include "Controller.h"

@@ -160,6 +160,9 @@ MemoryTile::issueReq(Request& req)
     } else if (req.isRFonly()) {
         req.process_time = cur_time;
         req.finish_time = cur_time + getReqTiming(req);
+    } else if (req.type == Request::Type::PopCountReduce_RF){
+        req.process_time = cur_time;
+        req.finish_time = cur_time + getReqTiming(req);
     }
     else {
         std::cout<<"Unsupported request";
