@@ -22,16 +22,16 @@ void gemv_tile0(System* sys) {
     //4 elements in each column need to be loaded.
     for (int i=0; i<4; i++) {
         request = new Request(Request::Type::RowLoad);
-        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
         request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
         requests.push_back(*request);
     }
 
     //Now load vector values into RF.
     //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
     request = new Request(Request::Type::RowLoad_RF);
-    request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
     request->addAddr(sys->rf_base_addr_tile0, 4, PrecisionT::INT4); //dst
+    request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     //Initialize rows that'll hold the accumulator (accumulator size=16)
@@ -60,10 +60,10 @@ void gemv_tile0(System* sys) {
         requests.push_back(*request);
     }
 
-    //Send partial results to tile1
+    //Send partial results to tile3
     request = new Request(Request::Type::TileSend);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT16); //src
-    request->addAddr(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT16); //dst
+    request->addAddr(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT16); //dst
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
@@ -87,16 +87,16 @@ void gemv_tile1(System* sys) {
     //4 elements in each column need to be loaded.
     for (int i=0; i<4; i++) {
         request = new Request(Request::Type::RowLoad);
-        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
         request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
         requests.push_back(*request);
     }
 
     //Now load vector values into RF.
     //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
     request = new Request(Request::Type::RowLoad_RF);
-    request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
     request->addAddr(sys->rf_base_addr_tile1, 4, PrecisionT::INT4); //dst
+    request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     //Initialize rows that'll hold the accumulator (accumulator size=16)
@@ -125,21 +125,177 @@ void gemv_tile1(System* sys) {
         requests.push_back(*request);
     }
 
+
+
+    //Send partial results to tile3
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row16, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sys->sendRequest(requests[i]);
+
+}
+
+/////////////////////////////////////////////////////////////
+// Queuing requests for tile2
+/////////////////////////////////////////////////////////////
+
+void gemv_tile2(System* sys) {
+
+    std::vector<Request> requests;
+    Request *request;
+
+    //Load weight matrix values into CRAM
+    //This is typically done beforehand/offline.
+    //Each core is loading separate data, so no broadcasting here.
+    //No need for synchronization either because different
+    //cores load data that only they will need/use.
+    //4 elements in each column need to be loaded.
+    for (int i=0; i<4; i++) {
+        request = new Request(Request::Type::RowLoad);
+        request->addAddr(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //dst
+        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
+    }
+
+    //Now load vector values into RF.
+    //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(sys->rf_base_addr_tile2, 4, PrecisionT::INT4); //dst
+    request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
+    //Initialize rows that'll hold the accumulator (accumulator size=16)
+    request = new Request(Request::Type::RowReset);
+    request->addAddr(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    //4 multiplications and additions into the accumulator
+    for (int i=0; i<4; i++) {
+        //Read an element from the RF
+        request = new Request(Request::Type::RowRead_RF);
+        request->addAddr(sys->rf_base_addr_tile2, 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
+
+        //Multiply in this core/tile.
+        request = new Request(Request::Type::RowMul_CRAM_RF);
+        request->addAddr(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //src
+        request->addAddr(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+        requests.push_back(*request);
+
+        //Add the result of multiplication into the accumulator
+        request = new Request(Request::Type::RowAdd);
+        request->addAddr(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT16); //src
+        request->addAddr(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT16); //dst
+        requests.push_back(*request);
+    }
+
+    //Send partial results to tile3
+    request = new Request(Request::Type::TileSend);
+    request->addAddr(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row24, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sys->sendRequest(requests[i]);
+
+}
+
+/////////////////////////////////////////////////////////////
+// Queuing requests for tile3
+/////////////////////////////////////////////////////////////
+
+void gemv_tile3(System* sys) {
+
+    std::vector<Request> requests;
+    Request *request;
+
+    //Load weight matrix values into CRAM
+    //This is typically done beforehand/offline.
+    //Each core is loading separate data, so no broadcasting here.
+    //No need for synchronization either because different
+    //cores load data that only they will need/use.
+    //4 elements in each column need to be loaded.
+    for (int i=0; i<4; i++) {
+        request = new Request(Request::Type::RowLoad);
+        request->addAddr(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //dst
+        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
+    }
+
+    //Now load vector values into RF.
+    //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
+    request = new Request(Request::Type::RowLoad_RF);
+    request->addAddr(sys->rf_base_addr_tile3, 4, PrecisionT::INT4); //dst
+    request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
+    requests.push_back(*request);
+
+    //Initialize rows that'll hold the accumulator (accumulator size=16)
+    request = new Request(Request::Type::RowReset);
+    request->addAddr(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    //4 multiplications and additions into the accumulator
+    for (int i=0; i<4; i++) {
+        //Read an element from the RF
+        request = new Request(Request::Type::RowRead_RF);
+        request->addAddr(sys->rf_base_addr_tile3, 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
+
+        //Multiply in this core/tile.
+        request = new Request(Request::Type::RowMul_CRAM_RF);
+        request->addAddr(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
+        request->addAddr(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //dst
+        requests.push_back(*request);
+
+        //Add the result of multiplication into the accumulator
+        request = new Request(Request::Type::RowAdd);
+        request->addAddr(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT16); //src
+        request->addAddr(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT16); //dst
+        requests.push_back(*request);
+    }
+
     //Receive partial results from tile0
     request = new Request(Request::Type::TileReceive);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT16); //src
-    request->addAddr(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT16); //dst
+    request->addAddr(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    //Receive partial results from tile1
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row16, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    //Receive partial results from tile2
+    request = new Request(Request::Type::TileReceive);
+    request->addAddr(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row24, 0, PrecisionT::INT16); //dst
     requests.push_back(*request);
 
     //Now add partial results from the two cores/tiles
     request = new Request(Request::Type::RowAdd);
-    request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT16); //src
-    request->addAddr(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT16); //dst
+    request->addAddr(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row24, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row24, 0, PrecisionT::INT16); //dst
+    requests.push_back(*request);
+
+    request = new Request(Request::Type::RowAdd);
+    request->addAddr(sys->cram_addr_tile3_block0_row16, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row24, 0, PrecisionT::INT16); //dst
     requests.push_back(*request);
 
     //Store results into DRAM
     request = new Request(Request::Type::RowStore);
-    request->addAddr(sys->cram_addr_tile1_block3_row8, 0, PrecisionT::INT16); //src
+    request->addAddr(sys->cram_addr_tile3_block0_row24, 0, PrecisionT::INT16); //src
     request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
@@ -176,6 +332,8 @@ int32_t gemv(System* sys)
     //Then store results in DRAM.
     gemv_tile0(sys);
     gemv_tile1(sys);
+    gemv_tile2(sys);
+    gemv_tile3(sys);
 }
 
 static __attribute__((unused)) Registry::Entry &__gemv__ = pimsim::registerFunc("gemv", gemv);

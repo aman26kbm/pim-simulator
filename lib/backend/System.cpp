@@ -37,11 +37,11 @@ System::System(Config* config) : _config(config)
     rstFile = fopen(config->get_rstfile().c_str(), "w");
 
     if (config->get_mem_configuration() == "htree") {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
     } else if (config->get_mem_configuration() == "bus") {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _config);
     } else {
-        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _wordsize_block2block, _wordsize_tile2tile, _wordsize_dram, _rf_chunk_size, _clock_rate);
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _config);
     }
 
     for (int i = 0; i < _nchips; i++) {
@@ -65,6 +65,8 @@ System::System(Config* config) : _config(config)
     cram_addr_tile0_block0_row0 = getAddress(0,0,0);  //src1
     cram_addr_tile0_block0_row4 = getAddress(0,0,4);  //src2
     cram_addr_tile0_block0_row8 = getAddress(0,0,8);  //dst
+    cram_addr_tile0_block0_row16 = getAddress(0,0,16);
+    cram_addr_tile0_block0_row24 = getAddress(0,0,24);
 
     cram_base_addr_tile0_block1 = getAddress(0,1,0); 
     cram_addr_tile0_block1_row0 = getAddress(0,1,0); 
@@ -88,6 +90,8 @@ System::System(Config* config) : _config(config)
     cram_addr_tile1_block0_row0 = getAddress(1,0,0);  //src1
     cram_addr_tile1_block0_row4 = getAddress(1,0,4);  //src2
     cram_addr_tile1_block0_row8 = getAddress(1,0,8);  //dst
+    cram_addr_tile1_block0_row16 = getAddress(1,0,16);
+    cram_addr_tile1_block0_row24 = getAddress(1,0,24);
 
     cram_base_addr_tile1_block1 = getAddress(1,1,0); 
     cram_addr_tile1_block1_row0 = getAddress(1,1,0); 
@@ -111,6 +115,8 @@ System::System(Config* config) : _config(config)
     cram_addr_tile2_block0_row0 = getAddress(2,0,0);  //src1
     cram_addr_tile2_block0_row4 = getAddress(2,0,4);  //src2
     cram_addr_tile2_block0_row8 = getAddress(2,0,8);  //dst
+    cram_addr_tile2_block0_row16 = getAddress(2,0,16);
+    cram_addr_tile2_block0_row24 = getAddress(2,0,24);
 
     cram_base_addr_tile2_block1 = getAddress(2,1,0); 
     cram_addr_tile2_block1_row0 = getAddress(2,1,0); 
@@ -134,6 +140,8 @@ System::System(Config* config) : _config(config)
     cram_addr_tile3_block0_row0 = getAddress(3,0,0);  //src1
     cram_addr_tile3_block0_row4 = getAddress(3,0,4);  //src2
     cram_addr_tile3_block0_row8 = getAddress(3,0,8);  //dst
+    cram_addr_tile3_block0_row16 = getAddress(3,0,16);
+    cram_addr_tile3_block0_row24 = getAddress(3,0,24);
 
     cram_base_addr_tile3_block1 = getAddress(3,1,0); 
     cram_addr_tile3_block1_row0 = getAddress(3,1,0); 
@@ -303,64 +311,39 @@ int System::sendPIM_two_operands(Request& req)
 
 int System::sendRF_one_operand(Request& req)
 {
-    int tot_clks = 0;
-    int n_ops = req.addr_list.size();
-    //for (int i = 0; i < n_ops; i++) {
-        int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+    int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+    assert(chip_index<=_chips.size());
+    int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+    assert(chip_index<=_chips[chip_index]->_children.size());
+    Request* rf_req = new Request(req.type);
+    rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+    //rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+    rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
+    rf_req->setDstLocation(0, 0, 0, 0, 0);
+    rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
+    rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
+    bool res = _chips[chip_index]->receiveReq(*rf_req);
+    return res;
 
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        Request *pim_req = new Request(req.type);
-
-        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        tot_clks++;
-        bool res = _chips[src_chip]->receiveReq(*pim_req);
-
-	    delete pim_req;
-    //}
-    return tot_clks;
 }
 
 
 int System::sendRF_two_operands(Request& req)
 {
-    int tot_clks = 0;
-    int n_ops = req.addr_list.size();
-    //for (int i = 0; i < n_ops; i+=2) {
-        int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
-        int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
-      
-        // First address is considered as src1.
-        // Second address is the dst.
-        // src2 isn't specified because it isn't required to model performance (time) and power (energy)
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col); 
-        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        Request *pim_req = new Request(req.type);
-
-        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        pim_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
-
-        tot_clks++;
-        //This queues the request into the queue of the controller.
-        //Ordinarily, this method returns True (indicating that queueing is successful)
-        //But when the queues hold more than 256 outstanding requests,
-        //then this will return False. Then we will go into the while loop
-        //And spend some cycles waiting here to put requests into the queue
-        //The cycle spending happens via the tick().
-        bool res = _chips[src_chip]->receiveReq(*pim_req);
-	    delete pim_req;
-    //}
-    return tot_clks;
+    int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+    assert(chip_index<=_chips.size());
+    int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+    assert(chip_index<=_chips[chip_index]->_children.size());
+    Request* rf_req = new Request(req.type);
+    rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+    rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+    rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
+    rf_req->setDstLocation(0, 0, 0, 0, 0);
+    rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
+    rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
+    bool res = _chips[chip_index]->receiveReq(*rf_req);
+    return res;
 }
 
 

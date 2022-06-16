@@ -319,14 +319,14 @@ public:
         broadcast = b;
     }
 
-//    std::string reqToStr() {
-//        char *buffer;
-//        buffer = new char[100];
-//        snprintf(buffer, sizeof(buffer), "[%s] chip: %d, tile: %d,  block: %d, row: %d, col: %d",
-//                req_str[int(type)].c_str(), chip, tile, block, row, col);
-//        std::string output = buffer;
-//        return output;
-//    }
+   std::string reqToStr() {
+       char *buffer;
+       buffer = new char[100];
+       snprintf(buffer, 100, "[%s] chip: %d, tile: %d,  block: %d, row: %d, col: %d",
+               print_name(type).c_str(), chip, tile, block, row, col);
+       std::string output = buffer;
+       return output;
+   }
 //
 //    std::string typeStr() {
 //        return req_str[int(type)];

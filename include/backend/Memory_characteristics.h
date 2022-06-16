@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "MemoryComponent.h"
+#include "Config.h"
 
 namespace pimsim {
 class MemoryCharacteristics {
@@ -31,11 +32,7 @@ public:
 
 	MemoryCharacteristics() {}
     MemoryCharacteristics(Configuration configuration, 
-                           int wordsize_block2block, 
-                           int wordsize_tile2tile, 
-                           int wordsize_dram, 
-                           int rf_chunk_size,
-                           int freq);
+                           Config* config);
 
     //Assume DRAM latency is 10 cycles
     int DramLatency = 10;

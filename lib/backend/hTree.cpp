@@ -667,8 +667,8 @@ bool hTree::disconfigure(Transmission trans){
         //free this->wordsize_block2block bit of wire1 and wire2
         wire_list[wire1_index]->available_bitwidth += this->wordsize_block2block;
         wire_list[wire2_index]->available_bitwidth += this->wordsize_block2block;
-        // if all bits are freed in wire1 and wire2, disconnect them
-        if(wire_list[wire1_index]->available_bitwidth == wire_list[wire1_index]->bitwidth && wire_list[wire2_index]->available_bitwidth == wire_list[wire2_index]->bitwidth){
+        // if all bits are freed in wire2, disconnect it from wire 1
+        if(wire_list[wire2_index]->available_bitwidth == wire_list[wire2_index]->bitwidth){
             assert(wire_disconnect(wire_list[wire1_index], wire_list[wire2_index]));
         }
 
@@ -711,8 +711,8 @@ bool hTree::disconfigure(Transmission trans){
         //free this->wordsize_block2block bit of wire1 and wire2
         wire_list[wire1_index]->available_bitwidth += this->wordsize_block2block;
         wire_list[wire2_index]->available_bitwidth += this->wordsize_block2block;
-        // if all bits are freed in wire1 and wire2, disconnect them
-        if(wire_list[wire1_index]->available_bitwidth == wire_list[wire1_index]->bitwidth && wire_list[wire2_index]->available_bitwidth == wire_list[wire2_index]->bitwidth){
+        // if all bits are freed in wire1 disconnect it from wire2
+        if(wire_list[wire1_index]->available_bitwidth == wire_list[wire1_index]->bitwidth){
             assert(wire_disconnect(wire_list[wire1_index], wire_list[wire2_index]));
         }
 

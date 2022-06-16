@@ -141,6 +141,8 @@ public:
     AddrT cram_addr_tile0_block0_row0;  
     AddrT cram_addr_tile0_block0_row4;  
     AddrT cram_addr_tile0_block0_row8;  
+    AddrT cram_addr_tile0_block0_row16;
+    AddrT cram_addr_tile0_block0_row24;
 
     AddrT cram_base_addr_tile0_block1; 
     AddrT cram_addr_tile0_block1_row0; 
@@ -159,11 +161,14 @@ public:
     AddrT cram_addr_tile0_block3_row16;
     AddrT cram_addr_tile0_block3_row24;
 
-    AddrT cram_base_addr_tile1_block0; 
-    AddrT cram_addr_tile1_block0_row0; 
-    AddrT cram_addr_tile1_block0_row4; 
-    AddrT cram_addr_tile1_block0_row8; 
 //tile1
+    AddrT cram_base_addr_tile1_block0; 
+    AddrT cram_addr_tile1_block0_row0;  
+    AddrT cram_addr_tile1_block0_row4;  
+    AddrT cram_addr_tile1_block0_row8;  
+    AddrT cram_addr_tile1_block0_row16;
+    AddrT cram_addr_tile1_block0_row24;
+
     AddrT cram_base_addr_tile1_block1; 
     AddrT cram_addr_tile1_block1_row0; 
     AddrT cram_addr_tile1_block1_row4; 
@@ -185,6 +190,8 @@ public:
     AddrT cram_addr_tile2_block0_row0; 
     AddrT cram_addr_tile2_block0_row4; 
     AddrT cram_addr_tile2_block0_row8; 
+    AddrT cram_addr_tile2_block0_row16;
+    AddrT cram_addr_tile2_block0_row24;
 
     AddrT cram_base_addr_tile2_block1; 
     AddrT cram_addr_tile2_block1_row0; 
@@ -207,6 +214,8 @@ public:
     AddrT cram_addr_tile3_block0_row0; 
     AddrT cram_addr_tile3_block0_row4; 
     AddrT cram_addr_tile3_block0_row8; 
+    AddrT cram_addr_tile3_block0_row16;
+    AddrT cram_addr_tile3_block0_row24;
 
     AddrT cram_base_addr_tile3_block1; 
     AddrT cram_addr_tile3_block1_row0; 
