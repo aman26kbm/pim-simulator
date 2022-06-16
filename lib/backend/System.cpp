@@ -308,13 +308,13 @@ int System::sendPIM_two_operands(Request& req)
     return tot_clks;
 }
 
-
+//operand is rf address
 int System::sendRF_one_operand(Request& req)
 {
     int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
     assert(chip_index<=_chips.size());
     int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
-    assert(chip_index<=_chips[chip_index]->_children.size());
+    assert(tile_index<=_chips[chip_index]->_children.size());
     Request* rf_req = new Request(req.type);
     rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
     //rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
@@ -328,13 +328,13 @@ int System::sendRF_one_operand(Request& req)
 
 }
 
-
+// first operand is cram address. second is rf address
 int System::sendRF_two_operands(Request& req)
 {
-    int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+    int chip_index, tile_index, block_index, row, col;
+    getLocation(req.addr_list[0], chip_index, tile_index, block_index, row, col);
     assert(chip_index<=_chips.size());
-    int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
-    assert(chip_index<=_chips[chip_index]->_children.size());
+    assert(tile_index<=_chips[chip_index]->_children.size());
     Request* rf_req = new Request(req.type);
     rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
     rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
@@ -350,10 +350,11 @@ int System::sendRF_two_operands(Request& req)
 int System::sendChipReq(Request& req, int para)
 {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
+        //first operand is rf address, second operand is DRAM address
         int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
         assert(chip_index<=_chips.size());
         int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
-        assert(chip_index<=_chips[chip_index]->_children.size());
+        assert(tile_index<=_chips[chip_index]->_children.size());
         Request* rf_req = new Request(req.type);
         rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);

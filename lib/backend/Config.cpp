@@ -103,7 +103,7 @@ void Config::parse(const string& fname) {
         } else if (tokens[0] == "net_configuration") {
             _net_configuration = tokens[1];
         }else if (tokens[0] == "popcount_pipeline_stages") {
-            _net_configuration = tokens[1];
+            _popcount_pipeline_stages = atoi(tokens[1].c_str());
         }
     }
     file.close();

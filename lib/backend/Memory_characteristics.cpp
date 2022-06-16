@@ -18,6 +18,7 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration,
     _wordsize_dram = config->_wordsize_dram;
     _rf_chunk_size = config->_rf_chunk_size;
     _freq = config->_clock_rate;
+    _popcount_pipeline_stages = config->_popcount_pipeline_stages;
 }
 
 
@@ -232,7 +233,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             time = T_CLK; //Only 1 cycle is consumed in these RF only instructions
             break;
         case Request::Type::PopCountReduce_RF:
-            time = T_CLK*(req.precision_list[0]+5);//assumes the popcount hardware is a pipeline with 5 stages
+            time = T_CLK*(req.precision_list[0]+_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
             break;
         default:
             time = T_CLK;

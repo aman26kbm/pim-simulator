@@ -27,8 +27,10 @@ public:
     //we read from DRAM (kinda like cache_line_size)
     //This is overridden from the config file.
     int _rf_chunk_size = 512;
-
+    // will be overridden from config
     int _freq;
+    // will be overridden from config
+    int _popcount_pipeline_stages = 5;
 
 	MemoryCharacteristics() {}
     MemoryCharacteristics(Configuration configuration, 
