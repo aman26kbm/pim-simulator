@@ -17,7 +17,9 @@ Wire::Wire(int index, int width){
     this->available_bitwidth = width;
     this->positive = (index%2);
     this->path = wire_index2path(index);
+    #ifdef DEBUG_OUTPUT
     printf("create wire %d with path:", index);
     print(this->path);
     printf("\n");
+    #endif
 }

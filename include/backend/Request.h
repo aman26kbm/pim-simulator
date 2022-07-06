@@ -276,7 +276,8 @@ public:
 
     int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue
-    TimeT process_time = 0; //The time at which the request started to be processed (ie. decoded in the controller and executed by the tile)
+    TimeT start_time = 0; //The time at which the request is decoded and start waiting
+    TimeT process_time = 0; //The time at which the request started to be processed (ie. actually executed by the tile)
     TimeT finish_time = 0; //The time at which the request finished processing
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list

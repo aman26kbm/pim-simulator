@@ -892,7 +892,7 @@ void System::finish()
         fprintf(rstFile, "--------------------------------\n");
 
         for (int j = 0; j < _chips[i]->_nchildren; j++) {
-            fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks\n", i, j, (long) _time);
+            fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks, last active time is %lu\n", i, j, (long) _time, (long)_chips[i]->_children[j]->_last_req_time);
             fprintf(rstFile, "--------------------------------\n");
 
             //for (int k = 0; k < _chips[i]->_children[j]->_nchildren; k++) {

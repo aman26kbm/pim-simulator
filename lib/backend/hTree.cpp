@@ -20,7 +20,9 @@ hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows, int nu
     ...
     wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
     */
+    #ifdef DEBUG_OUTPUT
     printf("creating hTree with depth %d, wordsize_block2block %d, ncols %d, nrows %d:\n", depth, wordsize_block2block, _ncols, _nrows);
+    #endif
     this->hTree_depth = depth;
     this->wordsize_block2block = wordsize_block2block;
     this->_ncols = _ncols;
@@ -29,7 +31,9 @@ hTree::hTree(int depth, int wordsize_block2block, int _ncols, int _nrows, int nu
     this->num_bits_per_reg = num_bits_per_reg;
     int index=0;
     for(int i=0; i<=depth; i++){
+        #ifdef DEBUG_OUTPUT
         printf("at depth %d:\n", i);
+        #endif
         for(int j=0; j<pow(4,i); j++){
             //printf("create wire %d!\n", index);
             Wire* wire_negative = new Wire(index, wordsize_block2block*pow(2,depth-i));
@@ -745,8 +749,10 @@ bool hTree::disconfigure(Transmission trans){
 
 
 void hTree::receive_request(Request* req){
+    #ifdef DEBUG_OUTPUT
      printf("hTree receives a request (%s), src_tile %d, dest_tile %d\n",  
                     req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
+    #endif
     //request should be TileSend, TileReceive, BlockSend or BlockReceive
     assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
     || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
@@ -967,10 +973,12 @@ void hTree::tick(){
             for(int j=0; j<trans_list_list[i].size(); j++){
                 disconfigure(trans_list_list[i][j]);
             }
+            #ifdef DEBUG_OUTPUT
             printf("hTree removes a request (%s), src_tile %d, dest_tile %d\n",  
                     reqPair_list[i]->send_req->print_name(reqPair_list[i]->send_req->type).c_str(), reqPair_list[i]->send_req->src_tile, reqPair_list[i]->send_req->dst_tile);
             printf("hTree removes a request (%s), src_tile %d, dest_tile %d\n",  
                     reqPair_list[i]->receive_req->print_name(reqPair_list[i]->receive_req->type).c_str(), reqPair_list[i]->receive_req->src_tile, reqPair_list[i]->receive_req->dst_tile);
+            #endif
             reqPair_list.erase(reqPair_list.begin()+i); 
             trans_list_list.erase(trans_list_list.begin()+i);
         }

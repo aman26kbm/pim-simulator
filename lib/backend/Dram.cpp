@@ -20,8 +20,10 @@ Dram::Dram(int _nbank, int row_open_delay){
 }
 
 void Dram::receive_request(Request* req){
+    #ifdef DEBUG_OUTPUT
     printf("Dram receives a request (%s), tile %d\n",  
                     req->print_name(req->type).c_str(), req->src_tile);
+    #endif
     //int bank_number = rand()%_nbank;
     int bank_number = 0;
     //if(_time>=bank_next_available_time[bank_number]){
