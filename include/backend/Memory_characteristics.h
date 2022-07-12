@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "MemoryComponent.h"
+#include "Config.h"
 
 namespace pimsim {
 class MemoryCharacteristics {
@@ -26,16 +27,14 @@ public:
     //we read from DRAM (kinda like cache_line_size)
     //This is overridden from the config file.
     int _rf_chunk_size = 512;
-
+    // will be overridden from config
     int _freq;
+    // will be overridden from config
+    int _popcount_pipeline_stages = 5;
 
 	MemoryCharacteristics() {}
     MemoryCharacteristics(Configuration configuration, 
-                           int wordsize_block2block, 
-                           int wordsize_tile2tile, 
-                           int wordsize_dram, 
-                           int rf_chunk_size,
-                           int freq);
+                           Config* config);
 
     //Assume DRAM latency is 10 cycles
     int DramLatency = 10;

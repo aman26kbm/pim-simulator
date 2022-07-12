@@ -154,16 +154,9 @@ MemoryTile::issueReq(Request& req)
         }
 
 
-    } else if (req.isPIM()) {
+    } else {
         req.process_time = cur_time;
         req.finish_time = cur_time + getReqTiming(req);
-    } else if (req.isRFonly()) {
-        req.process_time = cur_time;
-        req.finish_time = cur_time + getReqTiming(req);
-    }
-    else {
-        std::cout<<"Unsupported request";
-        assert(0);
     }
 
 #ifdef DEBUG_OUTPUT
@@ -242,6 +235,7 @@ void MemoryTile::update_next(){
                     break;
                 }
                 req = _ctrl->_tile_q->pop_front();
+                req.start_time = _time;
                 dest = (MemoryTile*)_parent->getDestTile(req);
                 source = (MemoryTile*)_parent->getSourceTile(req);
                 // if this request is tilesend/receive or blocksend/receive, give request to hTree and enter HTREE_WAIT
@@ -306,11 +300,13 @@ void MemoryTile::update_next(){
                 if (_time == _next_available){
                     next_state.status = IDLE;
                     req.send_receive_finished = true;
+                    if(_time > _last_req_time) _last_req_time = _time;
                 }
                 break;
             case MAIL_WAIT:
                 if(req.mail->status()) {
                     next_state.status = IDLE;
+                    if(_time > _last_req_time) _last_req_time = _time;
                 }
                 else {
                     next_state.status = MAIL_WAIT;
@@ -330,39 +326,18 @@ void MemoryTile::update_next(){
                     assert(false);
                 }
                 break;
-            // case DRAM_WAIT1:
-            //         //stay here until dram_busy lowers down
-            //         if (_parent->dram_busy) {
-            //             next_state.status = DRAM_WAIT1;
-            //         }
-            //         else {
-            //             next_state.status = DRAM_WAIT2;
-            //             issueReq(req);
-            //         }
-            //     break;
-            // case DRAM_WAIT2:
-            //     if (_time == _next_available){
-            //         next_state.status = IDLE;
-            //         dram_busy = false; //dram_busy local to this tile
-            //         _parent->dram_counter -= req.dram_words;
-            //     }
-            //     else {
-            //         next_state.status = DRAM_WAIT2;
-            //         dram_busy = true; //dram_busy local to this tile
-            //     }
-            //     break;
         }
-        //_ctrl->proceed(1);
-    //}
 }
 
 void MemoryTile::update_current(){
+    #ifdef DEBUG_OUTPUT
     printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. \n", 
    _time, _id, 
     print_name(cur_state.status).c_str(),
     print_name(next_state.status).c_str(),
     Request::print_name(req.type).c_str()
     );
+    #endif
     cur_state = next_state;
 }
 

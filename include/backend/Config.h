@@ -13,7 +13,7 @@
 namespace pimsim {
 
 class Config {
-private:
+public:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _rf_chunk_size;
@@ -31,8 +31,9 @@ private:
     bool _compact_alloc = false, _blockctrl = false, _tilectrl = false, _chipctrl = false, _sync = false;
     std::string _net_configuration, _mem_configuration;
     int _dataflow;
+    int _popcount_pipeline_stages;
     
-public:
+//public:
     Config() {}
 
     Config(const std::string& fname, int dataflow);
@@ -90,6 +91,7 @@ public:
     std::string get_net_configuration() const {return _net_configuration;}
     std::string get_rstfile() const {return _result_file;}
 };
+
 
 }
 

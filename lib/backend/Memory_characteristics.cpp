@@ -3,6 +3,7 @@
 //
 
 #include "Memory_characteristics.h"
+#include "backend/Config.h"
 #include <iostream>
 #include <cmath>
 
@@ -10,17 +11,14 @@ using namespace pimsim;
 using namespace std;
 
 MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, 
-                                             int wordsize_block2block, 
-                                             int wordsize_tile2tile, 
-                                             int wordsize_dram, 
-                                             int rf_chunk_size,
-                                             int freq) {
+                                             Config* config) {
     _configuration = configuration;
-    _wordsize_block2block = wordsize_block2block;
-    _wordsize_tile2tile = wordsize_tile2tile;
-    _wordsize_dram = wordsize_dram;
-    _rf_chunk_size = rf_chunk_size;
-    _freq = freq;
+    _wordsize_block2block = config->_wordsize_block2block;
+    _wordsize_tile2tile = config->_wordsize_tile2tile;
+    _wordsize_dram = config->_wordsize_dram;
+    _rf_chunk_size = config->_rf_chunk_size;
+    _freq = config->_clock_rate;
+    _popcount_pipeline_stages = config->_popcount_pipeline_stages;
 }
 
 
@@ -233,6 +231,9 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowSub_RF: 
         case Request::Type::RowRead_RF: 
             time = T_CLK; //Only 1 cycle is consumed in these RF only instructions
+            break;
+        case Request::Type::PopCountReduce_RF:
+            time = T_CLK*(req.precision_list[0]+_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
             break;
         default:
             time = T_CLK;

@@ -195,6 +195,7 @@ MemoryComponent::receiveReq(Request& req)
     printf("+++++%s_%d receives a reqeust! (%s : %lu)\n", level_str[int(_level)].c_str(), _id,
             req.reqToStr().c_str(), req.arrive_time);
 #endif
+    bool res;
     if (getLevel() == MemoryComponent::Level::Chip) {
         //Send to tiles
         int idx = req.tile;
@@ -202,7 +203,7 @@ MemoryComponent::receiveReq(Request& req)
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
         //Send to controller
-        bool res = _ctrl->receiveReq(req);
+        res = _ctrl->receiveReq(req);
         return res;
     }
     else {
@@ -243,7 +244,7 @@ MemoryComponent::finishReq(Request& req)
 {
     req_cnt[int(req.type)]++;    
     req_proctime[int(req.type)] += req.finish_time - req.process_time;
-    req_waittime[int(req.type)] += req.process_time - req.arrive_time;
+    req_waittime[int(req.type)] += req.process_time - req.start_time;
 
 /*
     switch (req.type) {

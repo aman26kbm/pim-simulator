@@ -1,7 +1,7 @@
 #ifndef _SYSTEM_H_
 #define _SYSTEM_H_
 
-#define DEBUG_OUTPUT
+//#define DEBUG_OUTPUT
 
 #include "Util.h"
 #include "Tool.h"
@@ -119,29 +119,30 @@ public:
     //void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
 
     //PIMRA
-    void gemv();
-    void gemv_tile0();
-    void gemv_tile1();
+    // void gemv();
+    // void gemv_tile0();
+    // void gemv_tile1();
 
-    void fir();
-    void fir_tile0();
-    void fir_tile1();
+    // void fir();
+    // void fir_tile0();
+    // void fir_tile1();
 
-    void test();
-    void test_tile0();
-    void test_tile1();
+    // void test();
+    // void test_tile0();
+    // void test_tile1();
 
-    // void sync();
-    // void sync_tile0();
-    // void sync_tile1();
-    // void sync_tile2();
-    // void sync_tile3();
+
+    //DRAM addresses don't matter. We just define 1 address
+    //and use it everywhere.
+    AddrT DRAM_ADDR;
 
 //tile0
     AddrT cram_base_addr_tile0_block0; 
     AddrT cram_addr_tile0_block0_row0;  
     AddrT cram_addr_tile0_block0_row4;  
     AddrT cram_addr_tile0_block0_row8;  
+    AddrT cram_addr_tile0_block0_row16;
+    AddrT cram_addr_tile0_block0_row24;
 
     AddrT cram_base_addr_tile0_block1; 
     AddrT cram_addr_tile0_block1_row0; 
@@ -160,11 +161,14 @@ public:
     AddrT cram_addr_tile0_block3_row16;
     AddrT cram_addr_tile0_block3_row24;
 
-    AddrT cram_base_addr_tile1_block0; 
-    AddrT cram_addr_tile1_block0_row0; 
-    AddrT cram_addr_tile1_block0_row4; 
-    AddrT cram_addr_tile1_block0_row8; 
 //tile1
+    AddrT cram_base_addr_tile1_block0; 
+    AddrT cram_addr_tile1_block0_row0;  
+    AddrT cram_addr_tile1_block0_row4;  
+    AddrT cram_addr_tile1_block0_row8;  
+    AddrT cram_addr_tile1_block0_row16;
+    AddrT cram_addr_tile1_block0_row24;
+
     AddrT cram_base_addr_tile1_block1; 
     AddrT cram_addr_tile1_block1_row0; 
     AddrT cram_addr_tile1_block1_row4; 
@@ -186,6 +190,8 @@ public:
     AddrT cram_addr_tile2_block0_row0; 
     AddrT cram_addr_tile2_block0_row4; 
     AddrT cram_addr_tile2_block0_row8; 
+    AddrT cram_addr_tile2_block0_row16;
+    AddrT cram_addr_tile2_block0_row24;
 
     AddrT cram_base_addr_tile2_block1; 
     AddrT cram_addr_tile2_block1_row0; 
@@ -208,6 +214,8 @@ public:
     AddrT cram_addr_tile3_block0_row0; 
     AddrT cram_addr_tile3_block0_row4; 
     AddrT cram_addr_tile3_block0_row8; 
+    AddrT cram_addr_tile3_block0_row16;
+    AddrT cram_addr_tile3_block0_row24;
 
     AddrT cram_base_addr_tile3_block1; 
     AddrT cram_addr_tile3_block1_row0; 

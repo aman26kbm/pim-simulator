@@ -1,7 +1,7 @@
 #ifndef _MEMORY_COMPONENT_H_
 #define _MEMORY_COMPONENT_H_
 
-// #define DEBUG_OUTPUT
+//#define DEBUG_OUTPUT
 
 #include "Util.h"
 #include <queue>
@@ -10,7 +10,6 @@
 #include <cassert>
 
 #include "Tool.h"
-#include "Config.h"
 #include "Message.h"
 #include "Request.h"
 #include "Controller.h"

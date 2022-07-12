@@ -2,7 +2,6 @@
 #define _REGISTER_FILE_H_
 
 #include "Util.h"
-#include "Config.h"
 #include "Message.h"
 #include "Request.h"
 

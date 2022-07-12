@@ -203,6 +203,7 @@ public:
                         //"size" argument is not used
                         //"addr" argument specifies the location of the operand in the RF
         RowSub_RF,      //Same as RowAdd_RF, but for subtraction
+        PopCountReduce_RF,//popcount reduce several rows. Result stored in RF.
         MAX
     } type;
 
@@ -267,6 +268,7 @@ public:
             case Type::RowWrite_RF: return        "RowWrite_RF";
             case Type::RowAdd_RF: return        "RowAdd_RF";
             case Type::RowSub_RF: return        "RowSub_RF";
+            case Type::PopCountReduce_RF: return  "PopCountReduce_RF";
             default: return        "None";
         };
 
@@ -274,7 +276,8 @@ public:
 
     int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue
-    TimeT process_time = 0; //The time at which the request started to be processed (ie. decoded in the controller and executed by the tile)
+    TimeT start_time = 0; //The time at which the request is decoded and start waiting
+    TimeT process_time = 0; //The time at which the request started to be processed (ie. actually executed by the tile)
     TimeT finish_time = 0; //The time at which the request finished processing
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list
@@ -317,14 +320,14 @@ public:
         broadcast = b;
     }
 
-//    std::string reqToStr() {
-//        char *buffer;
-//        buffer = new char[100];
-//        snprintf(buffer, sizeof(buffer), "[%s] chip: %d, tile: %d,  block: %d, row: %d, col: %d",
-//                req_str[int(type)].c_str(), chip, tile, block, row, col);
-//        std::string output = buffer;
-//        return output;
-//    }
+   std::string reqToStr() {
+       char *buffer;
+       buffer = new char[100];
+       snprintf(buffer, 100, "[%s] chip: %d, tile: %d,  block: %d, row: %d, col: %d",
+               print_name(type).c_str(), chip, tile, block, row, col);
+       std::string output = buffer;
+       return output;
+   }
 //
 //    std::string typeStr() {
 //        return req_str[int(type)];
@@ -439,7 +442,9 @@ public:
     }
 
     bool isRF() {
-        if ((type == Type::RowMul_CRAM_RF || type == Type::RowAdd_CRAM_RF || type == Type::RowLoad_RF || type == Type::RowStore_RF))
+        if ((type == Type::RowMul_CRAM_RF || type == Type::RowAdd_CRAM_RF 
+        || type == Type::RowLoad_RF || type == Type::RowStore_RF
+        || type == Type::PopCountReduce_RF))
             return true;
         else
             return false;

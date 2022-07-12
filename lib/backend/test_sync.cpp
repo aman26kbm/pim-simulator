@@ -219,9 +219,9 @@ int32_t test_sync(System *sys)
     test_sync_tile0(sys);
     printf("adding tile1 requests:\n");
     test_sync_tile1(sys);
-    printf("adding tile1 requests:\n");
+    printf("adding tile2 requests:\n");
     test_sync_tile2(sys);
-    printf("adding tile1 requests:\n");
+    printf("adding tile3 requests:\n");
     test_sync_tile3(sys);
 }
 
