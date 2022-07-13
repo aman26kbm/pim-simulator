@@ -35,6 +35,7 @@ void test_rf_tile1(System* sys){
 int32_t test_rf(System* sys){
     test_rf_tile0(sys);
     test_rf_tile1(sys);
+    return 0;
 }
 
 static __attribute__((unused)) Registry::Entry &__test_rf__ = pimsim::registerFunc("test_rf", test_rf);

@@ -334,6 +334,7 @@ int32_t fir(System* sys)
     fir_tile1(sys);
     fir_tile2(sys);
     fir_tile3(sys);
+    return 0;
 }
 
 static __attribute__((unused)) Registry::Entry &__fir__ = pimsim::registerFunc("fir", fir);

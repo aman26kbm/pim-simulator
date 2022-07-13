@@ -158,6 +158,7 @@ int32_t gemv_64core(System* sys)
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+    return 0;
 }
 
 static __attribute__((unused)) Registry::Entry &__gemv_64core__ = pimsim::registerFunc("gemv_64core", gemv_64core);

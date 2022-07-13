@@ -223,6 +223,7 @@ int32_t test_sync(System *sys)
     test_sync_tile2(sys);
     printf("adding tile3 requests:\n");
     test_sync_tile3(sys);
+    return 0;
 }
 
 static __attribute__((unused)) Registry::Entry &__test_sync__ = pimsim::registerFunc("test_sync", test_sync);
