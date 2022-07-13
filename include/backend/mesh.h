@@ -25,6 +25,8 @@ private:
     };
     std::vector<std::vector<Transmission>> trans_list_list;
 
+    int get_addr0_index(Request req);
+    int get_addr1_index(Request req);
     int get_source_index(Request req);
     int get_dest_index(Request req);
     int get_mesh_time(int source_index, int dest_index, PrecisionT precision);

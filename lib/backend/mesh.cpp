@@ -32,8 +32,8 @@ mesh::mesh(int height, int width, int wordsize_block2block, int _ncols, int _nro
     this->num_bits_per_reg = num_bits_per_reg;
 }
 
-
-int mesh::get_source_index(Request req){
+//get addr_list[0] index
+int mesh::get_addr0_index(Request req){
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
         AddrT addr;
         addr = req.addr_list[0];
@@ -52,9 +52,8 @@ int mesh::get_source_index(Request req){
     }
     
 }
-
-int mesh::get_dest_index(Request req){
-    int chip_idx; int tile_idx; int block_idx; int row_idx; int col_idx;
+//get addr_list[1] index
+int mesh::get_addr1_index(Request req){
     AddrT addr;
     //Source
     int _ncols = this->_ncols;
@@ -62,6 +61,35 @@ int mesh::get_dest_index(Request req){
     addr = req.addr_list[1];
     int block_index = addr/(_ncols*_nrows);
     return block_index;
+}
+
+int mesh::get_source_index(Request req){
+    if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowLoad) return -1;
+    else if(req.type == Request::Type::RowStore_RF){
+        AddrT addr;
+        addr = req.addr_list[0];
+        int row = addr/this->num_regs_per_rf;
+        return row*width;
+    }
+    else{
+        return get_addr0_index(req);
+    } 
+}
+
+int mesh::get_dest_index(Request req){
+    if(req.type == Request::Type::RowStore_RF || req.type == Request::Type::RowStore) return -1;
+    else if(req.type == Request::Type::RowLoad_RF){
+        AddrT addr;
+        addr = req.addr_list[0];
+        int row = addr/this->num_regs_per_rf;
+        return row*width;
+    }
+    else if(req.type == Request::Type::RowLoad){
+        return get_addr0_index(req);
+    }
+    else{
+        return get_addr1_index(req);
+    } 
 }
 
 void mesh::receive_request(Request* req){
@@ -74,8 +102,8 @@ void mesh::receive_request(Request* req){
     || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
     || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF);
     if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive){
-        int source_index = get_source_index(*req);
-        int dest_index = get_dest_index(*req);
+        int source_index = get_addr0_index(*req);
+        int dest_index = get_addr1_index(*req);
 
         //for tileSend or tileReceive
         //try to find paired request in current trans_list_list
@@ -146,7 +174,7 @@ void mesh::receive_request(Request* req){
     }
     //Request is DRAM rowLoad/Store request
     else if(req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore){
-        int block_index = get_source_index(*req);
+        int block_index = get_addr0_index(*req);
         ReqPair* reqPair = new ReqPair{NULL, NULL};
         reqPair->send_req = req;
         reqPair->receive_req = req;
@@ -167,7 +195,7 @@ void mesh::receive_request(Request* req){
     }
     else{
         //RowLoad_RF or RowStore_RF
-        int block_index = get_source_index(*req);
+        int block_index = get_addr0_index(*req);
         ReqPair* reqPair = new ReqPair{NULL, NULL};
         reqPair->send_req = req;
         reqPair->receive_req = req;
@@ -196,12 +224,17 @@ void mesh::tick(){
         if(!reqPair_list[i]->send_req || !reqPair_list[i]->receive_req){
             continue;
         }
-        
-
        //set mesh_ready
-        reqPair_list[i]->send_req->mesh_ready = true;
-        reqPair_list[i]->receive_req->mesh_ready = true;
-        
+        Request* send_req = reqPair_list[i]->send_req;
+        Request* receive_req = reqPair_list[i]->receive_req;
+        send_req->mesh_ready = true;
+        receive_req->mesh_ready = true;
+        //set transfer_time
+
+        int source_index = get_source_index(*send_req);
+        int dest_index = get_dest_index(*send_req);
+        send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
+        receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
     }
     //if a reqPair is finished, disconfigure it and remove from reqPair_list and trans_list_list
     int i=0;
@@ -230,12 +263,32 @@ void mesh::tick(){
         }
     }
 }
-
+//cauculate mesh transfer time based on distance
 int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT precision){
-    int source_row = source_index/width;
-    int source_col = source_index%width;
-    int dest_row = dest_index/width;
-    int dest_col = dest_index%width;
+    int source_row;
+    int source_col;
+    int dest_row;
+    int dest_col;
+    if(source_index == -1){
+        source_row = 0;
+        source_col = 0;
+        dest_row = dest_index/width;
+        dest_col = dest_index%width;
+        assert(dest_col==0);
+    }
+    else if(dest_index == -1){
+        source_row = source_index/width;
+        source_col = source_index%width;
+        dest_row = 0;
+        dest_col = 0;
+        assert(source_col==0);
+    }
+    else{
+        source_row = source_index/width;
+        source_col = source_index%width;
+        dest_row = dest_index/width;
+        dest_col = dest_index%width;
+    }
     assert(source_row<height && source_col<width && dest_row<height && dest_col<width);
     int bits = 0;
     switch(precision) {

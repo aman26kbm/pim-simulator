@@ -13,7 +13,7 @@ int32_t gemv(System* sys)
     //int matrix_row = 32768*2;//32768 * X
     //int matrix_col = 4096 *4;// 4096 * Y
     int matrix_row = 32768*2;//32768 * X
-    int matrix_col = 4096*2;// 4096 * Y
+    int matrix_col = 4096;// 4096 * Y
     int total_col = (matrix_col>4096)?4096:matrix_col;
     int total_row = (matrix_row>32768)?32768:matrix_row;
     int tile_num = 128;

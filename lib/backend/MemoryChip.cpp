@@ -166,7 +166,11 @@ MemoryChip::tick()
     for (int i = 0; i < _nchildren; i++) {
         _children[i]->update_next();
     }
-    _hTree->tick();
+    if(_values->_configuration == MemoryCharacteristics::Configuration::HTree)
+        _hTree->tick();
+    else if(_values->_configuration == MemoryCharacteristics::Configuration::Mesh)
+        _mesh->tick();
+    
     _Dram->tick();
 
     //Code that will collect stuff from multiple tiles for this clock period, before we update the current state.

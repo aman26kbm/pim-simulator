@@ -8,7 +8,7 @@ void test_rf_tile0(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    //popCount_reduce_RF dram->tile0 RF
+    //popCount_reduce_RF tile0 row0->tile0 RF
     request = new Request(Request::Type::PopCountReduce_RF);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(sys->rf_base_addr_tile0, 0, PrecisionT::INT4); //dst
@@ -22,7 +22,7 @@ void test_rf_tile1(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    //popCount_reduce_RF dram->tile1 RF
+    //popCount_reduce_RF tile1 row0->tile1 RF
     request = new Request(Request::Type::PopCountReduce_RF);
     request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
     request->addAddr(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //dst

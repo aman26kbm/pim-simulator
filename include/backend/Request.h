@@ -291,6 +291,7 @@ public:
     bool hTree_ready;
     bool mesh_ready;
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
+    int mesh_transfer_time;//only used for mesh. Indicates transfer time of a request
     bool send_receive_finished;
 
     bool dram_ready;
