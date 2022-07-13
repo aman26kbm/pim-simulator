@@ -63,7 +63,7 @@ void Config::parse(const string& fname) {
             _wordsize_dram = atoi(tokens[1].c_str());
         } else if (tokens[0] == "dram_row_open_latency") {
             _dram_row_open_latency = atoi(tokens[1].c_str());
-         }else if (tokens[0] == "dram_bank_number") {
+        } else if (tokens[0] == "dram_bank_number") {
             _dram_bank_number = atoi(tokens[1].c_str());
         } else if (tokens[0] == "rf_chunk_size") {
             _rf_chunk_size = atoi(tokens[1].c_str());

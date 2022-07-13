@@ -144,6 +144,7 @@ int32_t test(System* sys)
 {
     test_tile0(sys);
     test_tile1(sys);
+    return 0;
 }
 
 static __attribute__((unused)) Registry::Entry &__test__ = pimsim::registerFunc("test", test);
