@@ -369,6 +369,15 @@ public:
         precision_list.push_back(precision);
     }
 
+    void swapSrcDst() {
+      assert(addr_list.size() == 3);
+      std::swap(addr_list[1], addr_list[2]);
+      assert(size_list.size() == 3);
+      std::swap(size_list[1], size_list[2]);
+      assert(precision_list.size() == 3);
+      std::swap(precision_list[1], precision_list[2]);
+    }
+
     bool isSystem() {
         if ((type == Type::SystemRow2Row) || (type == Type::SystemRow2Col)
         || (type == Type::SystemCol2Row) || (type == Type::SystemCol2Col)

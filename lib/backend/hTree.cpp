@@ -203,8 +203,7 @@ bool hTree::dram_try_configure(Transmission trans){
             i++;
         }
         return true;
-    }
-    else if(trans.source_index == -1){
+    } else if(trans.source_index == -1) {
         //rowLoad
         int dest_index = trans.dest_index;
         
@@ -266,6 +265,7 @@ bool hTree::dram_try_configure(Transmission trans){
         }
         return true;
     }
+    return true;
 }
 
 

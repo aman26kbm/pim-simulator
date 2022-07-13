@@ -334,6 +334,7 @@ int32_t test_gemv(System* sys)
     test_gemv_tile1(sys);
     test_gemv_tile2(sys);
     test_gemv_tile3(sys);
+    return 0;
 }
 
 static __attribute__((unused)) Registry::Entry &__test_gemv__ = pimsim::registerFunc("test_gemv", test_gemv);
