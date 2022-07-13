@@ -10,6 +10,7 @@ class MemoryCharacteristics {
 public:
     enum class Configuration : int {
         HTree,
+        Mesh,
         Bus,
         Ideal
     } _configuration;

@@ -8,29 +8,36 @@
 // Simple program to perform a matrix-vector mul 
 /////////////////////////////////////////////////////////////
 
-int32_t gemv(System* sys)
+int32_t gemv_64core_128_128(System* sys)
 {
-    //int matrix_row = 32768*2;//32768 * X
-    //int matrix_col = 4096 *4;// 4096 * Y
+    //hardware config
+    int tile_num = 64;
+    int array_dim = 256;
+    int regs_per_rf = 32;
+    //matrix size
     int matrix_row = 32768*2;//32768 * X
-    int matrix_col = 4096*2;// 4096 * Y
-    int total_col = (matrix_col>4096)?4096:matrix_col;
-    int total_row = (matrix_row>32768)?32768:matrix_row;
-    int tile_num = 128;
+    int matrix_col = 4096 *4;// 4096 * Y
+
+
+    int sub_matrix_row = tile_num*array_dim;
+    int sub_matrix_col = tile_num*regs_per_rf;
+    int total_col = (matrix_col>sub_matrix_col)?sub_matrix_col:matrix_col;
+    int total_row = (matrix_row>sub_matrix_row)?sub_matrix_row:matrix_row;
+    
     int cols_per_tile = total_col/tile_num;
     int col_iter_num = (int)ceil(matrix_col/(double)total_col);
     int row_iter_num = (int)ceil(matrix_row/(double)total_row);
     //compute for 1 sub-matrix
     //We have 128 tiles
     //Each has 128 CRAMs.
-    //So total cram columns = 128 * 256 = 32768
+    //So total cram columns = 64 * 256 = 16384
     //Let's consider sub-matrix size to be 32768 rows * 4096 columns.
     //Let's consider sub-vector size to be 512 rows * 1 column.
 
     //We will load 32 columns of matrix into tile0
     //and 32 columns of matrix into tile1.
     //....
-    //That is, 32 elements in one column of each CRAM. So sub-matrix has at most 32*128=4096 cols
+    //That is, 32 elements in one column of each CRAM. So sub-matrix has at most 32*64=2048 cols
 
     //The vector is outside in RF.
     //32 elements in 1 core's RF, 32 in second core's RF.
@@ -153,4 +160,4 @@ int32_t gemv(System* sys)
         sys->sendRequest(requests[i]);
 }
 
-static __attribute__((unused)) Registry::Entry &__gemv__ = pimsim::registerFunc("gemv", gemv);
+static __attribute__((unused)) Registry::Entry &__gemv_64core_128_128__ = pimsim::registerFunc("gemv_64core_128_128", gemv_64core_128_128);

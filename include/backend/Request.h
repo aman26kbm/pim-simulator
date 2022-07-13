@@ -289,6 +289,7 @@ public:
     Mailbox* mail;
     //indicates if the htree is configured for this request. Value owned by htree.
     bool hTree_ready;
+    bool mesh_ready;
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     bool send_receive_finished;
 

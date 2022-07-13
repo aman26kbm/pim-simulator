@@ -31,11 +31,10 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wo
         _children.push_back(tile);
     }
 
-    // int htree_counter_size = h_tree_size(_ntiles);
-    // htree_counters.clear();
-    // for (int i = 0; i < htree_counter_size; i++)
-    //     htree_counters.push_back(0);
-    _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows, num_regs_per_rf, num_bits_per_reg);
+    if(_values->_configuration == MemoryCharacteristics::Configuration::HTree)
+        _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows, num_regs_per_rf, num_bits_per_reg);
+    else if(_values->_configuration == MemoryCharacteristics::Configuration::Mesh)
+        _mesh = new mesh(n_tiles, n_blocks,  wordsize_block2block, _ncols, _nrows, num_regs_per_rf, num_bits_per_reg);
     _Dram = new Dram(dram_bank_number, dram_row_open_latency);
     _regFile = new RegisterFile(num_regs_per_rf, num_bits_per_reg);
 }

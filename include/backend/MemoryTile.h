@@ -27,6 +27,7 @@ public:
         REQ_MODE,
         DRAM_WAIT,
         HTREE_WAIT,
+        MESH_WAIT,
         TILE_SEND_RECEIVE,
         BLOCK_SEND_RECEIVE,
         DRAM_LOAD_STORE,

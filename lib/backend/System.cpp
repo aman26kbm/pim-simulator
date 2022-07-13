@@ -38,6 +38,8 @@ System::System(Config* config) : _config(config)
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
+    } else if (config->get_mem_configuration() == "mesh") {
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Mesh, _config);
     } else if (config->get_mem_configuration() == "bus") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _config);
     } else {
@@ -862,6 +864,7 @@ void System::run()
         }
         //update time
         _time++;
+        printf("current time: %d\n", _time);
         //check if all chips finished
         finished = true;
         for(int i=0; i< _nchips; i++){

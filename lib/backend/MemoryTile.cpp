@@ -33,10 +33,6 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
     //Instantiate one RF in each tile
     RegisterFile* rf = new RegisterFile();
 
-    // int htree_counter_size = h_tree_size(_nblocks);
-    // htree_counters.clear();
-    // for (int i = 0; i < htree_counter_size; i++)
-    //     htree_counters.push_back(0);
 
     cur_state.status = IDLE;
     n_reads = 0; n_writes = 0; n_unexpected_reqs = 0;
@@ -75,47 +71,6 @@ MemoryTile::issueReq(Request& req)
 {
     //_ctrl refers to the controller of the tile.
     TimeT cur_time = _time;
-        
-    //if this chip-level request is for a DRAM access, then we call a different set of functions
-    // if (req.isChipDram()) {
-    //     req.process_time = cur_time;
-    //     //precision_list[0] effectively contains the number of rows to transfer.
-    //     //1 "word" = 1 full dram interface width worth of data. 
-    //     //it takes 1 cycle to read 1 "word" from dram (ignoring latency).
-    //     int rounded_up_bits;
-    //     if (req.isRF()) {
-    //         int chunk_size = _values->_rf_chunk_size;
-    //         int num_elements = req.size_list[0];
-    //         int precision_bits = getPrecisionBits(req);
-    //         int actual_bits = num_elements * precision_bits;
-    //         if (actual_bits < chunk_size) {
-    //             rounded_up_bits = chunk_size;
-    //         }
-    //         else if (actual_bits % chunk_size == 0) {
-    //             rounded_up_bits = actual_bits;
-    //         }
-    //         else {
-    //             rounded_up_bits = (int(actual_bits/chunk_size)*chunk_size) + chunk_size;
-    //         }
-    //     }
-    //     else {
-    //         rounded_up_bits = _ncols * _nblocks * getPrecisionBits(req);
-    //     }
-
-    //     int dram_chunk_size = _values->_wordsize_dram;
-    //     if (rounded_up_bits < dram_chunk_size) {
-    //         req.dram_words = 1;
-    //     }
-    //     else if (rounded_up_bits % dram_chunk_size == 0) {
-    //         req.dram_words = rounded_up_bits / dram_chunk_size;
-    //     }
-    //     else {
-    //         req.dram_words = (int(rounded_up_bits/dram_chunk_size)) + 1;
-    //     }
-    //     _parent->dram_counter += req.dram_words;
-    //     // getReqTiming gives us the dram latency
-    //     req.finish_time = cur_time + getReqTiming(req) + _parent->dram_counter;
-    // }
 
     if (req.isChip() || req.isChipDram()) {
         req.process_time = cur_time;
@@ -128,6 +83,8 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
 
+            req.finish_time = cur_time + getReqTiming(req) ;
+        } else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             req.finish_time = cur_time + getReqTiming(req) ;
         }
         else { //ideal
@@ -147,7 +104,8 @@ MemoryTile::issueReq(Request& req)
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
             
             req.finish_time = cur_time + getReqTiming(req);
-            //switch_list.clear();
+        }else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+            req.finish_time = cur_time + getReqTiming(req) ;
         }
         else { //ideal
             req.finish_time = cur_time + 0;
@@ -238,13 +196,20 @@ void MemoryTile::update_next(){
                 req.start_time = _time;
                 dest = (MemoryTile*)_parent->getDestTile(req);
                 source = (MemoryTile*)_parent->getSourceTile(req);
-                // if this request is tilesend/receive or blocksend/receive, give request to hTree and enter HTREE_WAIT
+                // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
                 if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
                  || req.type == Request::Type::BlockSend_Receive){
                      req.send_receive_finished = false;
-                     req.hTree_ready = false;
-                    ((MemoryChip*)_parent)->_hTree->receive_request(&req);
-                    next_state.status = HTREE_WAIT;
+                    if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
+                        req.hTree_ready = false;
+                        ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                        next_state.status = HTREE_WAIT;
+                    }
+                    else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+                        req.mesh_ready = false;
+                        ((MemoryChip*)_parent)->_mesh->receive_request(&req);
+                        next_state.status = MESH_WAIT;
+                    }
                 }
                 else if(req.type == Request::Type::Signal) {
                     req.mail->signal(_time);
@@ -286,11 +251,24 @@ void MemoryTile::update_next(){
                     next_state.status = REQ_MODE;
                     issueReq(req);
                 }
-                // uncomment when adding dram support
-                // else if(req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore){
-                //     next_state.status = REQ_MODE;
-                //     issueReq(*req);
-                // }
+                else{
+                    printf("Should not be here!\n");
+                    assert(false);
+                }
+                break;
+            case MESH_WAIT:
+                if(!req.mesh_ready){
+                    next_state.status = MESH_WAIT;
+                }
+                else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                     || req.type == Request::Type::BlockSend_Receive 
+                     || req.type == Request::Type::RowLoad
+                     || req.type == Request::Type::RowStore
+                     || req.type == Request::Type::RowLoad_RF
+                     || req.type == Request::Type::RowStore_RF){
+                    next_state.status = REQ_MODE;
+                    issueReq(req);
+                }
                 else{
                     printf("Should not be here!\n");
                     assert(false);
@@ -318,8 +296,14 @@ void MemoryTile::update_next(){
                 }
                 else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
                 || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
-                    ((MemoryChip*)_parent)->_hTree->receive_request(&req);
-                    next_state.status = HTREE_WAIT;
+                    if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
+                        ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                        next_state.status = HTREE_WAIT;
+                    }
+                    else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+                        ((MemoryChip*)_parent)->_mesh->receive_request(&req);
+                        next_state.status = MESH_WAIT;
+                    }
                 }
                 else{
                     printf("Should not be here!\n");

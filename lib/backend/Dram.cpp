@@ -17,6 +17,7 @@ Dram::Dram(int _nbank, int row_open_delay){
         this->curr_req.push_back(NULL);
     }
     srand(time(NULL));
+    this->current_bank = 0;
 }
 
 void Dram::receive_request(Request* req){
@@ -25,7 +26,11 @@ void Dram::receive_request(Request* req){
                     req->print_name(req->type).c_str(), req->src_tile);
     #endif
     //int bank_number = rand()%_nbank;
-    int bank_number = 0;
+    //int bank_number = 0;
+    int bank_number = current_bank;
+    current_bank++;
+    if(current_bank == _nbank) current_bank = 0;
+    //printf("dram request goes to bank %d\n", bank_number);
     //if(_time>=bank_next_available_time[bank_number]){
         //bank_next_available_time[bank_number] = _time + row_open_delay;
         req_q_list[bank_number].push(req);
@@ -49,4 +54,5 @@ void Dram::tick(){
             }  
         }
     }
+    //printf("dram bank request size at time % d: %d, %d, %d, %d\n", _time, req_q_list[0].size(), req_q_list[1].size(), req_q_list[2].size(), req_q_list[3].size());
 }

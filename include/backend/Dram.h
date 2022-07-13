@@ -12,6 +12,7 @@ private:
     std::vector<int> bank_next_available_time;
     std::vector<std::queue<Request*>> req_q_list;
     std::vector<Request*> curr_req;
+    int current_bank;
 
 public:
     Dram();
