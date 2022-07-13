@@ -8,7 +8,7 @@ int32_t vecadd_4k(System *sys) {
   void* _1 = nullptr;
   // int8_t a_global[1024], 0
   // int8_t b_global[1024], 1024
-  for (int32_t x_outer_outer = 0; x_outer_outer < 4; ++x_outer_outer) {
+  int32_t x_outer_outer = 0; /*array-dummized*/ // {
     for (int32_t ax0_outer = 0; ax0_outer < 4; ++ax0_outer) {
       {
         int32_t _2 = ax0_outer * 256;
@@ -33,8 +33,8 @@ int32_t vecadd_4k(System *sys) {
         request.type = Request::Type::RowAdd;
         int32_t _4 = x_c_outer * 256;
         request.addAddr((_4) * 1/*bytes*/ + 0/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT8);
-        request.addAddr(sys->getAddress(0, 0, 0)/*FIXME: dst*/, 0, PrecisionT::INT8);
         request.addAddr((_4) * 1/*bytes*/ + 1024/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT8);
+        request.addAddr(sys->getAddress(0, 0, 0)/*FIXME: dst*/, 0, PrecisionT::INT8);
         sys->sendRequest(request);
       }
     }
@@ -47,7 +47,7 @@ int32_t vecadd_4k(System *sys) {
         sys->sendRequest(request);
       }
     }
-  }
+  // }
   // freed b_global
   // freed a_global
   return 0;
