@@ -14,17 +14,17 @@ int32_t vecadd_4k(System *sys) {
       {
         int32_t _2 = ax0_outer * 256;
         Request request(Request::Type::RowLoad);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0, ((_2) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
         request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT8);
-        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, x_outer_outer, ((_2) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
         sys->sendRequest(request);
       }
     }
     for (int32_t ax0_outer1 = 0; ax0_outer1 < 4; ++ax0_outer1) {
       {
         int32_t _3 = ax0_outer1 * 256;
-        Request request(Request::Type::RowLoad);
+        Request request(Request::Type::RowLoad); 
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0, ((_3) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
         request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT8);
-        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, x_outer_outer, ((_3) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
         sys->sendRequest(request);
       }
     }
@@ -33,9 +33,9 @@ int32_t vecadd_4k(System *sys) {
         Request request(Request::Type::RowStore);
         int32_t _4 = x_c_outer * 256;
         request.type = Request::Type::RowAdd;
-        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, x_outer_outer, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
-        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, x_outer_outer, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
-        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, x_outer_outer, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
         request.swapSrcDst(); // for source, dest, source operand order
         sys->sendRequest(request);
       }
@@ -44,7 +44,7 @@ int32_t vecadd_4k(System *sys) {
       {
         int32_t _5 = x_outer_inner * 256;
         Request request(Request::Type::RowStore);
-        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, x_outer_outer, ((_5) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0, ((_5) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
         request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT8);
         sys->sendRequest(request);
       }
