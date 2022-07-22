@@ -19,11 +19,13 @@ void test_tile0(System* sys)
 
     request = new Request(Request::Type::RowMul);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(sys->cram_addr_tile0_block0_row4, 0, PrecisionT::INT4); //src
     request->addAddr(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowAdd);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(sys->cram_addr_tile0_block0_row4, 0, PrecisionT::INT4); //src
     request->addAddr(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
@@ -47,6 +49,7 @@ void test_tile0(System* sys)
 
     request = new Request(Request::Type::RowMul);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(sys->cram_addr_tile0_block0_row4, 0, PrecisionT::INT4); //src
     request->addAddr(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
@@ -67,6 +70,7 @@ void test_tile0(System* sys)
 
     request = new Request(Request::Type::RowMul_CRAM_RF);
     request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addAddr(sys->rf_base_addr_tile0, 0, PrecisionT::INT4);
     request->addAddr(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 

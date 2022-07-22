@@ -23,44 +23,21 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration,
 
 
 //Helper function to find the number of clocks for a given request's precision and op type
-int getClocksForReq(PrecisionT precision, string op, int levels=0) {
+int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, string op, int levels=0) {
     int clocks;
     int bits;
     string dtype;
     int mantissa;
     int exponent;
 
-    switch(precision) { 
-        case 0:  //fp8_e3m4
-            dtype = "float"; exponent = 3; mantissa = 4; bits = 8;
-            break;
-        case 1:  //bf16_e8m7
-            dtype = "float"; exponent = 8; mantissa = 7; bits = 16;
-            break;
-        case 2:  //fp16_e5m10
-            dtype = "float"; exponent = 5; mantissa = 10; bits = 16;
-            break;
-        case 3:  //fp32_e8m23
-            dtype = "float"; exponent = 8; mantissa = 23; bits = 32;
-            break;
-        case 4:  //INT4
-            dtype = "int"; exponent = 0; mantissa = 4; bits = 4;
-            break;
-        case 5:  //INT8
-            dtype = "int"; exponent = 0; mantissa = 8; bits = 8;
-            break;
-        case 6:  //INT16
-            dtype = "int"; exponent = 0; mantissa = 16; bits = 16;
-            break;
-        case 7:  //INT32
-            dtype = "int"; exponent = 0; mantissa = 32; bits = 32;
-            break;
-        default: 
-            dtype = "-"; exponent = -1; mantissa = -1; bits = -1;
-            break;
-    } 
-
     if (op=="add") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger src
+        p = p.bits()>precision_list[2].bits()?precision_list[2] : p;//take smaller of p, dest
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
         if (dtype=="float") {
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
@@ -69,6 +46,12 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
         }
     }
     else if (op=="add_cram_rf") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0];//take operand 0 (src) 
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
         if (dtype=="float") {
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
@@ -77,6 +60,13 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
         }
     }
     else if (op=="mul") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger of src
+        p = p.bits()>precision_list[2].bits()?precision_list[2] : p;//take smaller of p and dest
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
         if (dtype=="float") {
             clocks = mantissa * mantissa + 7 * mantissa + 3 * exponent + 5;
         }
@@ -85,6 +75,12 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
         }
     }
     else if (op=="mul_cram_rf") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0];//take operand 0 (src) 
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
         if (dtype=="float") {
             clocks = (mantissa * mantissa + 7 * mantissa + 3 * exponent + 5) / 2;
         }
@@ -93,6 +89,12 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
         }
     }
     else if (op=="reduce") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0];//take operand 0 (src)
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
         if (dtype=="float") {
             clocks = 0;
             for (int i=1; i<=levels; i++) {
@@ -114,6 +116,8 @@ int getClocksForReq(PrecisionT precision, string op, int levels=0) {
     
     }
     else if (op=="read" || op=="write") {
+        PrecisionT::Precision p = precision_list[0];//take operand 0 (cram)
+        bits = p.bits();
         clocks = bits;
     }
     else {
@@ -128,7 +132,7 @@ int MemoryCharacteristics::getPrecisionBits(Request req) {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
         return req.precision_bits;
     }
-    return getClocksForReq(req.precision_list[0], "read");
+    return getClocksForReq(req.precision_list, "read");
 }
 
 //double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {
@@ -136,43 +140,26 @@ double MemoryCharacteristics::getTiming(Request req) {
     TimeT time = 0;
     switch (req.type) {
         case Request::Type::RowSet: 
-        case Request::Type::ColSet: 
             time = T_CLK;
             break;
         case Request::Type::RowReset: 
-        case Request::Type::ColReset: 
-            time = T_CLK;
-            break;
-        case Request::Type::RowMv: 
-        case Request::Type::ColMv: 
             time = T_CLK;
             break;
         case Request::Type::RowRead: 
-        case Request::Type::ColRead: 
             time = T_CLK * getPrecisionBits(req);
             break;
-        case Request::Type::RowWrite: 
-        case Request::Type::ColWrite: 
+        case Request::Type::RowWrite:  
             time = T_CLK * getPrecisionBits(req);
             break;
-        case Request::Type::RowAdd: 
-        case Request::Type::ColAdd: 
+        case Request::Type::RowAdd:  
         case Request::Type::RowSub: 
-        case Request::Type::ColSub: 
-           //Looking the precision of the second item in the list (the destination) for calculating the
-           //number of cycles consumed.
-           //Number of destination bits tells the right value for addition because it could be more
-           //than the operands. (Eg. in case where accumulator is wider)
-            time = getClocksForReq(req.precision_list[1], "add") * T_CLK;
+            time = getClocksForReq(req.precision_list, "add") * T_CLK;
             break;
         case Request::Type::RowMul: 
-        case Request::Type::RowDiv: 
-        case Request::Type::ColMul: 
-        case Request::Type::ColDiv: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
            //Number of src bits gives the right value for multiplication cycles.
-            time = getClocksForReq(req.precision_list[0], "mul") * T_CLK;
+            time = getClocksForReq(req.precision_list, "mul") * T_CLK;
             break;
         case Request::Type::RowBitwise: 
         case Request::Type::ColBitwise: 
@@ -187,7 +174,6 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::BlockSend_Receive: 
         case Request::Type::TileSend: 
         case Request::Type::TileReceive: 
-        case Request::Type::TileSend_Receive: 
         case Request::Type::ChipSend_Receive: 
             time = getPrecisionBits(req) * T_CLK ; // Assuming the global clock frequency is 1/T_CLK. 10 is for testing
             break;
@@ -197,7 +183,7 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowReduce: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
-            time = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * T_CLK;
+            time = getClocksForReq(req.precision_list, "reduction", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
             time = getPrecisionBits(req) * T_CLK;
@@ -208,7 +194,7 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowShift: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of shifts
-            time = getClocksForReq(req.precision_list[0], "read", req.size_list[0]) * T_CLK;
+            time = getClocksForReq(req.precision_list, "read", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad_RF: 
         case Request::Type::RowStore_RF: 
@@ -218,14 +204,14 @@ double MemoryCharacteristics::getTiming(Request req) {
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
            //Number of src bits gives the right value for multiplication cycles.
-            time = getClocksForReq(req.precision_list[0], "mul_cram_rf") * T_CLK;
+            time = getClocksForReq(req.precision_list, "mul_cram_rf") * T_CLK;
             break;
         case Request::Type::RowAdd_CRAM_RF: 
            //Looking the precision of the second item in the list (the destination) for calculating the
            //number of cycles consumed.
            //Number of destination bits tells the right value for addition because it could be more
            //than the operands. (Eg. in case where accumulator is wider)
-            time = getClocksForReq(req.precision_list[1], "add_cram_rf") * T_CLK;
+            time = getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
             break;
         case Request::Type::RowAdd_RF: 
         case Request::Type::RowSub_RF: 
@@ -233,7 +219,8 @@ double MemoryCharacteristics::getTiming(Request req) {
             time = T_CLK; //Only 1 cycle is consumed in these RF only instructions
             break;
         case Request::Type::PopCountReduce_RF:
-            time = T_CLK*(req.precision_list[0]+_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
+        //TODO: how to calculate cycles?
+            time = T_CLK*(req.precision_list[0].bits()+_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
             break;
         default:
             time = T_CLK;

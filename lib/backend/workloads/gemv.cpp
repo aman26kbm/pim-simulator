@@ -83,12 +83,14 @@ int32_t gemv(System* sys)
                     //Multiply in this core/tile.
                     request = new Request(Request::Type::RowMul_CRAM_RF);
                     request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT4); //src
+                    request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4);//rf
                     request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT4); //dst
                     requests.push_back(*request);
 
                     //Add the result of multiplication into the accumulator
                     request = new Request(Request::Type::RowAdd);
                     request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT16); //src
+                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, PrecisionT::INT16);//src2
                     request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, PrecisionT::INT16); //dst
                     requests.push_back(*request);
                 }
@@ -112,6 +114,7 @@ int32_t gemv(System* sys)
                     //add
                     request = new Request(Request::Type::RowAdd);
                     request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16), 0, PrecisionT::INT16); //src
+                    request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, PrecisionT::INT16); //src2
                     request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, PrecisionT::INT16); //dst
                     requests.push_back(*request);
 
@@ -138,6 +141,7 @@ int32_t gemv(System* sys)
                 //accumulate partial results
                 request = new Request(Request::Type::RowAdd);
                 request->addAddr(sys->getAddress(tile_num-1, 0, col_iteration*16), 0, PrecisionT::INT16); //src
+                request->addAddr(sys->getAddress(tile_num-1, 0, col_iter_num*16), 0, PrecisionT::INT16); //src2
                 request->addAddr(sys->getAddress(tile_num-1, 0, col_iter_num*16), 0, PrecisionT::INT16); //dst
                 requests.push_back(*request);
             }

@@ -264,7 +264,7 @@ void mesh::tick(){
     }
 }
 //cauculate mesh transfer time based on distance
-int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT precision){
+int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision precision){
     int source_row;
     int source_col;
     int dest_row;
@@ -290,36 +290,8 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT precision){
         dest_col = dest_index%width;
     }
     assert(source_row<height && source_col<width && dest_row<height && dest_col<width);
-    int bits = 0;
-    switch(precision) {
-        case PrecisionT::FP8_e3m4:  //fp8_e3m4
-            bits = 8;
-            break;
-        case PrecisionT::BF16_e8m7:  //bf16_e8m7
-            bits = 16;
-            break;
-        case PrecisionT::FP16_e5m10:  //fp16_e5m10
-            bits = 16;
-            break;
-        case PrecisionT::FP32_e8m23:  //fp32_e8m23
-            bits = 32;
-            break;
-        case PrecisionT::INT4:  //INT4
-            bits = 4;
-            break;
-        case PrecisionT::INT8:  //INT8
-            bits = 8;
-            break;
-        case PrecisionT::INT16:  //INT16
-            bits = 16;
-            break;
-        case PrecisionT::INT32:  //INT32
-            bits = 32;
-            break;
-        default: 
-            bits = -1;
-            break;
-    }
+    int bits = precision.bits();
+    
     int distance = abs(dest_row - source_row) + abs(dest_col - source_col);
     return distance + bits-1;
     

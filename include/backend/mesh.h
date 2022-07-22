@@ -29,7 +29,7 @@ private:
     int get_addr1_index(Request req);
     int get_source_index(Request req);
     int get_dest_index(Request req);
-    int get_mesh_time(int source_index, int dest_index, PrecisionT precision);
+    int get_mesh_time(int source_index, int dest_index, PrecisionT::Precision precision);
 public:
     mesh();
     mesh(int height, int width, int wordsize_block2block, int _ncols, int _nrows, int num_regs_per_rf, int num_bits_per_reg);

@@ -27,22 +27,12 @@ public:
                   //Entire row is set. No way to set a few columns in the chunk of rows.
                   //It'd take the same time if either all columns or a few columns of the chunk of rows was needed to be set. 
                   //So setting a few columns of the chunk of rows is not modelled/supported.
-        ColSet,   //UNUSED
         RowReset, //Resets (to 0) a row in a block.
-        ColReset, //UNUSED
-        RowMv,    //UNUSED
-                  //Moves a row in a block from src to dst. 
-                  //"size" argument is not used.
-                  //The address of the row is specified by the "addr" argument.
-        ColMv,    //UNUSED
-
         RowRead,  //Read 1 row in a block and bring its contents into the row buffer of the block.
                   //The addr argument specifies the row ID. 
                   //"size" argument is not used.
                   //Can't specify a few columns within the row to read. Read all columns in the row.
-        ColRead,  //UNUSED
         RowWrite, //Write a row in a block; rest same as above 
-        ColWrite, //UNUSED
 
         RowAdd,   //Add multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
@@ -52,9 +42,13 @@ public:
                   //The "size" argument is unused.
                   //There is implicit parallellism here. This instruction involves multiple rows.
                   //Also, the add operation happens across all columns.
-        ColAdd,   //UNUSED
+                  //example: 
+                  //   request = new Request(Request::Type::RowAdd);
+                  //     request->addAddr(sys->getAddress(tile,0,src1_row), 0, src1_precision); //src1
+                  //     request->addAddr(sys->getAddress(tile,0,src2_row), 0, src2_precision);//src2
+                  //     request->addAddr(sys->getAddress(tile,0,dest_row), 0, dest_precision); //dst
+                  //     requests.push_back(*request);
         RowSub,   //Same as above, but for Sub instead of Add
-        ColSub,   //UNUSED
 
         RowMul,   //Multiply multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
@@ -64,9 +58,12 @@ public:
                   //The "size" argument is unused.
                   //There is implicit parallellism here. This instruction involves multiple rows.
                   //Also, the multiply operation happens across all columns.
-        ColMul,   //UNUSED
-        RowDiv,   //UNUSED
-        ColDiv,   //UNUSED
+                  //example:
+                  //   request = new Request(Request::Type::RowMul);
+                  //     request->addAddr(sys->getAddress(tile,0,src1_row), 0, src1_precision); //src1
+                  //     request->addAddr(sys->getAddress(tile,0,src2_row), 0, src2_precision);//src2
+                  //     request->addAddr(sys->getAddress(tile,0,dest_row), 0, dest_precision); //dst
+                  //     requests.push_back(*request);
 
         RowBitwise,//Perform a bitwise operation between multi-bit values stored over multiple rows.
                    //The entire row participates. Can't specify a few columns that will participate.
@@ -87,7 +84,16 @@ public:
                     //The "precision" argument specifies precision.
                     //The "size" argument specifies how many levels to stop after.
                     //There is implicit parallellism here. This instruction involves multiple rows.
+                    //example:
+                  //   request = new Request(Request::Type::RowMul);
+                  //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
+                  //     request->addAddr(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
+                  //     requests.push_back(*request);
         RowShift,   
+                    //example:
+                  //   request = new Request(Request::Type::RowShift);
+                  //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
+                  //     requests.push_back(*request);
 
         //////////////////////////////////
         //Data transfer instructions
@@ -104,17 +110,40 @@ public:
                    //The "precision" argument will specify the number of rows to transfer.
         BlockReceive, //UNUSED
                       //Same as above; just for receive
-        BlockSend_Receive, //Same as above; but for both send and receive
+        BlockSend_Receive, 
+                    //one request for both send and receive
+                    //Doesn't mean send a whole block from one place to another.
+                   //Send N rows from one block to another within a tile. 
+                   //Bandwidth of the block-to-block interconnect is specified in memory characteristics (_wordsize).
+                   //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
+                   //with number of transfer bursts (in the bus interconnect case) and with number of bursts + number of hops (in the htree interconnect case)
+                   //The number of bursts = number of rows * number of bits in a row / interconnect bandwidth
+                   //The "addr" argument will specify the row ID of row0.
+                   //The "size" argument is unused.
+                   //The "precision" argument will specify the number of rows to transfer. 
+                   //example:
+                    // request = new Request(Request::Type::BlockSend_Receive);
+                    // request->addAddr(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
+                    // request->addAddr(sys->cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+                    // requests.push_back(*request);
         TileSend, //Doesn't mean send a whole tile from one place to another.
                   //Doesn't mean send some bits from a block in one tile to another block in another tile.
                   //This only accounts for transfer between tiles (transfer from block to tile and tile to block is not included).
                   //For the H-tree interconnect, this involves some hops. So, there are some extra cycles to be added.
                   //But for the bus interconnect, this involves the delay in the tile-to-tile interconnect (the bus structure
                   //isn't global across the entire chip; there is a hierarchy)
-                  //size, precision and addr arguments have the same meaning as BlockSend.
+                  //size, precision and addr arguments have the same meaning as BlockSend_Receive.
+                  //example:
+                    // request = new Request(Request::Type::TileSend);
+                    // request->addAddr(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
+                    // request->addAddr(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
+                    // requests.push_back(*request);
         TileReceive, //Same as above; just for receive
-        TileSend_Receive, //UNUSED
-                          //Same as above; but for both send and receive
+                   //example:
+                    // request = new Request(Request::Type::TileReceive);
+                    // request->addAddr(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
+                    // request->addAddr(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
+                    // requests.push_back(*request);
         ChipSend_Receive,//UNUSED
                          //This does not transfer some bits from one block to another in a different chip. 
                          //This only accounts for the transfer from a chip to another chip. 
@@ -157,8 +186,18 @@ public:
                     //with number of transfer bursts.
                     //The number of bursts = number of rows / dram bandwidth
                     //The "addr" argument will specify the row ID of row0.
+                    //example:
+                    // request = new Request(Request::Type::RowLoad);
+                    // request->addAddr(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
+                    // request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+                    // requests.push_back(*request);
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
+                    //example:
+                    // request = new Request(Request::Type::RowStore);
+                    // request->addAddr(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
+                    // request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+                    // requests.push_back(*request);
         
         //////////////////////////////////
         //Synchronization related instructions
@@ -179,8 +218,18 @@ public:
                         //and the configured rf_chunk_size.
                         //The "addr" argument specifies the location in the RF where the first
                         //element will be saved.
+                        //example:
+                        // request = new Request(Request::Type::RowLoad_RF);
+                        // request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //RF addr
+                        // request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //dram addr
+                        // requests.push_back(*request);
         RowStore_RF,    //Store a set of data elements from RF into DRAM
                         //Rest of the details are the same as RowLoad_RF
+                        //example:
+                        // request = new Request(Request::Type::RowStore_RF);
+                        // request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //RF addr
+                        // request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //dram addr
+                        // requests.push_back(*request);
         RowMul_CRAM_RF, //Multiplication between a value in CRAM and RF.
                         //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
                         //One operand comes from the RF (common for all columns). It's addr is not specified.
@@ -192,10 +241,20 @@ public:
                         //Also, the multiply operation happens across all columns.
         RowAdd_CRAM_RF, //Addition between a value in CRAM and RF
                         //Same as RowMul_CRAM_RF, but for addition
+                        //example:
+                        // request = new Request(Request::Type::RowMul_CRAM_RF);
+                        // request->addAddr(sys->getAddress(tile,0,src_row), 0, PrecisionT::INT4); //src
+                        // request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4);//rf
+                        // request->addAddr(sys->getAddress(tile,0,dest_row), 0, PrecisionT::INT4); //dst
+                        // requests.push_back(*request);
         RowRead_RF,     //Read a row from the RF into a register (flops)
                         //The addr argument specifies the row ID. 
                         //"size" argument is not used.
                         //"precision" argument specifies the precision of the value to read.
+                        //example:
+                        // request = new Request(Request::Type::RowRead_RF);
+                        // request->addAddr(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //src
+                        // requests.push_back(*request);
         RowWrite_RF,    //Write a row from a register (flops) into RF
         RowAdd_RF,      //Add two values sourced from the RF.
                         //This is not used for computations, but used for control (e.g looping over other instructions, etc.)
@@ -204,6 +263,11 @@ public:
                         //"addr" argument specifies the location of the operand in the RF
         RowSub_RF,      //Same as RowAdd_RF, but for subtraction
         PopCountReduce_RF,//popcount reduce several rows. Result stored in RF.
+                        //example:
+                        // request = new Request(Request::Type::PopCountReduce_RF);
+                        // request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+                        // request->addAddr(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //dst
+                        // requests.push_back(*request);
         MAX
     } type;
 
@@ -211,23 +275,11 @@ public:
     static std::string print_name(Type type) {
         switch(type) {
             case Type::RowSet: return        "RowSet";
-            case Type::ColSet: return        "ColSet";
             case Type::RowReset: return        "RowReset";
-            case Type::ColReset: return        "ColReset";
-            case Type::RowMv: return        "RowMv";
-            case Type::ColMv: return        "ColMv";
             case Type::RowRead: return        "RowRead";
-            case Type::ColRead: return        "ColRead";
             case Type::RowWrite: return        "RowWrite";
-            case Type::ColWrite: return        "ColWrite";
             case Type::RowAdd: return        "RowAdd";
-            case Type::ColAdd: return        "ColAdd";
-            case Type::RowSub: return        "RowSub";
-            case Type::ColSub: return        "ColSub";
             case Type::RowMul: return        "RowMul";
-            case Type::ColMul: return        "ColMul";
-            case Type::RowDiv: return        "RowDiv";
-            case Type::ColDiv: return        "ColDiv";
             case Type::RowBitwise: return        "RowBitwise";
             case Type::ColBitwise: return        "ColBitwise";
             case Type::RowSearch: return        "RowSearch";
@@ -240,7 +292,6 @@ public:
             case Type::BlockSend_Receive: return        "BlockSend_Receive";
             case Type::TileSend: return        "TileSend";
             case Type::TileReceive: return        "TileReceive";
-            case Type::TileSend_Receive: return        "TileSend_Receive";
             case Type::ChipSend_Receive: return        "ChipSend_Receive";
             case Type::SystemRow2Row: return        "SystemRow2Row";
             case Type::SystemRow2Col: return        "SystemRow2Col";
@@ -281,7 +332,7 @@ public:
     TimeT finish_time = 0; //The time at which the request finished processing
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list
-    std::vector<PrecisionT> precision_list;
+    std::vector<PrecisionT::Precision> precision_list;
     int precision_bits;//only used for rowLoad_RF and rowStore_RF. Indicates how many times of transfer is needed
     int chip, tile, block, row, col;
     int src_chip, src_tile, src_block, src_row, src_col;
@@ -363,7 +414,7 @@ public:
         dst_col = col_id;
     }
 
-    void addAddr(AddrT addr, int size, PrecisionT precision=PrecisionT::INT8) {
+    void addAddr(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8) {
         addr_list.push_back(addr);
         size_list.push_back(size);
         precision_list.push_back(precision);
@@ -405,7 +456,7 @@ public:
     }
 
     bool isChip() {
-        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_Receive)
+        if (type == Type::TileSend || type == Type::TileReceive)
             return true;
         else
             return false;
@@ -421,25 +472,14 @@ public:
     bool isPIM() {
         switch (type) {
             case Type::RowSet:
-            case Type::ColSet:
             case Type::RowReset:
-            case Type::ColReset:
-            case Type::RowMv:
-            case Type::ColMv:
             case Type::RowRead:
-            case Type::ColRead:
             case Type::RowWrite:
-            case Type::ColWrite:
             case Type::RowAdd:
             case Type::RowAdd_CRAM_RF:
-            case Type::ColAdd:
             case Type::RowSub:
-            case Type::ColSub:
             case Type::RowMul:
             case Type::RowMul_CRAM_RF:
-            case Type::RowDiv:
-            case Type::ColMul:
-            case Type::ColDiv:
             case Type::RowBitwise:
             case Type::ColBitwise:
             case Type::RowSearch:

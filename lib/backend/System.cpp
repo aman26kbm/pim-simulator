@@ -281,10 +281,9 @@ int System::sendPIM_two_operands(Request& req)
         int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
       
         // First address is considered as src1.
-        // Second address is the dst.
-        // src2 isn't specified because it isn't required to model performance (time) and power (energy)
+        // Third address is the dst.
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col); 
-        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        getLocation(req.addr_list[2], dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -293,6 +292,7 @@ int System::sendPIM_two_operands(Request& req)
 
         pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         pim_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        pim_req->addAddr(req.addr_list[2], req.size_list[2], req.precision_list[2]);
         pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -523,32 +523,18 @@ int System::sendPimReq(Request& req)
     switch (req.type) {
         case Request::Type::RowRead:
         case Request::Type::RowWrite:
-        case Request::Type::ColRead:
-        case Request::Type::ColWrite:
         case Request::Type::RowSet:
         case Request::Type::RowReset:
-        case Request::Type::ColSet:
-        case Request::Type::ColReset:
         case Request::Type::RowReduce:
         case Request::Type::RowShift:
             return_value =  sendPIM_one_operand(req);
             break;
-        case Request::Type::RowMv:
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
         case Request::Type::RowSub:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
-        case Request::Type::RowDiv:
         case Request::Type::RowBitwise:
-        case Request::Type::RowSearch:
-        case Request::Type::ColMv:
-        case Request::Type::ColAdd:
-        case Request::Type::ColSub:
-        case Request::Type::ColMul:
-        case Request::Type::ColDiv:
-        case Request::Type::ColBitwise:
-        case Request::Type::ColSearch:
             return_value =  sendPIM_two_operands(req);
             break;
         default:
