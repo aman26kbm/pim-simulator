@@ -1,6 +1,7 @@
 #include "backend/mesh.h"
 #include "backend/Config.h"
 #include <math.h> 
+#include <string.h>
 
 using namespace pimsim;
 
@@ -30,6 +31,7 @@ mesh::mesh(int height, int width, int wordsize_block2block, int _ncols, int _nro
     this->_nrows = _nrows;
     this->num_regs_per_rf = num_regs_per_rf;
     this->num_bits_per_reg = num_bits_per_reg;
+    this->current_pairs = new ReqPair[height*width+1];//+1 for dram
 }
 
 //get addr_list[0] index
@@ -233,8 +235,16 @@ void mesh::tick(){
 
         int source_index = get_source_index(*send_req);
         int dest_index = get_dest_index(*send_req);
-        send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
-        receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+        
+        if(current_pairs[source_index+1].send_req!=NULL && current_pairs[dest_index+1].receive_req!=NULL
+         && get_source_index(*current_pairs[source_index+1].send_req) == source_index && get_dest_index(*current_pairs[dest_index+1].receive_req) == dest_index){   
+            send_req->mesh_transfer_time = 0;
+            receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+        }   
+        else{
+            send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
+            receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+        }
     }
     //if a reqPair is finished, disconfigure it and remove from reqPair_list and trans_list_list
     int i=0;
@@ -255,8 +265,11 @@ void mesh::tick(){
             printf("mesh removes a request (%s), src_tile %d, dest_tile %d\n",  
                     reqPair_list[i]->receive_req->print_name(reqPair_list[i]->receive_req->type).c_str(), reqPair_list[i]->receive_req->src_tile, reqPair_list[i]->receive_req->dst_tile);
             #endif
+            memcpy(&current_pairs[get_source_index(*reqPair_list[i]->send_req)+1], reqPair_list[i], sizeof(ReqPair));
+            memcpy(&current_pairs[get_dest_index(*reqPair_list[i]->send_req)+1], reqPair_list[i], sizeof(ReqPair));
             reqPair_list.erase(reqPair_list.begin()+i); 
             trans_list_list.erase(trans_list_list.begin()+i);
+            
         }
         else{
             i++;
@@ -290,9 +303,9 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
         dest_col = dest_index%width;
     }
     assert(source_row<height && source_col<width && dest_row<height && dest_col<width);
-    int bits = precision.bits();
+    //int bits = precision.bits();
     
     int distance = abs(dest_row - source_row) + abs(dest_col - source_col);
-    return distance + bits-1;
+    return distance -1;
     
 }

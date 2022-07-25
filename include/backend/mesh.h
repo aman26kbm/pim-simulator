@@ -24,6 +24,7 @@ private:
         int dest_index;
     };
     std::vector<std::vector<Transmission>> trans_list_list;
+    ReqPair* current_pairs;
 
     int get_addr0_index(Request req);
     int get_addr1_index(Request req);
