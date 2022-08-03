@@ -2,6 +2,7 @@
 #define _MESH_H_
 
 #include "Request.h"
+#include <map>
 
 namespace pimsim {
 
@@ -24,7 +25,7 @@ private:
         int dest_index;
     };
     std::vector<std::vector<Transmission>> trans_list_list;
-    ReqPair* current_pairs;
+    std::map<int, int> previous_connection;
 
     int get_addr0_index(Request req);
     int get_addr1_index(Request req);
