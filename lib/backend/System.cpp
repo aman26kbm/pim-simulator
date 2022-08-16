@@ -252,22 +252,22 @@ int System::sendPIM_one_operand(Request& req)
 {
     int tot_clks = 0;
     int n_ops = req.addr_list.size();
-    for (int i = 0; i < n_ops; i++) {
+    //for (int i = 0; i < n_ops; i++) {
         int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
 
-        getLocation(req.addr_list[i], src_chip, src_tile, src_block, src_row, src_col);
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[i], req.size_list[i], req.precision_list[i]);
+        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
         bool res = _chips[src_chip]->receiveReq(*pim_req);
 
 	    delete pim_req;
-    }
+    //}
     return tot_clks;
 }
 
@@ -526,6 +526,7 @@ int System::sendPimReq(Request& req)
         case Request::Type::RowSet:
         case Request::Type::RowReset:
         case Request::Type::RowReduce:
+        case Request::Type::RowReduce_WithinTile:
         case Request::Type::RowShift:
             return_value =  sendPIM_one_operand(req);
             break;
@@ -602,6 +603,7 @@ int System::sendRequest(Request& req)
         //case Request::Type::RowSearch:
         //case Request::Type::ColSearch:
         case Request::Type::RowReduce:
+        case Request::Type::RowReduce_WithinTile:
         case Request::Type::RowShift:
             ticks = sendPimReq(req);
             break;
@@ -737,6 +739,7 @@ int System::sendRequests(std::vector<Request>& reqs)
             case Request::Type::RowSearch:
             //case Request::Type::ColSearch:
             case Request::Type::RowReduce:
+            case Request::Type::RowReduce_WithinTile:
             case Request::Type::RowShift:
                 ticks = sendPimReq(reqs[i]);
                 break;

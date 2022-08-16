@@ -115,6 +115,33 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
         }
     
     }
+    else if (op=="RowReduce_WithinTile") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0];//take operand 0 (src)
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
+        if (dtype=="float") {
+            clocks = 0;
+            for (int i=1; i<=levels; i++) {
+                int powi2 = pow(i-1,2);
+                int cycles_to_add = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
+                clocks += cycles_to_add; //add
+                clocks += i * precision_list[0].bits(); //concurrent tilesend_receive
+            }
+        }
+        else {
+            clocks = 0;
+            for (int i=1; i<=levels; i++) {
+                int powi2 = pow(i-1,2);
+                int cycles_to_add = mantissa + i;
+                clocks += cycles_to_add; //add
+                clocks += i * precision_list[0].bits(); //concurrent tilesend_receive
+            }
+        }
+    
+    }
     else if (op=="read" || op=="write") {
         PrecisionT::Precision p = precision_list[0];//take operand 0 (cram)
         bits = p.bits();
@@ -183,7 +210,12 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowReduce: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
-            time = getClocksForReq(req.precision_list, "reduction", req.size_list[0]) * T_CLK;
+            time = getClocksForReq(req.precision_list, "reduce", req.size_list[0]) * T_CLK;
+            break;
+        case Request::Type::RowReduce_WithinTile: 
+            // precision_list[0] tells the number of bits in the operand
+            // size_list[0] tells the number of levels
+            time = getClocksForReq(req.precision_list, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
             time = getPrecisionBits(req) * T_CLK;

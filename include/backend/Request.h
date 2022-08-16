@@ -85,7 +85,20 @@ public:
                     //The "size" argument specifies how many levels to stop after.
                     //There is implicit parallellism here. This instruction involves multiple rows.
                     //example:
-                  //   request = new Request(Request::Type::RowMul);
+                  //   request = new Request(Request::Type::RowReduce);
+                  //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
+                  //     request->addAddr(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
+                  //     requests.push_back(*request);
+        RowReduce_WithinTile,  //Reduce within tile. Multi-bit elements present in multiple columns are reduced.
+                    //"Precision" argument specifies the precision of the data ([0] will be for src, [1] will be for destination).
+                    //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
+                    //The time taken is specified to be X cycles in MemoryCharacteristics
+                    //where X includes the cycles required to fully reduce multi-bit numbers.
+                    //The "precision" argument specifies precision.
+                    //The "size" argument specifies how many levels to stop after.
+                    //There is implicit parallellism here. This instruction involves multiple rows.
+                    //example:
+                  //   request = new Request(Request::Type::RowReduce);
                   //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
                   //     request->addAddr(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
                   //     requests.push_back(*request);
@@ -285,6 +298,7 @@ public:
             case Type::RowSearch: return        "RowSearch";
             case Type::ColSearch: return        "ColSearch";
             case Type::RowReduce: return        "RowReduce";
+            case Type::RowReduce_WithinTile: return        "RowReduce_WithinTile";
             case Type::RowShift: return        "RowShift";
 
             case Type::BlockSend: return        "BlockSend";
@@ -485,6 +499,7 @@ public:
             case Type::RowSearch:
             case Type::ColSearch:
             case Type::RowReduce:
+            case Type::RowReduce_WithinTile:
             case Type::RowShift:
                 return true;
             default:
