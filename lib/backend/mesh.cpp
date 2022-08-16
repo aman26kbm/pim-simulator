@@ -98,10 +98,11 @@ void mesh::receive_request(Request* req){
      printf("mesh receives a request (%s), src_tile %d, dest_tile %d\n",  
                     req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
     #endif
-    //request should be TileSend, TileReceive, BlockSend or BlockReceive
+    //request should be Send Receive or Load Store or Broadcast
     assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
     || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
-    || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF);
+    || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF
+    || req->type == Request::Type::TileSend_BroadCast || req->type == Request::Type::TileReceive_BroadCast || req->type == Request::Type::BlockBroadCast);
     if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive){
         int source_index = get_addr0_index(*req);
         int dest_index = get_addr1_index(*req);
@@ -171,6 +172,18 @@ void mesh::receive_request(Request* req){
                 trans_list.push_back(trans);
                 trans_list_list.push_back(trans_list);
             }
+        }
+    }
+    //Request is broadcast, set it ready immediately, not waiting for other requests to come. Semaphores are used explicitely to guarantee the send and receive sequence
+    //do not track them with previous connection
+    else if(req->type == Request::Type::TileSend_BroadCast || req->type == Request::Type::TileReceive_BroadCast || req->type == Request::Type::BlockBroadCast){
+        req->mesh_ready = true;
+        req->mesh_transfer_time = 0;
+        if(req->type == Request::Type::TileSend_BroadCast){
+            req->mesh_transfer_time = height/2 - 1 + 2;//assume dram controller is vertically in middle of mesh. -1 to conpemsate issueReq, +2 for 2 extra steps of write/read mesh buffer
+        }
+        else if(req->type == Request::Type::BlockBroadCast){
+            req->mesh_transfer_time = width - req->size_list[0] - 1 + 2;//assume broadcasted data is in the first few blocks-1 to conpemsate issueReq, +2 for 2 extra steps of write/read mesh buffer
         }
     }
     //Request is DRAM rowLoad/Store request
@@ -290,7 +303,7 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
     int dest_row;
     int dest_col;
     if(source_index == -1){
-        source_row = -1;
+        source_row = height/2;//dram position on mesh
         source_col = 0;
         dest_row = dest_index/width;
         dest_col = dest_index%width;
@@ -299,7 +312,7 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
     else if(dest_index == -1){
         source_row = source_index/width;
         source_col = source_index%width;
-        dest_row = -1;
+        dest_row = height/2;//dram position on mesh
         dest_col = 0;
         assert(source_col==0);
     }
@@ -310,9 +323,9 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
         dest_col = dest_index%width;
     }
     assert(source_row<height && source_col<width && dest_row<height && dest_col<width);
-    //int bits = precision.bits();
+    int bits = precision.bits();
     
     int distance = abs(dest_row - source_row) + abs(dest_col - source_col);
-    return distance -1;
+    return distance -1 +2;//-1 to compensate the bits in issueReq, +2 for extra 2 steps of write mesh buffer and read mesh buffer
     
 }

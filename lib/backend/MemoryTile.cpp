@@ -143,9 +143,10 @@ MemoryTile::finishReq(Request& req)
 void
 MemoryTile::commitReq(Request& req)
 {
-    if (req.type == Request::Type::BlockSend_Receive) {
+    if (req.type == Request::Type::BlockSend_Receive || req.type==Request::Type::BlockBroadCast) {
         n_intra_block_transfers++;
-    } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive)) {
+    } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive) 
+    || (req.type == Request::Type::TileSend_BroadCast) || (req.type == Request::Type::TileReceive_BroadCast)) {
         n_inter_block_transfers++;
     } else if (req.type == Request::Type::RowRead || req.type == Request::Type::RowRead_RF) {
         n_reads++;
@@ -199,7 +200,9 @@ void MemoryTile::update_next(){
                 source = (MemoryTile*)_parent->getSourceTile(req);
                 // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
                 if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                 || req.type == Request::Type::BlockSend_Receive){
+                 || req.type == Request::Type::BlockSend_Receive
+                 || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
+                 || req.type == Request::Type::BlockBroadCast){
                      req.send_receive_finished = false;
                     if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
                         req.hTree_ready = false;
@@ -266,7 +269,9 @@ void MemoryTile::update_next(){
                      || req.type == Request::Type::RowLoad
                      || req.type == Request::Type::RowStore
                      || req.type == Request::Type::RowLoad_RF
-                     || req.type == Request::Type::RowStore_RF){
+                     || req.type == Request::Type::RowStore_RF
+                     || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
+                     || req.type == Request::Type::BlockBroadCast){
                     next_state.status = REQ_MODE;
                     issueReq(req);
                 }

@@ -8,7 +8,7 @@ int32_t gemm_inner(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    int matrixARowNum = 128*16;
+    int matrixARowNum = 128*16*16;
     int matrixAColNum = 256*8;
     int matrixBRowNum = matrixAColNum;
     int matrixBColNum = sys->_num_regs_per_rf;

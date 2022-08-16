@@ -367,6 +367,46 @@ int System::sendChipReq(Request& req, int para)
         bool res = _chips[chip_index]->receiveReq(*rf_req);
         return res;
     }
+    else if(req.type == Request::Type::TileSend_BroadCast){
+        Request* inter_tile_req = new Request(req.type);
+        int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
+        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+        //req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
+        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
+         inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        //inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+        //inter_tile_req->setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
+        //setLocation is used to tell which tile owns this request
+        inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+       
+        bool res = _chips[src_chip]->receiveReq(*inter_tile_req);
+
+        delete inter_tile_req;
+
+        return res;
+    }
+    else if(req.type == Request::Type::TileReceive_BroadCast){
+        Request* inter_tile_req = new Request(req.type);
+        int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
+        getLocation(req.addr_list[0], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        //req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+         inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        //inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        //inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+        inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        //setLocation is used to tell which tile owns this request
+        inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+       
+        bool res = _chips[dst_chip]->receiveReq(*inter_tile_req);
+
+        delete inter_tile_req;
+
+        return res;
+    }
     else{
         int tot_clks = 0;
 
@@ -430,21 +470,31 @@ int System::sendTileReq(Request& req, int para)
 
     Request *inter_block_req = new Request(req.type);
     if (para == SEND_RECEIVE) {
-        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        if(req.type == Request::Type::BlockBroadCast){
+                getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
+                req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+                req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
+                inter_block_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+                inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+                inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+        }
+        else{
+            getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
+            getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
 
-        assert(src_chip==dst_chip);
-        assert(src_tile==dst_tile);
+            assert(src_chip==dst_chip);
+            assert(src_tile==dst_tile);
 
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
+            req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+            req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        inter_block_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        inter_block_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+            inter_block_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+            inter_block_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
+            inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+        }
     }
     else {
         std::cout<<"Unsupported request type/direction"<<std::endl;
@@ -614,12 +664,15 @@ int System::sendRequest(Request& req)
         //    ticks = system_sendTileReq(req, RECEIVE);
         //    break;
         case Request::Type::BlockSend_Receive:
+        case Request::Type::BlockBroadCast:
             ticks = sendTileReq(req, SEND_RECEIVE);
             break;
         case Request::Type::TileSend:
+        case Request::Type::TileSend_BroadCast:
             ticks = sendChipReq(req, SEND);
             break;
         case Request::Type::TileReceive:
+        case Request::Type::TileReceive_BroadCast:
             ticks = sendChipReq(req, RECEIVE);
             break;
         case Request::Type::Signal:

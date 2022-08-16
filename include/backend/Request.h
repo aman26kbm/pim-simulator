@@ -111,18 +111,6 @@ public:
         //////////////////////////////////
         //Data transfer instructions
         //////////////////////////////////
-        BlockSend, //UNUSED
-                   //Doesn't mean send a whole block from one place to another.
-                   //Send N rows from one block to another within a tile. 
-                   //Bandwidth of the block-to-block interconnect is specified in memory characteristics (_wordsize).
-                   //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
-                   //with number of transfer bursts (in the bus interconnect case) and with number of bursts + number of hops (in the htree interconnect case)
-                   //The number of bursts = number of rows * number of bits in a row / interconnect bandwidth
-                   //The "addr" argument will specify the row ID of row0.
-                   //The "size" argument is unused.
-                   //The "precision" argument will specify the number of rows to transfer.
-        BlockReceive, //UNUSED
-                      //Same as above; just for receive
         BlockSend_Receive, 
                     //one request for both send and receive
                     //Doesn't mean send a whole block from one place to another.
@@ -139,6 +127,7 @@ public:
                     // request->addAddr(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
                     // request->addAddr(sys->cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
                     // requests.push_back(*request);
+        BlockBroadCast,//broadcast a few rows of #size arrays starting from array0 into all other arrays
         TileSend, //Doesn't mean send a whole tile from one place to another.
                   //Doesn't mean send some bits from a block in one tile to another block in another tile.
                   //This only accounts for transfer between tiles (transfer from block to tile and tile to block is not included).
@@ -163,7 +152,10 @@ public:
                          //So, network delay is added.
                          //The transfer time from block to tile, tile to chip boundary is not included.
                          //size, precision and addr arguments have the same meaning as BlockSend.
-
+        TileSend_BroadCast,//broadcast a few rows of data to all other cores
+                            //requirement: use signal to unblock all other cores when this request is finished
+        TileReceive_BroadCast,//spend 1 cycle to fetch broadcasted data into arrays.
+                                //requirement: use wait to block untill TileBroadCast_Send is finished 
         //////////////////////////////////
         //High level API for data transfer - UNUSED
         //////////////////////////////////
@@ -301,11 +293,12 @@ public:
             case Type::RowReduce_WithinTile: return        "RowReduce_WithinTile";
             case Type::RowShift: return        "RowShift";
 
-            case Type::BlockSend: return        "BlockSend";
-            case Type::BlockReceive: return        "BlockReceive";
             case Type::BlockSend_Receive: return        "BlockSend_Receive";
             case Type::TileSend: return        "TileSend";
             case Type::TileReceive: return        "TileReceive";
+            case Type::BlockBroadCast: return  "BlockBroadCast";
+            case Type::TileSend_BroadCast: return "TileSend_BroadCast";
+            case Type::TileReceive_BroadCast: return "TileReceive_BroadCast";
             case Type::ChipSend_Receive: return        "ChipSend_Receive";
             case Type::SystemRow2Row: return        "SystemRow2Row";
             case Type::SystemRow2Col: return        "SystemRow2Col";
@@ -470,14 +463,14 @@ public:
     }
 
     bool isChip() {
-        if (type == Type::TileSend || type == Type::TileReceive)
+        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_BroadCast || type == Type::TileReceive_BroadCast)
             return true;
         else
             return false;
     }
 
     bool isTile() {
-        if (type == Type::BlockSend || type == Type::BlockReceive || type == Type::BlockSend_Receive)
+        if ( type == Type::BlockSend_Receive || type == Type::BlockBroadCast)
             return true;
         else
             return false;

@@ -196,12 +196,13 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::ColSearch: 
             time = T_CLK;
             break;
-        case Request::Type::BlockSend: 
-        case Request::Type::BlockReceive: 
+        case Request::Type::BlockBroadCast:  
         case Request::Type::BlockSend_Receive: 
         case Request::Type::TileSend: 
         case Request::Type::TileReceive: 
         case Request::Type::ChipSend_Receive: 
+        case Request::Type::TileSend_BroadCast:
+        case Request::Type::TileReceive_BroadCast:
             time = getPrecisionBits(req) * T_CLK ; // Assuming the global clock frequency is 1/T_CLK. 10 is for testing
             break;
 
