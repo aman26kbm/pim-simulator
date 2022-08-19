@@ -48,7 +48,8 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
     else if (op=="add_cram_rf") {
         if(precision_list[0].isfloat) dtype="float";
         else dtype = "int";
-        PrecisionT::Precision p = precision_list[0];//take operand 0 (src) 
+        PrecisionT::Precision p = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger src
+        p = p.bits()>precision_list[2].bits()?precision_list[2] : p;//take smaller of p, dest 
         mantissa = p.mantissa;
         exponent = p.exponent;
         bits = p.bits();
@@ -77,7 +78,8 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
     else if (op=="mul_cram_rf") {
         if(precision_list[0].isfloat) dtype="float";
         else dtype = "int";
-        PrecisionT::Precision p = precision_list[0];//take operand 0 (src) 
+        PrecisionT::Precision p = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger of src
+        p = p.bits()>precision_list[2].bits()?precision_list[2] : p;//take smaller of p and dest
         mantissa = p.mantissa;
         exponent = p.exponent;
         bits = p.bits();

@@ -309,7 +309,93 @@ void fir_tile3(System* sys)
         sys->sendRequest(requests[i]);
 }
 
+void fir_tile0_255(System* sys)
+{
+    std::vector<Request> requests;
+    Request *request;
 
+    int size_input = 256*128*4;
+    int size_filter = 257;
+
+    PrecisionT::Precision precision_input = PrecisionT::INT16;
+    PrecisionT::Precision precision_multiply = PrecisionT::INT32;
+    PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
+
+
+    for(int iter_row_load=0; iter_row_load<(int)ceil(size_input/(double)(sys->_nblocks * sys->_ncols)); iter_row_load++){
+        //Now we load inputs from DRAM
+        //Currently, we're assuming just one load is enough.
+        //Only one input in each column across all cores.
+        request = new Request(Request::Type::RowLoad);
+        request->addAddr(sys->getAddress(0,0,0), 0, precision_input); //dst
+        request->addAddr(sys->DRAM_ADDR, 0, precision_input); //src
+        requests.push_back(*request);
+
+        //Initialize rows that'll hold the accumulator (accumulator size=16)
+        request = new Request(Request::Type::RowReset);
+        request->addAddr(sys->getAddress(0,0,precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
+        requests.push_back(*request);
+
+        for(int iter_load_rf=0; iter_load_rf<(int)ceil(size_filter/(double)sys->_num_regs_per_rf); iter_load_rf++){
+            //Load filter coefficients into the RF.
+            //This step is typically done beforehand/offline.
+            //Also, RFs in all cores will have the same coefficients.
+            //So, we can brodcast.
+            //When we are broadcasting though, other tiles shouldn't do anything.
+            //So they will wait for a semaphore.
+            //Assume the number of weights is 8
+            request = new Request(Request::Type::RowLoad_RF, Request::BroadcastType::ALL);
+            request->addAddr(sys->rf_base_addr_tile0, 32, precision_input); //dst
+            request->addAddr(sys->DRAM_ADDR,32, precision_input); //src
+            requests.push_back(*request);
+
+            //Loop over the following set of instructions N times,
+            //where N is the number of filter coefficients
+            for (int i=0; i< 32; i++) {
+
+                //Read the coefficient we want to multiply with from the RF.
+                //This is not required if we make the RF out of flops.
+                //Well, we can handle that internally (if we implement using flops, we
+                //can make the cycles consumed by this Request to be 0)
+                request = new Request(Request::Type::RowRead_RF);
+                request->addAddr(i, 0, precision_input); //src
+                requests.push_back(*request);
+
+                //Multiply filter coefficient (in RF) with the inputs stored in CRAM.
+                //Product will be stored in some rows
+                request = new Request(Request::Type::RowMul_CRAM_RF);
+                request->addAddr(sys->getAddress(0,0,0), 0, precision_input); //src
+                request->addAddr(i, 0, precision_input); //src
+                request->addAddr(sys->getAddress(0,0,precision_input.bits()), 0, precision_multiply); //dst
+                requests.push_back(*request);
+
+                //Now, add the product generated above into the accumulator rows
+                request = new Request(Request::Type::RowAdd);
+                request->addAddr(sys->getAddress(0,0,precision_input.bits()), 0, precision_multiply); //src
+                request->addAddr(sys->getAddress(0,0,precision_input.bits()+precision_multiply.bits()), 0, precision_multiply); //src
+                request->addAddr(sys->getAddress(0,0,precision_input.bits()+precision_multiply.bits()), 0, precision_multiply); //dst
+                requests.push_back(*request);
+
+                //Shift the inputs by 1 column to the left.
+                //No need to loop for each bit. That is a part of the RowShift instruction's semantics.
+                request = new Request(Request::Type::RowShift);
+                request->addAddr(sys->getAddress(0,0,0), 0, precision_input); //src
+                request->addAddr(sys->getAddress(0,0,0), 0, precision_input); //dst
+                requests.push_back(*request);
+            }
+        }
+        //Now store the results back into DRAM
+        //Only 1 result is present per column.
+        //So, just 1 RowStore instruction is enough.
+        request = new Request(Request::Type::RowStore);
+        request->addAddr(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT16); //src
+        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); //dst
+        requests.push_back(*request);
+    }
+
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sys->sendRequest(requests[i]);
+}
 
 /////////////////////////////////////////////////////////////
 // Simple program to perform an FIR filter
@@ -330,10 +416,11 @@ int32_t fir(System* sys)
 
     //The result's length will be 2048 (minus halo).
     //One element in each column of each CRAM.
-    fir_tile0(sys);
-    fir_tile1(sys);
-    fir_tile2(sys);
-    fir_tile3(sys);
+    //fir_tile0(sys);
+    // fir_tile1(sys);
+    // fir_tile2(sys);
+    // fir_tile3(sys);
+    fir_tile0_255(sys);
     return 0;
 }
 

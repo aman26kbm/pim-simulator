@@ -1,1 +1,0 @@
-./PIM_simulator --cfg ../configs/pimsim.cfg --test |& tee test.log

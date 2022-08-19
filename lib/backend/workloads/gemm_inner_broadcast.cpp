@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t gemm_inner(System* sys){
+int32_t gemm_inner_broadcast(System* sys){
     std::vector<Request> requests;
     Request *request;
 
@@ -45,28 +45,28 @@ int32_t gemm_inner(System* sys){
             request->addAddr(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //cram addr
             request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
             requests.push_back(*request);
+
             //broadcast for tiles
-            for(int tile=0; tile+1<sys->_ntiles; tile++){
-                request = new Request(Request::Type::TileSend);
-                request->addAddr(sys->getAddress(tile,0,4),0,PrecisionT::INT4);//src
-                request->addAddr(sys->getAddress(tile+1,0,4),0,PrecisionT::INT4);//dest
+            request = new Request(Request::Type::TileSend_BroadCast);
+            request->addAddr(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //src
+            requests.push_back(*request);
+            request = new Request(Request::Type::Signal, sys->m1);
+            request->addAddr(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //src
+            requests.push_back(*request);
+            for(int tile=1; tile<sys->_ntiles; tile++){
+                request = new Request(Request::Type::Wait, sys->m1);
+                request->addAddr(sys->getAddress(tile,0,4), 0, PrecisionT::INT4); //src
                 requests.push_back(*request);
-
-                request = new Request(Request::Type::TileReceive);
-                request->addAddr(sys->getAddress(tile,0,4),0,PrecisionT::INT4);//src
-                request->addAddr(sys->getAddress(tile+1,0,4),0,PrecisionT::INT4);//dest
+                request = new Request(Request::Type::TileReceive_BroadCast);
+                request->addAddr(sys->getAddress(tile,0,4), 0, PrecisionT::INT4); //src
                 requests.push_back(*request);
-
             }
             
             for(int tile=0; tile<sys->_ntiles; tile++){
                //broadcast for blocks
-                for(int block=0; block+(matrixAColNum/sys->_ncols)<sys->_nblocks; block+=(matrixAColNum/sys->_ncols)){
-                    request = new Request(Request::Type::BlockSend_Receive);
-                    request->addAddr(sys->getAddress(tile,block,4),0,PrecisionT::INT4);//src
-                    request->addAddr(sys->getAddress(tile,block+(matrixAColNum/sys->_ncols),4),0,PrecisionT::INT4);//dest
-                    requests.push_back(*request);
-                }                
+                request = new Request(Request::Type::BlockBroadCast);
+                request->addAddr(sys->getAddress(tile,0,4), matrixAColNum/sys->_ncols, PrecisionT::INT4); //src
+                requests.push_back(*request);              
                 //multiply
                 request = new Request(Request::Type::RowMul);
                 request->addAddr(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //src1
@@ -86,29 +86,6 @@ int32_t gemm_inner(System* sys){
                 request->addAddr(sys->getAddress(tile,0,12), 0, PrecisionT::INT4); //src
                 request->addAddr(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //dst
                 requests.push_back(*request);
-                // int start_block = 0;
-                // int round = 0;
-                // for(int gap =1; gap<sys->_nblocks; gap = gap*2){
-                //     for(int block=start_block; block+gap<sys->_nblocks; block=block+2*gap){
-                //         //Send partial results to block that is gap away
-                        
-                //             request = new Request(Request::Type::BlockSend_Receive);
-                //             request->addAddr(sys->getAddress(tile,block,8), 0, PrecisionT::INT4); //src
-                //             request->addAddr(sys->getAddress(tile,block+gap,12), 0, PrecisionT::INT16); //dst
-                //             requests.push_back(*request);
-
-                //             //add
-                //             request = new Request(Request::Type::RowAdd);
-                //             request->addAddr(sys->getAddress(tile,block+gap,8), 0, PrecisionT::INT16); //src
-                //             request->addAddr(sys->getAddress(tile,block+gap,12), 0, PrecisionT::INT16); //src2
-                //             request->addAddr(sys->getAddress(tile,block+gap,8), 0, PrecisionT::INT16); //dst
-                //             requests.push_back(*request);
-                        
-
-                //     }
-                //     start_block += gap;
-                //     round++;
-                // }  
 
             }
         }
@@ -120,4 +97,4 @@ int32_t gemm_inner(System* sys){
 
 
 
-static __attribute__((unused)) Registry::Entry &__gemm_inner__ = pimsim::registerFunc("gemm_inner", gemm_inner);
+static __attribute__((unused)) Registry::Entry &__gemm_inner_broadcast__ = pimsim::registerFunc("gemm_inner_broadcast", gemm_inner_broadcast);

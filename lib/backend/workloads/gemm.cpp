@@ -29,7 +29,7 @@ int32_t gemm(System* sys){
             request = new Request(Request::Type::RowMul_CRAM_RF);
             request->addAddr(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //src
             request->addAddr(sys->_num_regs_per_rf * tile + regIndex, 4, PrecisionT::INT4);//rf
-            request->addAddr(sys->getAddress(tile,0,4*(regIndex+1)), 0, PrecisionT::INT4); //dst
+            request->addAddr(sys->getAddress(tile,0,4*(regIndex+1)), 0, PrecisionT::INT8); //dst
             requests.push_back(*request);    
                 
         }  
@@ -41,12 +41,12 @@ int32_t gemm(System* sys){
             //Send partial results to tile that is gap away
             for(int resultColIndex=0; resultColIndex<sys->_num_regs_per_rf; resultColIndex++){
                 request = new Request(Request::Type::TileSend);
-                request->addAddr(sys->getAddress(tile,0,4 + resultColIndex*4), 0, PrecisionT::INT4); //src
+                request->addAddr(sys->getAddress(tile,0,4 + resultColIndex*4), 0, PrecisionT::INT8); //src
                 request->addAddr(sys->getAddress(tile+gap,0, 4 + sys->_num_regs_per_rf*4), 0, PrecisionT::INT16); //dst
                 requests.push_back(*request);
 
                 request = new Request(Request::Type::TileReceive);
-                request->addAddr(sys->getAddress(tile,0,4 + resultColIndex*4), 0, PrecisionT::INT16); //src
+                request->addAddr(sys->getAddress(tile,0,4 + resultColIndex*4), 0, PrecisionT::INT8); //src
                 request->addAddr(sys->getAddress(tile+gap,0,4 + sys->_num_regs_per_rf*4), 0, PrecisionT::INT16); //dst
                 requests.push_back(*request);
 

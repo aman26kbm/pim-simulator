@@ -10,16 +10,19 @@
 
 int32_t gemv(System* sys)
 {
-    //int matrix_row = 32768*2;//32768 * X
-    //int matrix_col = 4096 *4;// 4096 * Y
-    int matrix_row = 32768*2;//32768 * X
-    int matrix_col = 4096;// 4096 * Y
-    int total_col = (matrix_col>4096)?4096:matrix_col;
-    int total_row = (matrix_row>32768)?32768:matrix_row;
-    int tile_num = 128;
-    int cols_per_tile = total_col/tile_num;
-    int col_iter_num = (int)ceil(matrix_col/(double)total_col);
-    int row_iter_num = (int)ceil(matrix_row/(double)total_row);
+    int matrix_row = 32768*1;//32768 * X
+    int matrix_col = 4096 *1;// 4096 * Y
+    int use_tiles = 1;
+    int basic_matrix_row = sys->_ncols * sys->_nblocks;//256*128=32768
+    int basic_matrix_col = use_tiles * sys->_num_regs_per_rf;// 128*32=4096
+    int effective_basic_col = (matrix_col>basic_matrix_col)?basic_matrix_col:matrix_col;
+    int effective_basic_row = (matrix_row>basic_matrix_row)?basic_matrix_row:matrix_row;
+    int cols_per_tile = effective_basic_col/use_tiles;//equal to # register iteration <=32
+    int col_iter_num = (int)ceil(matrix_col/(double)effective_basic_col);
+    int row_iter_num = (int)ceil(matrix_row/(double)effective_basic_row);
+    PrecisionT::Precision input_precision = PrecisionT::INT8;
+    PrecisionT::Precision multiply_precision = PrecisionT::INT16;
+    PrecisionT::Precision accumulate_precision = PrecisionT::INT32;
     //compute for 1 sub-matrix
     //We have 128 tiles
     //Each has 128 CRAMs.
@@ -46,7 +49,7 @@ int32_t gemv(System* sys)
     Request *request;
     for(int row_iteration =0; row_iteration<row_iter_num; row_iteration++){
         for(int col_iteration=0; col_iteration<col_iter_num; col_iteration++){
-            for(int tile=0; tile<tile_num; tile++){
+            for(int tile=0; tile<use_tiles; tile++){
                 //Load weight matrix values into CRAM
                 //This is typically done beforehand/offline.
                 //Each core is loading separate data, so no broadcasting here.
@@ -55,100 +58,104 @@ int32_t gemv(System* sys)
                 //4 elements in each column need to be loaded.
                 for (int i=0; i<cols_per_tile; i++) {
                     request = new Request(Request::Type::RowLoad);
-                    request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT4); //dst
-                    request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
+                    request->addAddr(sys->getAddress(tile,0,i*4), 0, input_precision); //dst
+                    request->addAddr(sys->DRAM_ADDR, 0, input_precision); //src
                     requests.push_back(*request);
                 }
 
                 //Now load vector values into RF.
                 //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
                 request = new Request(Request::Type::RowLoad_RF);
-                request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //dst
-                request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //src
+                request->addAddr(sys->_num_regs_per_rf * tile, 4, input_precision); //dst
+                request->addAddr(sys->DRAM_ADDR, 4, input_precision); //src
                 requests.push_back(*request);
 
                 //Initialize rows that'll hold the accumulator (accumulator size=16)
                 request = new Request(Request::Type::RowReset);
-                request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, PrecisionT::INT16); //src
-                request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, PrecisionT::INT16); //dst
+                request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, accumulate_precision); //src
+                request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, accumulate_precision); //dst
                 requests.push_back(*request);
 
-                //4 multiplications and additions into the accumulator
+                //32 multiplications and additions into the accumulator
                 for (int i=0; i<cols_per_tile; i++) {
                     //Read an element from the RF
                     request = new Request(Request::Type::RowRead_RF);
-                    request->addAddr(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //src
+                    request->addAddr(sys->_num_regs_per_rf * tile, 0, input_precision); //src
                     requests.push_back(*request);
 
                     //Multiply in this core/tile.
                     request = new Request(Request::Type::RowMul_CRAM_RF);
-                    request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT4); //src
-                    request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4);//rf
-                    request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT4); //dst
+                    request->addAddr(sys->getAddress(tile,0,i*4), 0, input_precision); //src
+                    request->addAddr(sys->_num_regs_per_rf * tile, 4, input_precision);//rf
+                    request->addAddr(sys->getAddress(tile,0,i*4), 0, multiply_precision); //dst
                     requests.push_back(*request);
 
                     //Add the result of multiplication into the accumulator
                     request = new Request(Request::Type::RowAdd);
-                    request->addAddr(sys->getAddress(tile,0,i*4), 0, PrecisionT::INT16); //src
-                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, PrecisionT::INT16);//src2
-                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, PrecisionT::INT16); //dst
+                    request->addAddr(sys->getAddress(tile,0,i*4), 0, multiply_precision); //src
+                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, accumulate_precision);//src2
+                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4), 0, accumulate_precision); //dst
                     requests.push_back(*request);
                 }
             }
             //reduce
-            int start_tile = 0;
             int round = 0;
-            for(int gap =1; gap<tile_num; gap = gap*2){
-                for(int tile=start_tile; tile<tile_num; tile=tile+2*gap){
-                    //Send partial results to tile that is gap away
-                    request = new Request(Request::Type::TileSend);
-                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4 + round*16), 0, PrecisionT::INT16); //src
-                    request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, PrecisionT::INT16); //dst
-                    requests.push_back(*request);
+            if(use_tiles>1){
+                int start_tile = 0;
+                
+                for(int gap =1; gap<use_tiles; gap = gap*2){
+                    for(int tile=start_tile; tile+gap<use_tiles; tile=tile+2*gap){
+                        //Send partial results to tile that is gap away
+                        request = new Request(Request::Type::TileSend);
+                        request->addAddr(sys->getAddress(tile,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+                        request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, accumulate_precision); //dst
+                        requests.push_back(*request);
 
-                    request = new Request(Request::Type::TileReceive);
-                    request->addAddr(sys->getAddress(tile,0,cols_per_tile*4 + round*16), 0, PrecisionT::INT16); //src
-                    request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, PrecisionT::INT16); //dst
-                    requests.push_back(*request);
+                        request = new Request(Request::Type::TileReceive);
+                        request->addAddr(sys->getAddress(tile,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+                        request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, accumulate_precision); //dst
+                        requests.push_back(*request);
 
-                    //add
-                    request = new Request(Request::Type::RowAdd);
-                    request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16), 0, PrecisionT::INT16); //src
-                    request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, PrecisionT::INT16); //src2
-                    request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, PrecisionT::INT16); //dst
-                    requests.push_back(*request);
+                        //add
+                        request = new Request(Request::Type::RowAdd);
+                        request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+                        request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, accumulate_precision); //src2
+                        request->addAddr(sys->getAddress(tile+gap,0,cols_per_tile*4 + round*16 + 16), 0, accumulate_precision); //dst
+                        requests.push_back(*request);
 
+                    }
+                    start_tile += gap;
+                    round++;
                 }
-                start_tile += gap;
-                round++;
             }
 
             //Store results into DRAM
             request = new Request(Request::Type::RowStore);
-            request->addAddr(sys->getAddress(tile_num-1, 0, cols_per_tile*4 + round*16), 0, PrecisionT::INT16); //src
-            request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); //dst
+            request->addAddr(sys->getAddress(use_tiles-1, 0, cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+            request->addAddr(sys->DRAM_ADDR, 0, accumulate_precision); //dst
             requests.push_back(*request);
         }
-        if(col_iter_num>=1){
+        if(col_iter_num>1){
             for(int col_iteration=0; col_iteration<col_iter_num; col_iteration++){
                 //load results from DRAM
                 request = new Request(Request::Type::RowLoad);
-                request->addAddr(sys->getAddress(tile_num-1, 0, col_iteration*16), 0, PrecisionT::INT16); //src
-                request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); //dst
+                request->addAddr(sys->getAddress(use_tiles-1, 0, 0), 0, accumulate_precision); //src
+                request->addAddr(sys->DRAM_ADDR, 0,accumulate_precision); //dst
+                requests.push_back(*request);
+                //accumulate partial results
+                request = new Request(Request::Type::RowAdd);
+                request->addAddr(sys->getAddress(use_tiles-1, 0, 0), 0, accumulate_precision); //src
+                request->addAddr(sys->getAddress(use_tiles-1, 0, 16), 0, accumulate_precision); //src2
+                request->addAddr(sys->getAddress(use_tiles-1, 0, 16), 0, accumulate_precision); //dst
                 requests.push_back(*request);
             }
             for(int col_iteration=0; col_iteration<col_iter_num; col_iteration++){
-                //accumulate partial results
-                request = new Request(Request::Type::RowAdd);
-                request->addAddr(sys->getAddress(tile_num-1, 0, col_iteration*16), 0, PrecisionT::INT16); //src
-                request->addAddr(sys->getAddress(tile_num-1, 0, col_iter_num*16), 0, PrecisionT::INT16); //src2
-                request->addAddr(sys->getAddress(tile_num-1, 0, col_iter_num*16), 0, PrecisionT::INT16); //dst
-                requests.push_back(*request);
+                
             }
             //Store results into DRAM
             request = new Request(Request::Type::RowStore);
-            request->addAddr(sys->getAddress(tile_num-1, 0, col_iter_num*16), 0, PrecisionT::INT16); //src
-            request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); //dst
+            request->addAddr(sys->getAddress(use_tiles-1, 0, 16), 0, accumulate_precision); //src
+            request->addAddr(sys->DRAM_ADDR, 0,accumulate_precision); //dst
             requests.push_back(*request);
         }
     }

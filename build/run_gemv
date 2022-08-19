@@ -1,1 +1,0 @@
-./PIM_simulator --cfg ../configs/pimsim.cfg --gemv |& tee gemv.log
