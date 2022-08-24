@@ -248,8 +248,9 @@ void mesh::tick(){
         int source_index = get_source_index(*send_req);
         int dest_index = get_dest_index(*send_req);
         
-        if(previous_connection.count(source_index) && previous_connection.count(dest_index)){
-            if(previous_connection.find(source_index)->second == dest_index && previous_connection.find(dest_index)->second == source_index){   
+        int optimize_for_consecutive_transfer = false;
+        if(previous_connection.count(source_index) && previous_connection.count(dest_index) && optimize_for_consecutive_transfer){
+            if(previous_connection.find(source_index)->second == dest_index && previous_connection.find(dest_index)->second == -source_index){   
                 send_req->mesh_transfer_time = 0;
                 receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
             }else{
@@ -283,10 +284,10 @@ void mesh::tick(){
             #endif
             int source_index = get_source_index(*reqPair_list[i]->send_req);
             int dest_index = get_dest_index(*reqPair_list[i]->send_req);
-            previous_connection.insert(std::pair<int,int>(source_index,dest_index));
-            previous_connection.insert(std::pair<int,int>(dest_index,source_index));
+            previous_connection.insert(std::pair<int,int>(source_index,dest_index));//if key already exist, this do nothing
+            previous_connection.insert(std::pair<int,int>(dest_index,-source_index));
             previous_connection.find(source_index)->second = dest_index;
-            previous_connection.find(dest_index)->second = source_index;
+            previous_connection.find(dest_index)->second = -source_index;
             reqPair_list.erase(reqPair_list.begin()+i); 
             trans_list_list.erase(trans_list_list.begin()+i);
             
