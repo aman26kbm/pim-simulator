@@ -5,13 +5,14 @@ using namespace std;
 
 
 
-Config::Config(const string& fname) {
-    parse(fname);
+Config::Config(const string& cfg_file_name) {
+    parse(cfg_file_name);
 }
 
-Config::Config(const string& fname, int dataflow) {
-    _dataflow = dataflow;
-    parse(fname);
+Config::Config(const string& cfg_file_name, const string& log_file_name) {
+    parse(cfg_file_name);
+    //Overwrite the name of the log file provided from the command line
+    _result_file = log_file_name;
 }
 
 void Config::parse(const string& fname) {
@@ -77,7 +78,6 @@ void Config::parse(const string& fname) {
             _clock_rate = atoi(tokens[1].c_str());
         } else if (tokens[0] == "result_file") {
             _result_file = tokens[1];
-            _result_file += ("_" + std::to_string(_dataflow));
         } else if (tokens[0] == "compact_alloc") {
             if (tokens[1] == "true") {
                 _compact_alloc = true;

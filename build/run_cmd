@@ -1,0 +1,6 @@
+./PIM_simulator -c ../configs/pimsim.cfg -m fir_compiled -l fir_compiled.log
+./PIM_simulator -c ../configs/pimsim.cfg -m conv_reduce_compiled -l conv_reduce.log
+./PIM_simulator -c ../configs/pimsim.cfg -m conv2d_simple_compiled -l conv2d_simple_compiled.log
+./PIM_simulator -c ../configs/pimsim.cfg -m gemm_compiled -l gemm_compiled.log
+./PIM_simulator -c ../configs/pimsim.cfg -m mv_compiled -l mv_compiled.log
+./PIM_simulator -c ../configs/pimsim.cfg -m vecadd_compiled -l vecadd_compiled.log
