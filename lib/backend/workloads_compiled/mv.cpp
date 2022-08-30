@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t mv(System *sys) {
+int32_t mv_compiled(System *sys) {
   void* _1 = nullptr;
   // int32_t c_global[1024], 0
   // int8_t a_global[256], 1024
@@ -53,4 +53,4 @@ int32_t mv(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__mv__ = pimsim::registerFunc("mv", mv);
+static __attribute__((unused)) Registry::Entry &__mv_compiled__ = pimsim::registerFunc("mv_compiled", mv_compiled);

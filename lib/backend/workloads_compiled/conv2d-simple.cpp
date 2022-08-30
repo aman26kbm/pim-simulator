@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t conv2d_simple(System *sys) {
+int32_t conv2d_simple_compiled(System *sys) {
   void* _1 = nullptr;
   // int8_t w_global[4608], 0
   // int32_t Conv2dOutput_repl_global[1024], 4608
@@ -85,4 +85,4 @@ int32_t conv2d_simple(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__conv2d_simple__ = pimsim::registerFunc("conv2d_simple", conv2d_simple);
+static __attribute__((unused)) Registry::Entry &__conv2d_simple_compiled__ = pimsim::registerFunc("conv2d_simple_compiled", conv2d_simple_compiled);

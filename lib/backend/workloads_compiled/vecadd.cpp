@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t vecadd(System *sys) {
+int32_t vecadd_compiled(System *sys) {
   void* _1 = nullptr;
   // int16_t a_global[512], 0
   // int16_t b_global[512], 512
@@ -44,4 +44,4 @@ int32_t vecadd(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__vecadd__ = pimsim::registerFunc("vecadd", vecadd);
+static __attribute__((unused)) Registry::Entry &__vecadd_compiled__ = pimsim::registerFunc("vecadd_compiled", vecadd_compiled);

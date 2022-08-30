@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t gemm(System *sys) {
+int32_t gemm_compiled(System *sys) {
   void* _1 = nullptr;
   // int32_t compute_global[4096], 0
   // int8_t a_global[256], 4096
@@ -61,4 +61,4 @@ int32_t gemm(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__gemm__ = pimsim::registerFunc("gemm", gemm);
+static __attribute__((unused)) Registry::Entry &__gemm_compiled__ = pimsim::registerFunc("gemm_compiled", gemm_compiled);
