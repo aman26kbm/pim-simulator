@@ -13,29 +13,29 @@ int32_t vecadd(System *sys) {
     int32_t x_outer = 0;
     {
       Request request(Request::Type::RowLoad);
-      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16); // dst
-      request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
+      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16); // dst
+      request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
       sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowLoad);
-      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 16/*cram buffer*/), 0, PrecisionT::INT16); // dst
-      request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
+      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 16/*cram buffer*/), 0, PrecisionT::INT16); // dst
+      request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
       sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowStore);
       request.type = Request::Type::RowAdd;
-      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16);
-      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 16/*cram buffer*/), 0, PrecisionT::INT16);
-      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16);
+      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16);
+      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 16/*cram buffer*/), 0, PrecisionT::INT16);
+      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16);
       request.swapSrcDst(); // for source, dest, source operand order
       sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowStore);
-      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16); // src
-      request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); // dst
+      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16); // src
+      request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // dst
       sys->sendRequest(request);
     }
   }

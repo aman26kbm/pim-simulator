@@ -10,8 +10,8 @@ void test_trans_tile0(System* sys){
 
     for(int i =0; i<trans_count; i++){
         request = new Request(Request::Type::TileSend);
-        request->addAddr(sys->getAddress(0,0,(i*4)%128), 0, PrecisionT::INT4); //src
-        request->addAddr(sys->getAddress(127,0,(i*4)%128), 0, PrecisionT::INT4); //dst
+        request->addOperand(sys->getAddress(0,0,(i*4)%128), 0, PrecisionT::INT4); //src
+        request->addOperand(sys->getAddress(127,0,(i*4)%128), 0, PrecisionT::INT4); //dst
         requests.push_back(*request);
     }
 
@@ -25,8 +25,8 @@ void test_trans_tile128(System* sys){
 
     for(int i =0; i<trans_count; i++){
         request = new Request(Request::Type::TileReceive);
-        request->addAddr(sys->getAddress(0,0,(i*4)%128), 0, PrecisionT::INT4); //src
-        request->addAddr(sys->getAddress(127,0,(i*4)%128), 0, PrecisionT::INT4); //dst
+        request->addOperand(sys->getAddress(0,0,(i*4)%128), 0, PrecisionT::INT4); //src
+        request->addOperand(sys->getAddress(127,0,(i*4)%128), 0, PrecisionT::INT4); //dst
         requests.push_back(*request);
     }
 
@@ -40,14 +40,14 @@ void test_trans_tile64(System* sys){
 
     for(int i =0; i<trans_count; i++){
         request = new Request(Request::Type::RowLoad);
-        request->addAddr(sys->getAddress(64,0,(i*4)%128), 0, PrecisionT::INT4); //dst
-        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
+        request->addOperand(sys->getAddress(64,0,(i*4)%128), 0, PrecisionT::INT4); //dst
+        request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
         requests.push_back(*request);
     }
     for(int i =0; i<trans_count; i++){
         request = new Request(Request::Type::RowStore);
-        request->addAddr(sys->getAddress(64,0,(i*4)%128), 0, PrecisionT::INT4); //src
-        request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dst
+        request->addOperand(sys->getAddress(64,0,(i*4)%128), 0, PrecisionT::INT4); //src
+        request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dst
         requests.push_back(*request);
     }
 

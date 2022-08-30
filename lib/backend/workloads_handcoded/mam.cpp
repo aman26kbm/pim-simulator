@@ -13,23 +13,23 @@ int32_t mam(System *sys) {
     for (int32_t x_outer = 0; x_outer < 4; ++x_outer) {
       {
         Request request(Request::Type::RowLoad);
-        request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
-        request.addAddr((0) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
+        request.addOperand((0) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowLoad);
-        request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
-        request.addAddr((0) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
+        request.addOperand((0) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowStore);
         int32_t _2 = x_outer * 256;
         request.type = Request::Type::RowMul;
-        request.addAddr((0) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
-        request.addAddr((0) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
-        request.addAddr((_2) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
+        request.addOperand((0) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand((0) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand((_2) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
     }
@@ -37,8 +37,8 @@ int32_t mam(System *sys) {
       {
         int32_t _3 = ax0_outer * 256;
         Request request(Request::Type::RowLoad);
-        request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
-        request.addAddr((_3) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
+        request.addOperand((_3) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
     }
@@ -46,8 +46,8 @@ int32_t mam(System *sys) {
       {
         int32_t _4 = ax0_outer1 * 256;
         Request request(Request::Type::RowLoad);
-        request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
-        request.addAddr((_4) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
+        request.addOperand((_4) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
     }
@@ -56,9 +56,9 @@ int32_t mam(System *sys) {
         Request request(Request::Type::RowStore);
         int32_t _5 = x_outer1 * 256;
         request.type = Request::Type::RowMul;
-        request.addAddr((_5) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
-        request.addAddr((_5) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
-        request.addAddr((_5) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand((_5) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand((_5) * 2/*bytes*/ + 2048/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand((_5) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
     }
@@ -67,9 +67,9 @@ int32_t mam(System *sys) {
         Request request(Request::Type::RowStore);
         int32_t _6 = x_c_outer * 256;
         request.type = Request::Type::RowAdd;
-        request.addAddr((_6) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
-        request.addAddr((_6) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
-        request.addAddr((_6) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
+        request.addOperand((_6) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
+        request.addOperand((_6) * 2/*bytes*/ + 4096/*cram buffer*/ + 8192/*array-size*/ * x_outer_outer/*array-id*/, 0, PrecisionT::INT16);
+        request.addOperand((_6) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
     }
@@ -77,8 +77,8 @@ int32_t mam(System *sys) {
       {
         int32_t _7 = x_outer_inner * 256;
         Request request(Request::Type::RowStore);
-        request.addAddr((_7) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
-        request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
+        request.addOperand((_7) * 2/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT16);
+        request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT16);
         sys->sendRequest(request);
       }
     }

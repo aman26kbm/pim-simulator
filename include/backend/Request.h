@@ -44,9 +44,9 @@ public:
                   //Also, the add operation happens across all columns.
                   //example: 
                   //   request = new Request(Request::Type::RowAdd);
-                  //     request->addAddr(sys->getAddress(tile,0,src1_row), 0, src1_precision); //src1
-                  //     request->addAddr(sys->getAddress(tile,0,src2_row), 0, src2_precision);//src2
-                  //     request->addAddr(sys->getAddress(tile,0,dest_row), 0, dest_precision); //dst
+                  //     request->addOperand(sys->getAddress(tile,0,src1_row), 0, src1_precision); //src1
+                  //     request->addOperand(sys->getAddress(tile,0,src2_row), 0, src2_precision);//src2
+                  //     request->addOperand(sys->getAddress(tile,0,dest_row), 0, dest_precision); //dst
                   //     requests.push_back(*request);
         RowSub,   //Same as above, but for Sub instead of Add
 
@@ -60,9 +60,9 @@ public:
                   //Also, the multiply operation happens across all columns.
                   //example:
                   //   request = new Request(Request::Type::RowMul);
-                  //     request->addAddr(sys->getAddress(tile,0,src1_row), 0, src1_precision); //src1
-                  //     request->addAddr(sys->getAddress(tile,0,src2_row), 0, src2_precision);//src2
-                  //     request->addAddr(sys->getAddress(tile,0,dest_row), 0, dest_precision); //dst
+                  //     request->addOperand(sys->getAddress(tile,0,src1_row), 0, src1_precision); //src1
+                  //     request->addOperand(sys->getAddress(tile,0,src2_row), 0, src2_precision);//src2
+                  //     request->addOperand(sys->getAddress(tile,0,dest_row), 0, dest_precision); //dst
                   //     requests.push_back(*request);
 
         RowBitwise,//Perform a bitwise operation between multi-bit values stored over multiple rows.
@@ -86,8 +86,8 @@ public:
                     //There is implicit parallellism here. This instruction involves multiple rows.
                     //example:
                   //   request = new Request(Request::Type::RowReduce);
-                  //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
-                  //     request->addAddr(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
+                  //     request->addOperand(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
+                  //     request->addOperand(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
                   //     requests.push_back(*request);
         RowReduce_WithinTile,  //Reduce within tile. Multi-bit elements present in multiple columns are reduced.
                     //"Precision" argument specifies the precision of the data ([0] will be for src, [1] will be for destination).
@@ -99,13 +99,13 @@ public:
                     //There is implicit parallellism here. This instruction involves multiple rows.
                     //example:
                   //   request = new Request(Request::Type::RowReduce);
-                  //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
-                  //     request->addAddr(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
+                  //     request->addOperand(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
+                  //     request->addOperand(sys->getAddress(tile,0,dest_row), size, dest_precision); //dst
                   //     requests.push_back(*request);
         RowShift,   
                     //example:
                   //   request = new Request(Request::Type::RowShift);
-                  //     request->addAddr(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
+                  //     request->addOperand(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
                   //     requests.push_back(*request);
 
         //////////////////////////////////
@@ -124,8 +124,8 @@ public:
                    //The "precision" argument will specify the number of rows to transfer. 
                    //example:
                     // request = new Request(Request::Type::BlockSend_Receive);
-                    // request->addAddr(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
-                    // request->addAddr(sys->cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+                    // request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
+                    // request->addOperand(sys->cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
                     // requests.push_back(*request);
         BlockBroadCast,//broadcast a few rows of #size arrays starting from array0 into all other arrays
         TileSend, //Doesn't mean send a whole tile from one place to another.
@@ -137,14 +137,14 @@ public:
                   //size, precision and addr arguments have the same meaning as BlockSend_Receive.
                   //example:
                     // request = new Request(Request::Type::TileSend);
-                    // request->addAddr(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
-                    // request->addAddr(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
+                    // request->addOperand(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
+                    // request->addOperand(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
                     // requests.push_back(*request);
         TileReceive, //Same as above; just for receive
                    //example:
                     // request = new Request(Request::Type::TileReceive);
-                    // request->addAddr(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
-                    // request->addAddr(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
+                    // request->addOperand(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
+                    // request->addOperand(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
                     // requests.push_back(*request);
         ChipSend_Receive,//UNUSED
                          //This does not transfer some bits from one block to another in a different chip. 
@@ -193,15 +193,15 @@ public:
                     //The "addr" argument will specify the row ID of row0.
                     //example:
                     // request = new Request(Request::Type::RowLoad);
-                    // request->addAddr(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
-                    // request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+                    // request->addOperand(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
+                    // request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
                     // requests.push_back(*request);
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
                     //example:
                     // request = new Request(Request::Type::RowStore);
-                    // request->addAddr(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
-                    // request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+                    // request->addOperand(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
+                    // request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
                     // requests.push_back(*request);
         
         //////////////////////////////////
@@ -225,15 +225,15 @@ public:
                         //element will be saved.
                         //example:
                         // request = new Request(Request::Type::RowLoad_RF);
-                        // request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //RF addr
-                        // request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //dram addr
+                        // request->addOperand(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //RF addr
+                        // request->addOperand(sys->DRAM_ADDR, 4, PrecisionT::INT4); //dram addr
                         // requests.push_back(*request);
         RowStore_RF,    //Store a set of data elements from RF into DRAM
                         //Rest of the details are the same as RowLoad_RF
                         //example:
                         // request = new Request(Request::Type::RowStore_RF);
-                        // request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //RF addr
-                        // request->addAddr(sys->DRAM_ADDR, 4, PrecisionT::INT4); //dram addr
+                        // request->addOperand(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4); //RF addr
+                        // request->addOperand(sys->DRAM_ADDR, 4, PrecisionT::INT4); //dram addr
                         // requests.push_back(*request);
         RowMul_CRAM_RF, //Multiplication between a value in CRAM and RF.
                         //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
@@ -248,9 +248,9 @@ public:
                         //Same as RowMul_CRAM_RF, but for addition
                         //example:
                         // request = new Request(Request::Type::RowMul_CRAM_RF);
-                        // request->addAddr(sys->getAddress(tile,0,src_row), 0, PrecisionT::INT4); //src
-                        // request->addAddr(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4);//rf
-                        // request->addAddr(sys->getAddress(tile,0,dest_row), 0, PrecisionT::INT4); //dst
+                        // request->addOperand(sys->getAddress(tile,0,src_row), 0, PrecisionT::INT4); //src
+                        // request->addOperand(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4);//rf
+                        // request->addOperand(sys->getAddress(tile,0,dest_row), 0, PrecisionT::INT4); //dst
                         // requests.push_back(*request);
         RowRead_RF,     //Read a row from the RF into a register (flops)
                         //The addr argument specifies the row ID. 
@@ -258,7 +258,7 @@ public:
                         //"precision" argument specifies the precision of the value to read.
                         //example:
                         // request = new Request(Request::Type::RowRead_RF);
-                        // request->addAddr(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //src
+                        // request->addOperand(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //src
                         // requests.push_back(*request);
         RowWrite_RF,    //Write a row from a register (flops) into RF
         RowAdd_RF,      //Add two values sourced from the RF.
@@ -270,8 +270,8 @@ public:
         PopCountReduce_RF,//popcount reduce several rows. Result stored in RF.
                         //example:
                         // request = new Request(Request::Type::PopCountReduce_RF);
-                        // request->addAddr(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-                        // request->addAddr(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //dst
+                        // request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+                        // request->addOperand(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //dst
                         // requests.push_back(*request);
         MAX
     } type;
@@ -421,7 +421,7 @@ public:
         dst_col = col_id;
     }
 
-    void addAddr(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8) {
+    void addOperand(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8) {
         addr_list.push_back(addr);
         size_list.push_back(size);
         precision_list.push_back(precision);
