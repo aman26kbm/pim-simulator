@@ -13,7 +13,7 @@ int32_t gemm_outer(System* sys){
     int matrixBRowNum = matrixAColNum;
     int matrixBColNum = sys->_num_regs_per_rf;
 
-    int use_tiles = 1;
+    int use_tiles = 128;
     int dram_tile = 64;
     PrecisionT::Precision precision_input = PrecisionT::INT8;
     PrecisionT::Precision precision_multiply = PrecisionT::INT16;
