@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
     printf("simulator start:\n");
 
     string config_file;
-    
-    string to_simulate;
+    string log_file;
+    string workload;
 
     Config* config = nullptr;
     System* system = nullptr;
@@ -33,25 +33,29 @@ int main(int argc, char *argv[]) {
         TCLAP::ValueArg<string> config_file_arg("c", "cfg", "name of config file", true, "mycfg", "string");
         cmd.add(config_file_arg);
 
-        TCLAP::ValueArg<string> simulate_arg("m", "sim", "simulate the target", false, "simulated", "string");
+        TCLAP::ValueArg<string> simulate_arg("m", "sim", "workload to simulate", false, "simulated", "string");
         cmd.add(simulate_arg);
+
+        TCLAP::ValueArg<string> log_file_arg("l", "log", "logfile to generate", false, "pimsim.log", "string");
+        cmd.add(log_file_arg);
 
         // Parse the args.
         cmd.parse(argc, argv);
 
         // Get the value parsed by each arg.
         config_file = config_file_arg.getValue();
+        log_file = log_file_arg.getValue();
 
-        config = new Config(config_file);
+        config = new Config(config_file, log_file);
         system = new System(config);
 
         try {
-          to_simulate = simulate_arg.getValue();
-          if (!Registry::registeredSimulation().count(to_simulate)) {
-            std::cerr << "cannot simulate " << to_simulate << std::endl;
+          workload = simulate_arg.getValue();
+          if (!Registry::registeredSimulation().count(workload)) {
+            std::cerr << "cannot simulate " << workload << std::endl;
             return 1;
           } else {
-            Registry::registeredSimulation()[to_simulate].f(system);
+            Registry::registeredSimulation()[workload].f(system);
           }
         } catch (TCLAP::ArgException &e) {
           std::cout << "It is ok to not have " << e.argId() << std::endl;

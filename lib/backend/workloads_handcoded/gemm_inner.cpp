@@ -35,26 +35,26 @@ int32_t gemm_inner(System* sys){
         for(int tile=0; tile<sys->_ntiles; tile++){
              //a[0:]
                 request = new Request(Request::Type::RowLoad);
-                request->addAddr(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //cram addr
-                request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+                request->addOperand(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //cram addr
+                request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
                 requests.push_back(*request);
         }
         for(int b_col_index=0; b_col_index<basicMatrixBColNum; b_col_index++){
             //b[:0]
             request = new Request(Request::Type::RowLoad);
-            request->addAddr(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //cram addr
-            request->addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+            request->addOperand(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //cram addr
+            request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
             requests.push_back(*request);
             //broadcast for tiles
             for(int tile=0; tile+1<sys->_ntiles; tile++){
                 request = new Request(Request::Type::TileSend);
-                request->addAddr(sys->getAddress(tile,0,4),0,PrecisionT::INT4);//src
-                request->addAddr(sys->getAddress(tile+1,0,4),0,PrecisionT::INT4);//dest
+                request->addOperand(sys->getAddress(tile,0,4),0,PrecisionT::INT4);//src
+                request->addOperand(sys->getAddress(tile+1,0,4),0,PrecisionT::INT4);//dest
                 requests.push_back(*request);
 
                 request = new Request(Request::Type::TileReceive);
-                request->addAddr(sys->getAddress(tile,0,4),0,PrecisionT::INT4);//src
-                request->addAddr(sys->getAddress(tile+1,0,4),0,PrecisionT::INT4);//dest
+                request->addOperand(sys->getAddress(tile,0,4),0,PrecisionT::INT4);//src
+                request->addOperand(sys->getAddress(tile+1,0,4),0,PrecisionT::INT4);//dest
                 requests.push_back(*request);
 
             }
@@ -63,28 +63,28 @@ int32_t gemm_inner(System* sys){
                //broadcast for blocks
                 for(int block=0; block+(matrixAColNum/sys->_ncols)<sys->_nblocks; block+=(matrixAColNum/sys->_ncols)){
                     request = new Request(Request::Type::BlockSend_Receive);
-                    request->addAddr(sys->getAddress(tile,block,4),0,PrecisionT::INT4);//src
-                    request->addAddr(sys->getAddress(tile,block+(matrixAColNum/sys->_ncols),4),0,PrecisionT::INT4);//dest
+                    request->addOperand(sys->getAddress(tile,block,4),0,PrecisionT::INT4);//src
+                    request->addOperand(sys->getAddress(tile,block+(matrixAColNum/sys->_ncols),4),0,PrecisionT::INT4);//dest
                     requests.push_back(*request);
                 }                
                 //multiply
                 request = new Request(Request::Type::RowMul);
-                request->addAddr(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //src1
-                request->addAddr(sys->getAddress(tile,0,4), 0, PrecisionT::INT4);//src2
-                request->addAddr(sys->getAddress(tile,0,8), 0, PrecisionT::INT4); //dst
+                request->addOperand(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //src1
+                request->addOperand(sys->getAddress(tile,0,4), 0, PrecisionT::INT4);//src2
+                request->addOperand(sys->getAddress(tile,0,8), 0, PrecisionT::INT4); //dst
                 requests.push_back(*request);
                 //reduce to get c0_0
                 request = new Request(Request::Type::RowReduce_WithinTile);
-                request->addAddr(sys->getAddress(tile,0,8), RowReduce_WithinTile_count, PrecisionT::INT4); //src
-                request->addAddr(sys->getAddress(tile,0,12), RowReduce_WithinTile_count, PrecisionT::INT4); //dst
+                request->addOperand(sys->getAddress(tile,0,8), RowReduce_WithinTile_count, PrecisionT::INT4); //src
+                request->addOperand(sys->getAddress(tile,0,12), RowReduce_WithinTile_count, PrecisionT::INT4); //dst
                 requests.push_back(*request);
                 request = new Request(Request::Type::RowReduce);
-                request->addAddr(sys->getAddress(tile,0,12), rowReduce_count, PrecisionT::INT4); //src
-                request->addAddr(sys->getAddress(tile,0,12), rowReduce_count, PrecisionT::INT4); //dst
+                request->addOperand(sys->getAddress(tile,0,12), rowReduce_count, PrecisionT::INT4); //src
+                request->addOperand(sys->getAddress(tile,0,12), rowReduce_count, PrecisionT::INT4); //dst
                 requests.push_back(*request);
                 request = new Request(Request::Type::PopCountReduce_RF);
-                request->addAddr(sys->getAddress(tile,0,12), 0, PrecisionT::INT4); //src
-                request->addAddr(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //dst
+                request->addOperand(sys->getAddress(tile,0,12), 0, PrecisionT::INT4); //src
+                request->addOperand(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //dst
                 requests.push_back(*request);
                 // int start_block = 0;
                 // int round = 0;
@@ -93,15 +93,15 @@ int32_t gemm_inner(System* sys){
                 //         //Send partial results to block that is gap away
                         
                 //             request = new Request(Request::Type::BlockSend_Receive);
-                //             request->addAddr(sys->getAddress(tile,block,8), 0, PrecisionT::INT4); //src
-                //             request->addAddr(sys->getAddress(tile,block+gap,12), 0, PrecisionT::INT16); //dst
+                //             request->addOperand(sys->getAddress(tile,block,8), 0, PrecisionT::INT4); //src
+                //             request->addOperand(sys->getAddress(tile,block+gap,12), 0, PrecisionT::INT16); //dst
                 //             requests.push_back(*request);
 
                 //             //add
                 //             request = new Request(Request::Type::RowAdd);
-                //             request->addAddr(sys->getAddress(tile,block+gap,8), 0, PrecisionT::INT16); //src
-                //             request->addAddr(sys->getAddress(tile,block+gap,12), 0, PrecisionT::INT16); //src2
-                //             request->addAddr(sys->getAddress(tile,block+gap,8), 0, PrecisionT::INT16); //dst
+                //             request->addOperand(sys->getAddress(tile,block+gap,8), 0, PrecisionT::INT16); //src
+                //             request->addOperand(sys->getAddress(tile,block+gap,12), 0, PrecisionT::INT16); //src2
+                //             request->addOperand(sys->getAddress(tile,block+gap,8), 0, PrecisionT::INT16); //dst
                 //             requests.push_back(*request);
                         
 

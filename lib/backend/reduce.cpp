@@ -17,8 +17,8 @@ int32_t reduce(System *sys) {
         {
           int32_t _2 = ax1 * 256;
           Request request(Request::Type::RowLoad);
-          request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT8);
-          request.addAddr((_2) * 1/*bytes*/ + 256/*cram buffer*/ + 8192/*array-size*/ * x_outer/*array-id*/, 0, PrecisionT::INT8);
+          request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT8);
+          request.addOperand((_2) * 1/*bytes*/ + 256/*cram buffer*/ + 8192/*array-size*/ * x_outer/*array-id*/, 0, PrecisionT::INT8);
           sys->sendRequest(request);
         }
       }
@@ -26,18 +26,18 @@ int32_t reduce(System *sys) {
         {
           Request request(Request::Type::RowStore);
           request.type = Request::Type::RowAdd;
-          request.addAddr((0) * 1/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT8);
+          request.addOperand((0) * 1/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT8);
           int32_t _3 = k_inner * 256;
-          request.addAddr((_3) * 1/*bytes*/ + 256/*cram buffer*/ + 8192/*array-size*/ * x_outer/*array-id*/, 0, PrecisionT::INT8);
-          request.addAddr(sys->getAddress(0, 0, 0)/*FIXME: dst*/, 0, PrecisionT::INT8);
+          request.addOperand((_3) * 1/*bytes*/ + 256/*cram buffer*/ + 8192/*array-size*/ * x_outer/*array-id*/, 0, PrecisionT::INT8);
+          request.addOperand(sys->getAddress(0, 0, 0)/*FIXME: dst*/, 0, PrecisionT::INT8);
           sys->sendRequest(request);
         }
       }
     }
     {
       Request request(Request::Type::RowStore);
-      request.addAddr((0) * 1/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT8);
-      request.addAddr(sys->getAddress(0, 0, 0), 0, PrecisionT::INT8);
+      request.addOperand((0) * 1/*bytes*/ + 0/*cram buffer*/, 0, PrecisionT::INT8);
+      request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::INT8);
       sys->sendRequest(request);
     }
   // }

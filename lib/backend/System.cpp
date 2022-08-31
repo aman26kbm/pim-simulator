@@ -260,7 +260,7 @@ int System::sendPIM_one_operand(Request& req)
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        pim_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
@@ -290,9 +290,9 @@ int System::sendPIM_two_operands(Request& req)
 
         Request *pim_req = new Request(req.type);
 
-        pim_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        pim_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        pim_req->addAddr(req.addr_list[2], req.size_list[2], req.precision_list[2]);
+        pim_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        pim_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        pim_req->addOperand(req.addr_list[2], req.size_list[2], req.precision_list[2]);
         pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -318,8 +318,8 @@ int System::sendRF_one_operand(Request& req)
     int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
     assert(tile_index<=_chips[chip_index]->_children.size());
     Request* rf_req = new Request(req.type);
-    rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-    //rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+    rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+    //rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
     rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
     rf_req->setDstLocation(0, 0, 0, 0, 0);
     rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
@@ -338,8 +338,8 @@ int System::sendRF_two_operands(Request& req)
     assert(chip_index<=_chips.size());
     assert(tile_index<=_chips[chip_index]->_children.size());
     Request* rf_req = new Request(req.type);
-    rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-    rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+    rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+    rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
     rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
     rf_req->setDstLocation(0, 0, 0, 0, 0);
     rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
@@ -358,8 +358,8 @@ int System::sendChipReq(Request& req, int para)
         int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
         assert(tile_index<=_chips[chip_index]->_children.size());
         Request* rf_req = new Request(req.type);
-        rf_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        rf_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
         rf_req->setDstLocation(0, 0, 0, 0, 0);
         rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
@@ -374,8 +374,8 @@ int System::sendChipReq(Request& req, int para)
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         //req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-         inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        //inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+         inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        //inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         //inter_tile_req->setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
         //setLocation is used to tell which tile owns this request
@@ -394,8 +394,8 @@ int System::sendChipReq(Request& req, int para)
         //req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
-         inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        //inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+         inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        //inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         //inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         //setLocation is used to tell which tile owns this request
@@ -423,8 +423,8 @@ int System::sendChipReq(Request& req, int para)
             req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-            inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-            inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+            inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
             inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
             inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             //setLocation is used to tell which tile owns this request
@@ -438,8 +438,8 @@ int System::sendChipReq(Request& req, int para)
             req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
 
-            inter_tile_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-            inter_tile_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+            inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
             inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
             inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             //setLocation is used to tell which tile owns this request
@@ -474,7 +474,7 @@ int System::sendTileReq(Request& req, int para)
                 getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
                 req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
                 req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
-                inter_block_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+                inter_block_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
                 inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
                 inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
         }
@@ -489,8 +489,8 @@ int System::sendTileReq(Request& req, int para)
             req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-            inter_block_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-            inter_block_req->addAddr(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_block_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+            inter_block_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
             inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
             inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
@@ -523,7 +523,7 @@ int System::sendSyncReq(Request& req)
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        sync_req1->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        sync_req1->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         sync_req1->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         sync_req1->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
@@ -537,7 +537,7 @@ int System::sendSyncReq(Request& req)
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        sync_req2->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        sync_req2->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         sync_req2->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         sync_req2->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
@@ -552,7 +552,7 @@ int System::sendSyncReq(Request& req)
         req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
-        sync_req->addAddr(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        sync_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         sync_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         sync_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 

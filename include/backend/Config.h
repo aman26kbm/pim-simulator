@@ -36,8 +36,8 @@ public:
 //public:
     Config() {}
 
-    Config(const std::string& fname, int dataflow);
-    Config(const std::string& fname);
+    Config(const std::string& cfg_file_name);
+    Config(const std::string& cfg_file_name, const std::string& log_file_name);
 
     ~Config() {}
 
