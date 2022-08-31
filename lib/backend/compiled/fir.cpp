@@ -12,7 +12,15 @@ int32_t fir_compiled(System *sys) {
   {
     int32_t x_outer_outer = 0;
     for (int32_t x_outer_inner = 0; x_outer_inner < 4; ++x_outer_inner) {
-      // pragma skipped!
+      for (int32_t ax0_outer = 0; ax0_outer < 2; ++ax0_outer) {
+        {
+          int32_t _2 = ax0_outer * 256;
+          Request request(Request::Type::RowLoad);
+          request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_2) * 2/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT16); // dst
+          request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
+          sys->sendRequest(request);
+        }
+      }
       {
         // initialization skipped
       }
