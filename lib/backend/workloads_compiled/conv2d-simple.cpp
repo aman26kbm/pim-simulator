@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t conv2d_simple_compiled(System *sys) {
+int32_t conv2d_simple(System *sys) {
   void* _1 = nullptr;
   // int8_t w_global[4608], 0
   // int32_t Conv2dOutput_repl_global[1024], 4608
@@ -19,8 +19,8 @@ int32_t conv2d_simple_compiled(System *sys) {
           int32_t _5 = ax2 * 256;
           int32_t _6 = _4 + _5;
           Request request(Request::Type::RowLoad);
-          request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_6) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8); // dst
-          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8); // src
+          request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_6) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8); // dst
+          request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT8); // src
           sys->sendRequest(request);
         }
       }
@@ -41,22 +41,22 @@ int32_t conv2d_simple_compiled(System *sys) {
           {
             Request request(Request::Type::RowStore);
             request.type = Request::Type::RowAdd;
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
             {
               Request request(Request::Type::RowMul);
               request.type = Request::Type::RowMul_CRAM_RF;
-              request.addOperand(0, 0, PrecisionT::INT8);
+              request.addAddr(0, 0, PrecisionT::INT8);
               int32_t _7 = ry * 1536;
               int32_t _8 = rx * 512;
               int32_t _9 = _7 + _8;
               int32_t _10 = rc_v * 256;
               int32_t _11 = _9 + _10;
-              request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_11) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
-              request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
+              request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_11) * 1/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT8);
+              request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
               sys->sendRequest(request);
             }
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
             request.swapSrcDst(); // for source, dest, source operand order
             sys->sendRequest(request);
           }
@@ -65,17 +65,17 @@ int32_t conv2d_simple_compiled(System *sys) {
       {
         Request request(Request::Type::RowStore);
         request.type = Request::Type::RowAdd;
-        request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 144/*cram buffer*/), 0, PrecisionT::INT32);
-        request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
-        request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 144/*cram buffer*/), 0, PrecisionT::INT32);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 144/*cram buffer*/), 0, PrecisionT::INT32);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 176/*cram buffer*/), 0, PrecisionT::INT32);
+        request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 144/*cram buffer*/), 0, PrecisionT::INT32);
         request.swapSrcDst(); // for source, dest, source operand order
         sys->sendRequest(request);
       }
     }
     {
       Request request(Request::Type::RowStore);
-      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 144/*cram buffer*/), 0, PrecisionT::INT32); // src
-      request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT32); // dst
+      request.addAddr(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 144/*cram buffer*/), 0, PrecisionT::INT32); // src
+      request.addAddr(sys->DRAM_ADDR, 0, PrecisionT::INT32); // dst
       sys->sendRequest(request);
     }
   }
@@ -85,4 +85,4 @@ int32_t conv2d_simple_compiled(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__conv2d_simple_compiled__ = pimsim::registerFunc("conv2d_simple_compiled", conv2d_simple_compiled);
+static __attribute__((unused)) Registry::Entry &__conv2d_simple__ = pimsim::registerFunc("conv2d_simple", conv2d_simple);
