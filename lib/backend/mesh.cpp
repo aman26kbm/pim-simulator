@@ -8,21 +8,9 @@ using namespace pimsim;
 mesh::mesh(){}
 
 mesh::mesh(int height, int width, int wordsize_block2block, int _ncols, int _nrows, int num_regs_per_rf, int num_bits_per_reg){
-    /*
-    wire -1 has index 0 (negative direction) and 1(positive). This is the wire to dram.
-    wire 0 has index 2 (negative direction) and index 3 (positive)
-    wire 1 has index 4 (negative) and index 5 (positive)
-    wire 2 has index 6 (negative) and index 7 (positive)
-    wire 3 has index 8 (negative) and index 9 (positive)
-    wire 00 has index 10 (negative) and index 11 (positive)
-    ...
-    wire 33 has index 40 (negative) and index 41 (positive)
-    wire 000 has index 42 (negative) and index 43 (positive)
-    ...
-    wire ijk has index ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 (negative) and ((i+1)*4^2 + (j+1)*4^1 + (k+1)*4^0)*2 + 1 (positive)
-    */
-    #ifdef DEBUG_OUTPUT
-    printf("creating hTree with depth %d, wordsize_block2block %d, ncols %d, nrows %d:\n", depth, wordsize_block2block, _ncols, _nrows);
+    
+    #ifdef MESH_DEBUG_OUTPUT
+    printf("creating mesh with width %d, height %d, wordsize_block2block %d:\n",width, height, wordsize_block2block);
     #endif
     this->height = height;
     this->width = width;
@@ -31,6 +19,11 @@ mesh::mesh(int height, int width, int wordsize_block2block, int _ncols, int _nro
     this->_nrows = _nrows;
     this->num_regs_per_rf = num_regs_per_rf;
     this->num_bits_per_reg = num_bits_per_reg;
+
+    for(int index=0; index<height*width; index++){
+        //Switch mesh_switch = Switch(index, wordsize_block2block);
+        switch_list.push_back(Switch(index, wordsize_block2block));
+    }
 }
 
 //get addr_list[0] index
@@ -94,7 +87,7 @@ int mesh::get_dest_index(Request req){
 }
 
 void mesh::receive_request(Request* req){
-    #ifdef DEBUG_OUTPUT
+    #ifdef MESH_DEBUG_OUTPUT
      printf("mesh receives a request (%s), src_tile %d, dest_tile %d\n",  
                     req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
     #endif
@@ -180,7 +173,7 @@ void mesh::receive_request(Request* req){
         req->mesh_ready = true;
         req->mesh_transfer_time = 0;
         if(req->type == Request::Type::TileSend_BroadCast){
-            req->mesh_transfer_time = height/2 - 1 + 2;//assume dram controller is vertically in middle of mesh. -1 to conpemsate issueReq, +2 for 2 extra steps of write/read mesh buffer
+            req->mesh_transfer_time = height-1 - 1 + 2;//assume dram controller is vertically on top of mesh, the furthest distance is height-1. -1 to conpemsate issueReq, +2 for 2 extra steps of write/read mesh buffer
         }
         else if(req->type == Request::Type::BlockBroadCast){
             req->mesh_transfer_time = width - req->size_list[0] - 1 + 2;//assume broadcasted data is in the first few blocks-1 to conpemsate issueReq, +2 for 2 extra steps of write/read mesh buffer
@@ -238,29 +231,35 @@ void mesh::tick(){
         if(!reqPair_list[i]->send_req || !reqPair_list[i]->receive_req){
             continue;
         }
-       //set mesh_ready
+       
         Request* send_req = reqPair_list[i]->send_req;
         Request* receive_req = reqPair_list[i]->receive_req;
-        send_req->mesh_ready = true;
-        receive_req->mesh_ready = true;
-        //set transfer_time
+        //try configure, if success, configure and set mesh_ready
+        if(!send_req->mesh_ready){
+            if(try_configure(send_req)){
+                configure(send_req);
+                send_req->mesh_ready = true;
+                receive_req->mesh_ready = true;
+                //set transfer_time
 
-        int source_index = get_source_index(*send_req);
-        int dest_index = get_dest_index(*send_req);
-        
-        int optimize_for_consecutive_transfer = false;
-        if(previous_connection.count(source_index) && previous_connection.count(dest_index) && optimize_for_consecutive_transfer){
-            if(previous_connection.find(source_index)->second == dest_index && previous_connection.find(dest_index)->second == -source_index){   
-                send_req->mesh_transfer_time = 0;
-                receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
-            }else{
-                send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
-                receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+                int source_index = get_source_index(*send_req);
+                int dest_index = get_dest_index(*send_req);
+                
+                int optimize_for_consecutive_transfer = false;
+                if(previous_connection.count(source_index) && previous_connection.count(dest_index) && optimize_for_consecutive_transfer){
+                    if(previous_connection.find(source_index)->second == dest_index && previous_connection.find(dest_index)->second == -source_index){   
+                        send_req->mesh_transfer_time = 0;
+                        receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+                    }else{
+                        send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
+                        receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+                    }
+                }   
+                else{
+                    send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
+                    receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
+                }
             }
-        }   
-        else{
-            send_req->mesh_transfer_time = get_mesh_time(source_index, dest_index, send_req->precision_list[0]);
-            receive_req->mesh_transfer_time = send_req->mesh_transfer_time;
         }
     }
     //if a reqPair is finished, disconfigure it and remove from reqPair_list and trans_list_list
@@ -271,16 +270,12 @@ void mesh::tick(){
             continue;
         }
         if(reqPair_list[i]->send_req->send_receive_finished){
-            /*
-            for(int j=0; j<trans_list_list[i].size(); j++){
-                disconfigure(trans_list_list[i][j]);
-            }
-            */
-            #ifdef DEBUG_OUTPUT
+            disconfigure(reqPair_list[i]->send_req);
+            
+            
+            #ifdef MESH_DEBUG_OUTPUT
             printf("mesh removes a request (%s), src_tile %d, dest_tile %d\n",  
                     reqPair_list[i]->send_req->print_name(reqPair_list[i]->send_req->type).c_str(), reqPair_list[i]->send_req->src_tile, reqPair_list[i]->send_req->dst_tile);
-            printf("mesh removes a request (%s), src_tile %d, dest_tile %d\n",  
-                    reqPair_list[i]->receive_req->print_name(reqPair_list[i]->receive_req->type).c_str(), reqPair_list[i]->receive_req->src_tile, reqPair_list[i]->receive_req->dst_tile);
             #endif
             int source_index = get_source_index(*reqPair_list[i]->send_req);
             int dest_index = get_dest_index(*reqPair_list[i]->send_req);
@@ -304,7 +299,7 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
     int dest_row;
     int dest_col;
     if(source_index == -1){
-        source_row = height/2;//dram position on mesh
+        source_row = dram_tile;//dram position on mesh
         source_col = 0;
         dest_row = dest_index/width;
         dest_col = dest_index%width;
@@ -313,7 +308,7 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
     else if(dest_index == -1){
         source_row = source_index/width;
         source_col = source_index%width;
-        dest_row = height/2;//dram position on mesh
+        dest_row = dram_tile;//dram position on mesh
         dest_col = 0;
         assert(source_col==0);
     }
@@ -327,6 +322,424 @@ int mesh::get_mesh_time(int source_index, int dest_index, PrecisionT::Precision 
     int bits = precision.bits();
     
     int distance = abs(dest_row - source_row) + abs(dest_col - source_col);
-    return distance -1 +2;//-1 to compensate the bits in issueReq, +2 for extra 2 steps of write mesh buffer and read mesh buffer
+    //return distance -1 +2;//-1 to compensate the bits in issueReq, +2 for extra 2 steps of write mesh buffer and read mesh buffer
+    return distance +1;//hops from source buffer to dest array
     
+}
+
+bool mesh::try_configure(Request* req){
+    assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
+    || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
+    || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF
+    || req->type == Request::Type::TileSend_BroadCast || req->type == Request::Type::TileReceive_BroadCast || req->type == Request::Type::BlockBroadCast);
+
+    int source_index = get_source_index(*req);
+    int dest_index = get_dest_index(*req);
+    if(req->type ==  Request::Type::RowLoad || req->type == Request::Type::RowLoad_RF){
+        assert(source_index == -1);
+        assert(dest_index%width==0);
+        for(int index=0; index<dest_index+width; index++){
+            //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+            if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1)) return false;
+        }
+    }
+    else if(req->type == Request::Type::RowStore || req->type == Request::Type::RowStore_RF){
+        assert(source_index%width == 0);
+        assert(dest_index==-1);
+        for(int index=0; index<width; index++){
+            if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=0)) return false;
+        }
+        for(int index=width; index<source_index+width; index++){
+            //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+            if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3)) return false;
+        }
+    }
+    else if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive){
+        assert(source_index%width == 0);
+        assert(dest_index%width == 0);
+        
+        int upper_index = 0;
+        int lower_index = 0;
+        if(dest_index<source_index){
+            //go up
+            lower_index = dest_index;
+            upper_index = source_index;
+            for(int index=lower_index; index<upper_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3)) return false;
+            }
+            for(int index=upper_index; index<upper_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=0)) return false;
+            }
+        }
+        else{
+            //go down
+            lower_index = source_index;
+            upper_index = dest_index;
+            for(int index=lower_index; index<lower_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=0)) return false;
+            }
+            for(int index=lower_index+width; index<upper_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1)) return false;
+            }
+        }
+
+    }
+    else if(req->type == Request::Type::BlockSend_Receive){
+        assert(source_index/width == dest_index/width);
+        
+        int left_index = 0;
+        int right_index = 0;
+        if(dest_index<source_index){
+            //go left
+            left_index = dest_index;
+            right_index = source_index;
+            for(int index=left_index; index<right_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=2 || switch_list[index].output_port!=4)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=2)) return false;
+            }
+            if(switch_list[right_index].usr_count!=0 && (switch_list[right_index].input_port!=0)) return false;
+        }
+        else{
+            //go right
+            left_index = source_index;
+            right_index = dest_index;
+            if(switch_list[left_index].usr_count!=0 && (switch_list[left_index].input_port!=0)) return false;
+            for(int index=left_index+1; index<=right_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=4 || switch_list[index].output_port!=2)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=4)) return false;
+            }
+        }
+    }
+    else{}
+    return true;
+}
+bool mesh::configure(Request* req){
+    // assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
+    // || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
+    // || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF
+    // || req->type == Request::Type::TileSend_BroadCast || req->type == Request::Type::TileReceive_BroadCast || req->type == Request::Type::BlockBroadCast);
+
+    // int source_index = get_source_index(*req);
+    // int dest_index = get_dest_index(*req);
+    // if(req->type ==  Request::Type::RowLoad || req->type == Request::Type::RowLoad_RF){
+    //     assert(source_index == -1);
+    //     assert(dest_index%width==0);
+    //     for(int index=0; index<dest_index+width; index++){
+    //         if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+    //         //configure
+    //         switch_list[index].input_port = 1;
+    //         //switch_list[index].output_port = 3;
+    //         switch_list[index].usr_count++;
+    //     }
+    // }
+    // else if(req->type == Request::Type::RowStore || req->type == Request::Type::RowStore_RF){
+    //     assert(source_index%width == 0);
+    //     assert(dest_index==-1);
+    //     for(int index=0; index<source_index+width; index++){
+    //         if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+    //         switch_list[index].input_port = 3;
+    //         //switch_list[index].output_port = 1;
+    //         switch_list[index].usr_count++;
+    //     }
+    // }
+    // else if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive){
+    //     assert(source_index%width == 0);
+    //     assert(dest_index%width == 0);
+        
+    //     int upper_index = 0;
+    //     int lower_index = 0;
+    //     if(dest_index<source_index){
+    //         //go up
+    //         lower_index = dest_index;
+    //         upper_index = source_index;
+    //         for(int index=lower_index; index<upper_index+width; index++){
+    //             if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+    //             //configure
+    //             switch_list[index].input_port = 3;
+    //             //switch_list[index].output_port = 1;
+    //             switch_list[index].usr_count++;
+    //         }
+    //     }
+    //     else{
+    //         //go down
+    //         lower_index = source_index;
+    //         upper_index = dest_index;
+    //         for(int index=lower_index; index<upper_index+width; index++){
+    //             if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+    //             //configure
+    //             switch_list[index].input_port = 1;
+    //             //switch_list[index].output_port = 3;
+    //             switch_list[index].usr_count++;
+    //         }
+    //     }
+    // else if(req->type == Request::Type::BlockSend_Receive){
+    //     assert(source_index/width == dest_index/width);
+        
+    //     int left_index = 0;
+    //     int right_index = 0;
+    //     if(dest_index<source_index){
+    //         //go left
+    //         left_index = dest_index;
+    //         right_index = source_index;
+    //         for(int index=left_index; index<=right_index; index++){
+    //             if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=2 || switch_list[index].output_port!=4)) return false;
+    //             //configure
+    //             switch_list[index].input_port=2;
+    //             //switch_list[index].output_port=4;
+    //             switch_list[index].usr_count++;
+    //         }
+    //     }
+    //     else{
+    //         //go right
+    //         left_index = source_index;
+    //         right_index = dest_index;
+    //         for(int index=left_index; index<=right_index; index++){
+    //             if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=4 || switch_list[index].output_port!=2)) return false;
+    //             switch_list[index].input_port = 4;
+    //             //switch_list[index].output_port = 2;
+    //             switch_list[index].usr_count++;
+    //         }
+    //     }
+    // }
+    // else{}
+    // return true;
+    #ifdef MESH_DEBUG_OUTPUT
+            printf("mesh configure a request (%s), src_tile %d, dest_tile %d\n",  
+                    req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
+    #endif
+    assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
+    || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
+    || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF
+    || req->type == Request::Type::TileSend_BroadCast || req->type == Request::Type::TileReceive_BroadCast || req->type == Request::Type::BlockBroadCast);
+
+    int source_index = get_source_index(*req);
+    int dest_index = get_dest_index(*req);
+    if(req->type ==  Request::Type::RowLoad || req->type == Request::Type::RowLoad_RF){
+        assert(source_index == -1);
+        assert(dest_index%width==0);
+        for(int index=0; index<dest_index+width; index++){
+            //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+            if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1)) return false;
+            switch_list[index].input_port = 1;
+            switch_list[index].usr_count++;
+        }
+    }
+    else if(req->type == Request::Type::RowStore || req->type == Request::Type::RowStore_RF){
+        assert(source_index%width == 0);
+        assert(dest_index==-1);
+        for(int index=0; index<width; index++){
+            if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=0)) return false;
+            switch_list[index].input_port = 0;
+            switch_list[index].usr_count++;
+        }
+        for(int index=width; index<source_index+width; index++){
+            //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+            if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3)) return false;
+            switch_list[index].input_port = 3;
+            switch_list[index].usr_count++;
+        }
+    }
+    else if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive){
+        assert(source_index%width == 0);
+        assert(dest_index%width == 0);
+        
+        int upper_index = 0;
+        int lower_index = 0;
+        if(dest_index<source_index){
+            //go up
+            lower_index = dest_index;
+            upper_index = source_index;
+            for(int index=lower_index; index<upper_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3)) return false;
+                switch_list[index].input_port = 3;
+                switch_list[index].usr_count++;
+            }
+            for(int index=upper_index; index<upper_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=0)) return false;
+                switch_list[index].input_port = 0;
+                switch_list[index].usr_count++;
+            }
+        }
+        else{
+            //go down
+            lower_index = source_index;
+            upper_index = dest_index;
+            for(int index=lower_index; index<lower_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=0)) return false;
+                switch_list[index].input_port = 0;
+                switch_list[index].usr_count++;
+            }
+            for(int index=lower_index+width; index<upper_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1)) return false;\
+                switch_list[index].input_port = 1;
+                switch_list[index].usr_count++;
+            }
+        }
+
+    }
+    else if(req->type == Request::Type::BlockSend_Receive){
+        assert(source_index/width == dest_index/width);
+        
+        int left_index = 0;
+        int right_index = 0;
+        if(dest_index<source_index){
+            //go left
+            left_index = dest_index;
+            right_index = source_index;
+            for(int index=left_index; index<right_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=2 || switch_list[index].output_port!=4)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=2)) return false;
+                switch_list[index].input_port = 2;
+                switch_list[index].usr_count++;
+            }
+            if(switch_list[right_index].usr_count!=0 && (switch_list[right_index].input_port!=0)) return false;
+            switch_list[right_index].input_port = 0;
+            switch_list[right_index].usr_count++;
+        }
+        else{
+            //go right
+            left_index = source_index;
+            right_index = dest_index;
+            if(switch_list[left_index].usr_count!=0 && (switch_list[left_index].input_port!=0)) return false;
+            switch_list[left_index].input_port = 0;
+            switch_list[left_index].usr_count++;
+            for(int index=left_index+1; index<=right_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=4 || switch_list[index].output_port!=2)) return false;
+                if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=4)) return false;
+                switch_list[index].input_port = 4;
+                switch_list[index].usr_count++;
+            }
+        }
+    }
+    else{}
+    return true;
+
+}
+
+bool mesh::disconfigure(Request* req){
+    #ifdef MESH_DEBUG_OUTPUT
+            printf("mesh disconfigure a request (%s), src_tile %d, dest_tile %d\n",  
+                    req->print_name(req->type).c_str(), req->src_tile, req->dst_tile);
+    #endif
+    assert(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive || req->type == Request::Type::BlockSend_Receive 
+    || req->type == Request::Type::RowLoad || req->type == Request::Type::RowStore
+    || req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowStore_RF
+    || req->type == Request::Type::TileSend_BroadCast || req->type == Request::Type::TileReceive_BroadCast || req->type == Request::Type::BlockBroadCast);
+
+    assert(req->send_receive_finished);
+    int source_index = get_source_index(*req);
+    int dest_index = get_dest_index(*req);
+
+    // int smaller_index = std::max(0, std::min(source_index, dest_index));
+    // int bigger_index = std::max(source_index, dest_index);
+    // if(req->type == Request::Type::BlockSend_Receive){
+    //     for(int index = smaller_index; index<=bigger_index; index++){
+    //         switch_list[index].usr_count--;
+    //         assert(switch_list[index].usr_count>=0);
+    //     }
+    // }
+    // else{
+    //     for(int index = smaller_index; index<bigger_index + width; index++){
+    //         switch_list[index].usr_count--;
+    //         assert(switch_list[index].usr_count>=0);
+    //     }
+    // }
+    if(req->type ==  Request::Type::RowLoad || req->type == Request::Type::RowLoad_RF){
+        assert(source_index == -1);
+        assert(dest_index%width==0);
+        for(int index=0; index<dest_index+width; index++){
+            assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==1));
+            switch_list[index].usr_count--;
+        }
+    }
+    else if(req->type == Request::Type::RowStore || req->type == Request::Type::RowStore_RF){
+        assert(source_index%width == 0);
+        assert(dest_index==-1);
+        for(int index=0; index<width; index++){
+            assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==0));
+            switch_list[index].usr_count--;
+        }
+        for(int index=width; index<source_index+width; index++){
+            assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==3));
+            switch_list[index].usr_count--;
+        }
+    }
+    else if(req->type == Request::Type::TileSend || req->type == Request::Type::TileReceive){
+        assert(source_index%width == 0);
+        assert(dest_index%width == 0);
+        
+        int upper_index = 0;
+        int lower_index = 0;
+        if(dest_index<source_index){
+            //go up
+            lower_index = dest_index;
+            upper_index = source_index;
+            for(int index=lower_index; index<upper_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+                assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==3));
+                switch_list[index].usr_count--;
+            }
+            for(int index=upper_index; index<upper_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=3 || switch_list[index].output_port!=1)) return false;
+                assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==0));
+                switch_list[index].usr_count--;
+            }
+        }
+        else{
+            //go down
+            lower_index = source_index;
+            upper_index = dest_index;
+            for(int index=lower_index; index<lower_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+                assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==0));
+                switch_list[index].usr_count--;
+            }
+            for(int index=lower_index+width; index<upper_index+width; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=1 || switch_list[index].output_port!=3)) return false;
+                assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==1));
+                switch_list[index].usr_count--;
+            }
+        }
+
+    }
+    else if(req->type == Request::Type::BlockSend_Receive){
+        assert(source_index/width == dest_index/width);
+        
+        int left_index = 0;
+        int right_index = 0;
+        if(dest_index<source_index){
+            //go left
+            left_index = dest_index;
+            right_index = source_index;
+            for(int index=left_index; index<right_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=2 || switch_list[index].output_port!=4)) return false;
+                assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==2));
+                switch_list[index].usr_count--;
+            }
+            assert(switch_list[right_index].usr_count!=0 && (switch_list[right_index].input_port==0));
+            switch_list[right_index].usr_count--;
+        }
+        else{
+            //go right
+            left_index = source_index;
+            right_index = dest_index;
+            assert(switch_list[left_index].usr_count!=0 && (switch_list[left_index].input_port==0));
+            switch_list[left_index].usr_count--;
+            for(int index=left_index+1; index<=right_index; index++){
+                //if(switch_list[index].usr_count!=0 && (switch_list[index].input_port!=4 || switch_list[index].output_port!=2)) return false;
+                assert(switch_list[index].usr_count!=0 && (switch_list[index].input_port==4));
+                switch_list[index].usr_count--;
+            }
+        }
+    }
+    else{}
+    return true;
 }

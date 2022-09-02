@@ -340,17 +340,17 @@ public:
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list
     std::vector<PrecisionT::Precision> precision_list;
-    int precision_bits;//only used for rowLoad_RF and rowStore_RF. Indicates how many times of transfer is needed
+    //int precision_bits;//only used for rowLoad_RF and rowStore_RF. Indicates how many times of transfer is needed
     int chip, tile, block, row, col;
     int src_chip, src_tile, src_block, src_row, src_col;
     int dst_chip, dst_tile, dst_block, dst_row, dst_col;
     Mailbox* mail;
     //indicates if the htree is configured for this request. Value owned by htree.
-    bool hTree_ready;
-    bool mesh_ready;
+    bool hTree_ready=false;
+    bool mesh_ready=false;
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     int mesh_transfer_time;//only used for mesh. Indicates transfer time of a request
-    bool send_receive_finished;
+    bool send_receive_finished=false;
 
     bool dram_ready;
 

@@ -325,7 +325,7 @@ void fir_tile64(System* sys)
     int dram_tile = 64;
 
 
-    for(int iter_row_load=0; iter_row_load<(int)ceil(size_input/(double)(sys->_nblocks * sys->_ncols)); iter_row_load++){
+    for(int iter_row_load=0; iter_row_load<(int)ceil(size_input/(double)(sys->_nblocks * sys->_ncols - size_filter)); iter_row_load++){
         //Now we load inputs from DRAM
         //Currently, we're assuming just one load is enough.
         //Only one input in each column across all cores.

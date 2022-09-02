@@ -233,6 +233,7 @@ void MemoryTile::update_next(){
                     //     next_state.status = DRAM_WAIT2;
                     //     issueReq(req);
                     // }
+                    req.dram_ready = false;
                     ((MemoryChip*)_parent)->_Dram->receive_request(&req);
                     next_state.status = DRAM_WAIT;
                 }
@@ -303,10 +304,13 @@ void MemoryTile::update_next(){
                 else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
                 || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
                     if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
+                        req.hTree_ready = false;
                         ((MemoryChip*)_parent)->_hTree->receive_request(&req);
                         next_state.status = HTREE_WAIT;
                     }
                     else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+                        req.mesh_ready = false;
+                        req.mesh_transfer_time = 0;
                         ((MemoryChip*)_parent)->_mesh->receive_request(&req);
                         next_state.status = MESH_WAIT;
                     }

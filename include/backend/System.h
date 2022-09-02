@@ -134,7 +134,7 @@ public:
 
     //DRAM addresses don't matter. We just define 1 address
     //and use it everywhere.
-    AddrT DRAM_ADDR;
+    AddrT DRAM_ADDR = 0;
 
 //tile0
     AddrT cram_base_addr_tile0_block0; 

@@ -323,7 +323,7 @@ int System::sendRF_one_operand(Request& req)
     rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
     rf_req->setDstLocation(0, 0, 0, 0, 0);
     rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
-    rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
+    //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
     bool res = _chips[chip_index]->receiveReq(*rf_req);
     return res;
 
@@ -343,7 +343,7 @@ int System::sendRF_two_operands(Request& req)
     rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
     rf_req->setDstLocation(0, 0, 0, 0, 0);
     rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
-    rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
+    //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
     bool res = _chips[chip_index]->receiveReq(*rf_req);
     return res;
 }
@@ -363,7 +363,7 @@ int System::sendChipReq(Request& req, int para)
         rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
         rf_req->setDstLocation(0, 0, 0, 0, 0);
         rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
-        rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
+        //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
         bool res = _chips[chip_index]->receiveReq(*rf_req);
         return res;
     }
