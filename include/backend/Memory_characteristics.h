@@ -15,6 +15,8 @@ public:
         Ideal
     } _configuration;
 
+    Config* config;
+
     //This is the inter block bandwidth (in bits).
     //This is overridden from the config file.
     int _wordsize_block2block = 256;

@@ -13,6 +13,7 @@ using namespace std;
 MemoryCharacteristics::MemoryCharacteristics(Configuration configuration, 
                                              Config* config) {
     _configuration = configuration;
+    this->config = config; 
     _wordsize_block2block = config->_wordsize_block2block;
     _wordsize_tile2tile = config->_wordsize_tile2tile;
     _wordsize_dram = config->_wordsize_dram;
@@ -159,7 +160,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
 
 int MemoryCharacteristics::getPrecisionBits(Request req) {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
-        return req.precision_bits;
+        return (int)ceil(config->_num_bits_per_reg * config->_num_regs_per_rf / (double)config->_wordsize_dram);
     }
     return getClocksForReq(req.precision_list, "read");
 }
@@ -221,10 +222,10 @@ double MemoryCharacteristics::getTiming(Request req) {
             time = getClocksForReq(req.precision_list, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
-            time = getPrecisionBits(req) * T_CLK;
+            time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
         case Request::Type::RowStore: 
-            time = getPrecisionBits(req) * T_CLK;
+            time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
         case Request::Type::RowShift: 
             // precision_list[0] tells the number of bits in the operand
@@ -233,7 +234,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::RowLoad_RF: 
         case Request::Type::RowStore_RF: 
-            time = getPrecisionBits(req) * T_CLK;
+            time = T_CLK * (int)ceil(config->_num_regs_per_rf * config->_num_bits_per_reg / (double)config->_wordsize_dram);
             break;
         case Request::Type::RowMul_CRAM_RF: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the

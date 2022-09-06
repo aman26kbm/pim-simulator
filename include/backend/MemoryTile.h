@@ -37,18 +37,19 @@ public:
         DRAM_WAIT2   //Wait for the current dram request to finish
     };
     
-    static std::string print_name(int type) {
+    static std::string print_name(status_t type) {
         switch(type) {
-            case 0: return       "IDLE";
-            case 1: return       "REQ_MODE";
-            case 2: return       "DRAM_WAIT";
-            case 3: return       "HTREE_WAIT";
-            case 4: return       "TILE_SEND_RECEIVE";
-            case 5: return       "BLOCK_SEND_RECEIVE";
-            case 6: return       "DRAM_LOAD_STORE";
-            case 7: return       "MAIL_WAIT";
-            case 8: return       "DRAM_WAIT1";
-            case 9: return       "DRAM_WAIT2";
+            case IDLE: return       "IDLE";
+            case REQ_MODE: return       "REQ_MODE";
+            case DRAM_WAIT: return       "DRAM_WAIT";
+            case HTREE_WAIT: return       "HTREE_WAIT";
+            case MESH_WAIT: return "MESH_WAIT";
+            case TILE_SEND_RECEIVE: return       "TILE_SEND_RECEIVE";
+            case BLOCK_SEND_RECEIVE: return       "BLOCK_SEND_RECEIVE";
+            case DRAM_LOAD_STORE: return       "DRAM_LOAD_STORE";
+            case MAIL_WAIT: return       "MAIL_WAIT";
+            case DRAM_WAIT1: return       "DRAM_WAIT1";
+            case DRAM_WAIT2: return       "DRAM_WAIT2";
             default: return      "Help";
         };
     
