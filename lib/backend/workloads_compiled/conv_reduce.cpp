@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t conv_reduce_compiled(System *sys) {
+int32_t conv_reduce(System *sys) {
   void* _1 = nullptr;
   // int32_t Conv2dOutput_rf[1024], 0
   // int8_t w_global[2304], 1024
@@ -19,7 +19,7 @@ int32_t conv_reduce_compiled(System *sys) {
             int32_t _3 = ax1 * 256;
             int32_t _4 = _2 + _3;
             Request request(Request::Type::RowLoad);
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8); // dst
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_4) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8); // dst
             request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8); // src
             sys->sendRequest(request);
           }
@@ -34,7 +34,7 @@ int32_t conv_reduce_compiled(System *sys) {
             Request request(Request::Type::RowStore);
             int32_t _5 = rc * 256;
             request.type = Request::Type::RowAdd;
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
             {
               Request request(Request::Type::RowMul);
               request.type = Request::Type::RowMul_CRAM_RF;
@@ -42,12 +42,12 @@ int32_t conv_reduce_compiled(System *sys) {
               int32_t _6 = ry * 768;
               int32_t _7 = rx * 256;
               int32_t _8 = _6 + _7;
-              request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_8) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
-              request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+              request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_8) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
+              request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
               sys->sendRequest(request);
             }
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_5) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
             request.swapSrcDst(); // for source, dest, source operand order
             sys->sendRequest(request);
           }
@@ -61,23 +61,23 @@ int32_t conv_reduce_compiled(System *sys) {
       {
         Request request(Request::Type::RowStore);
         request.type = Request::Type::RowAdd;
-        request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT32);
+        request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT32);
         int32_t _9 = rc_v * 256;
         {
           Request request(Request::Type::BlockSend_Receive);
-          request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_9) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
-          request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_9) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_9) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_9) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
           sys->sendRequest(request);
         }
-        request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_9) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
-        request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT32);
+        request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_9) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+        request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT32);
         request.swapSrcDst(); // for source, dest, source operand order
         sys->sendRequest(request);
       }
     }
     {
       Request request(Request::Type::RowStore);
-      request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT32); // src
+      request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT32); // src
       request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT32); // dst
       sys->sendRequest(request);
     }
@@ -87,4 +87,4 @@ int32_t conv_reduce_compiled(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__conv_reduce_compiled__ = pimsim::registerFunc("conv_reduce_compiled", conv_reduce_compiled);
+static __attribute__((unused)) Registry::Entry &__conv_reduce__ = pimsim::registerFunc("conv_reduce", conv_reduce);
