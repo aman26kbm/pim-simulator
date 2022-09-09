@@ -20,7 +20,7 @@ int32_t gemm_compiled(System *sys) {
       for (int32_t rv = 0; rv < 2048; ++rv) {
         {
           Request request(Request::Type::RowLoad);
-          request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 128/*cram buffer*/), 0, PrecisionT::INT8); // dst
+          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 128/*cram buffer*/), 0, PrecisionT::INT8); // dst
           request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8); // src
           sys->sendRequest(request);
         }
@@ -29,17 +29,17 @@ int32_t gemm_compiled(System *sys) {
             Request request(Request::Type::RowStore);
             int32_t _2 = y_c_inner * 256;
             request.type = Request::Type::RowAdd;
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
             {
               Request request(Request::Type::RowMul);
-              request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 128/*cram buffer*/), 0, PrecisionT::INT8);
+              request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 128/*cram buffer*/), 0, PrecisionT::INT8);
               request.type = Request::Type::RowMul_CRAM_RF;
               request.addOperand(0, 0, PrecisionT::INT8);
-              request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+              request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
               sys->sendRequest(request);
             }
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
-            request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_2) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
             request.swapSrcDst(); // for source, dest, source operand order
             sys->sendRequest(request);
           }
@@ -49,7 +49,7 @@ int32_t gemm_compiled(System *sys) {
         {
           int32_t _3 = y_inner * 256;
           Request request(Request::Type::RowStore);
-          request.addOperand(sys->getAddress(0/*TODO: for multi-tile*/, 0/*block-id*/, ((_3) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32); // src
+          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((_3) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32); // src
           request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT32); // dst
           sys->sendRequest(request);
         }

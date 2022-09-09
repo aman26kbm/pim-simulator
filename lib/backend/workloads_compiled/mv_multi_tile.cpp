@@ -14,7 +14,7 @@ int32_t mv_multi_tile_compiled(System *sys) {
     {
       // initialization skipped
     }
-    for (int32_t k_v_outer = 0; k_v_outer < 16; ++k_v_outer) {
+    for (int32_t k_v_outer = 0; k_v_outer < 32; ++k_v_outer) {
       // cram-array axis
       {
         int32_t k_inner = 0;
@@ -36,7 +36,7 @@ int32_t mv_multi_tile_compiled(System *sys) {
           sys->sendRequest(request);
         }
       }
-      for (int32_t k_v_inner = 256, delta_k_v_inner = 256 / 2; k_v_inner > 1; k_v_inner -= delta_k_v_inner, delta_k_v_inner >>= 1) {
+      for (int32_t k_v_inner = 128; k_v_inner > 1; k_v_inner -= k_v_inner / 2) {
         {
           Request request(Request::Type::RowStore);
           request.type = Request::Type::RowAdd;
