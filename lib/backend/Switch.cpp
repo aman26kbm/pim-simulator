@@ -1,5 +1,4 @@
 #include "backend/Switch.h"
-#include "backend/Switch.h"
 using namespace pimsim;
 
 Switch::Switch(){}
