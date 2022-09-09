@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t conv_reduce(System *sys) {
+int32_t conv_reduce_compiled(System *sys) {
   void* _1 = nullptr;
   // int32_t Conv2dOutput_rf[1024], 0
   // int8_t w_global[2304], 1024
@@ -57,7 +57,7 @@ int32_t conv_reduce(System *sys) {
     {
       // initialization skipped
     }
-    for (int32_t rc_v = 128, delta_rc_v = 64; rc_v > 1; rc_v -= delta_rc_v, delta_rc_v >>= 1) {
+    for (int32_t rc_v = 128, delta_rc_v = 128 / 2; rc_v > 1; rc_v -= delta_rc_v, delta_rc_v >>= 1) {
       {
         Request request(Request::Type::RowStore);
         request.type = Request::Type::RowAdd;
@@ -87,4 +87,4 @@ int32_t conv_reduce(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__conv_reduce__ = pimsim::registerFunc("conv_reduce", conv_reduce);
+static __attribute__((unused)) Registry::Entry &__conv_reduce_compiled__ = pimsim::registerFunc("conv_reduce_compiled", conv_reduce_compiled);

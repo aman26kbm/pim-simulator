@@ -15,7 +15,9 @@ int32_t mv_multi_tile_compiled(System *sys) {
       // initialization skipped
     }
     for (int32_t k_v_outer = 0; k_v_outer < 16; ++k_v_outer) {
-      for (int32_t k_inner = 0; k_inner < 256; ++k_inner) {
+      // cram-array axis
+      {
+        int32_t k_inner = 0;
         {
           Request request(Request::Type::RowLoad);
           request.addOperand(sys->getAddress(x_outer/*tile no*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 64/*cram buffer*/), 0, PrecisionT::INT8); // dst
@@ -34,7 +36,7 @@ int32_t mv_multi_tile_compiled(System *sys) {
           sys->sendRequest(request);
         }
       }
-      for (int32_t k_v_inner = 256, delta_k_v_inner = 64; k_v_inner > 1; k_v_inner -= delta_k_v_inner, delta_k_v_inner >>= 1) {
+      for (int32_t k_v_inner = 256, delta_k_v_inner = 256 / 2; k_v_inner > 1; k_v_inner -= delta_k_v_inner, delta_k_v_inner >>= 1) {
         {
           Request request(Request::Type::RowStore);
           request.type = Request::Type::RowAdd;
