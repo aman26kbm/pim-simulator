@@ -906,7 +906,9 @@ void System::run()
         }
         //update time
         _time++;
+        #ifdef PRINT_TICK
         printf("current time: %d\n", _time);
+        #endif
         //check if all chips finished
         finished = true;
         for(int i=0; i< _nchips; i++){
