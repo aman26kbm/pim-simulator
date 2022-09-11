@@ -48,6 +48,8 @@ void Config::parse(const string& fname) {
             _nchips = atoi(tokens[1].c_str());
         } else if (tokens[0] == "n_tiles") {
             _ntiles = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "n_tiles_used") {
+            _ntiles_used = atoi(tokens[1].c_str());
         } else if (tokens[0] == "n_blocks") {
             _nblocks = atoi(tokens[1].c_str());
         } else if (tokens[0] == "block_size") {

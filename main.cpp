@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 
     std::cout<<"Starting executing user program: "<<workload<<std::endl;
     //Execute the requests queued by the workload above
-    system->run();
+    system->run(workload);
 
     //Collect and print stats
     system->finish();

@@ -321,7 +321,7 @@ void fir_tile64(System* sys)
     PrecisionT::Precision precision_multiply = PrecisionT::INT32;
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
 
-    int use_tiles = 128;
+    int use_tiles = sys->_ntiles_used;
     int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
 
 

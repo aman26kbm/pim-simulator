@@ -15,7 +15,7 @@ namespace pimsim {
 class Config {
 public:
     std::map<std::string, std::string> options;
-    int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
+    int _nchips, _ntiles, _ntiles_used, _nblocks, _blocksize, _nrows, _ncols;
     int _rf_chunk_size;
     int _num_regs_per_rf;
     int _num_bits_per_reg;
@@ -69,6 +69,7 @@ public:
 
     int get_nchips() const {return _nchips;}
     int get_ntiles() const {return _ntiles;}
+    int get_ntiles_used() const {return _ntiles_used;}
     int get_nblocks() const {return _nblocks;}
     int get_blocksize() const {return _blocksize;}
     int get_nrows() const {return _nrows;}
