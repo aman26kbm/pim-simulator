@@ -35,6 +35,10 @@ MemoryChip::MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wo
         _hTree = new hTree(h_tree_height(n_blocks*n_tiles), wordsize_block2block, _ncols, _nrows, num_regs_per_rf, num_bits_per_reg);
     else if(_values->_configuration == MemoryCharacteristics::Configuration::Mesh)
         _mesh = new mesh(n_tiles, n_blocks,  wordsize_block2block, _ncols, _nrows, num_regs_per_rf, num_bits_per_reg);
+    else if(_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+        printf("creating DynaMesh\n");
+        _DynaMesh = new DynaMesh(_values->config);
+    }
     _Dram = new Dram(dram_bank_number, dram_row_open_latency);
     _regFile = new RegisterFile(num_regs_per_rf, num_bits_per_reg);
 }
@@ -170,6 +174,8 @@ MemoryChip::tick()
         _hTree->tick();
     else if(_values->_configuration == MemoryCharacteristics::Configuration::Mesh)
         _mesh->tick();
+    else if(_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh)
+        _DynaMesh->tick();
     
     _Dram->tick();
 

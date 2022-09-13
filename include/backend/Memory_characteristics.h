@@ -11,6 +11,7 @@ public:
     enum class Configuration : int {
         HTree,
         Mesh,
+        DynaMesh,
         Bus,
         Ideal
     } _configuration;

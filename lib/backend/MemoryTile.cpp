@@ -13,7 +13,6 @@ MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristi
     _ncols = n_cols;
     _blocksize = _nrows * _ncols;
     _values = values;
-
     _nchildren = _nblocks;
 
 #ifdef DEBUG_OUTPUT
@@ -87,6 +86,9 @@ MemoryTile::issueReq(Request& req)
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
         }
+        else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+            req.finish_time = cur_time + getReqTiming(req) + req.DynaMesh_transfer_time;
+        }
         else { //ideal
             req.finish_time = cur_time + 0;
         }
@@ -106,6 +108,9 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req);
         }else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
+        }
+        else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+            req.finish_time = cur_time + getReqTiming(req) + req.DynaMesh_transfer_time;
         }
         else { //ideal
             req.finish_time = cur_time + 0;
@@ -214,6 +219,11 @@ void MemoryTile::update_next(){
                         ((MemoryChip*)_parent)->_mesh->receive_request(&req);
                         next_state.status = MESH_WAIT;
                     }
+                    else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+                        req.DynaMesh_ready = false;
+                        ((MemoryChip*)_parent)->_DynaMesh->receive_request(&req);
+                        next_state.status = DYNA_MESH_WAIT;
+                    }
                 }
                 else if(req.type == Request::Type::Signal) {
                     req.mail->signal(_time);
@@ -281,6 +291,26 @@ void MemoryTile::update_next(){
                     assert(false);
                 }
                 break;
+            case DYNA_MESH_WAIT:
+                if(!req.DynaMesh_ready){
+                    next_state.status = DYNA_MESH_WAIT;
+                }
+                else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                     || req.type == Request::Type::BlockSend_Receive 
+                     || req.type == Request::Type::RowLoad
+                     || req.type == Request::Type::RowStore
+                     || req.type == Request::Type::RowLoad_RF
+                     || req.type == Request::Type::RowStore_RF
+                     || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
+                     || req.type == Request::Type::BlockBroadCast){
+                    next_state.status = REQ_MODE;
+                    issueReq(req);
+                }
+                else{
+                    printf("Should not be here!\n");
+                    assert(false);
+                }
+                break;
             case REQ_MODE:
                 if (_time == _next_available){
                     next_state.status = IDLE;
@@ -313,6 +343,16 @@ void MemoryTile::update_next(){
                         req.mesh_transfer_time = 0;
                         ((MemoryChip*)_parent)->_mesh->receive_request(&req);
                         next_state.status = MESH_WAIT;
+                    }
+                    else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+                        req.DynaMesh_ready = false;
+                        req.DynaMesh_transfer_time = 0;
+                        ((MemoryChip*)_parent)->_DynaMesh->receive_request(&req);
+                        next_state.status = DYNA_MESH_WAIT;
+                    }
+                    else{
+                        printf("Should not be here!\n");
+                        assert(false);
                     }
                 }
                 else{

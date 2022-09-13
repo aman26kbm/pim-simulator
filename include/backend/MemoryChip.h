@@ -13,6 +13,7 @@
 
 #include "hTree.h"
 #include "mesh.h"
+#include "DynaMesh.h"
 #include "Dram.h"
 #include "RegisterFile.h"
 
@@ -28,6 +29,7 @@ public:
 
     hTree* _hTree;
     mesh* _mesh;
+    DynaMesh* _DynaMesh;
     Dram* _Dram;
     RegisterFile* _regFile;
     MemoryChip(int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number, MemoryCharacteristics* values);

@@ -1,7 +1,7 @@
 #ifndef _SYSTEM_H_
 #define _SYSTEM_H_
 
-//#define DEBUG_OUTPUT
+#define DEBUG_OUTPUT
 
 #include "Util.h"
 #include "Tool.h"

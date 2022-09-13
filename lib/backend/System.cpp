@@ -40,6 +40,8 @@ System::System(Config* config) : _config(config)
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
     } else if (config->get_mem_configuration() == "mesh") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Mesh, _config);
+    } else if (config->get_mem_configuration() == "DynaMesh") {
+        _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::DynaMesh, _config);
     } else if (config->get_mem_configuration() == "bus") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Bus, _config);
     } else {
