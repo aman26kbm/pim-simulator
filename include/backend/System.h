@@ -44,12 +44,14 @@ class MemoryChip;
 class System {
 public:
     FILE* rstFile;
+    std::ofstream csv_file;
+    std::string workload;
     uint64_t tot_reqs = 0;
     //TimeT _time; // Global cycles for processing
     Config* _config;
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
-    int _nchips, _ntiles, _nblocks, _nrows, _ncols;
+    int _nchips, _ntiles, _ntiles_used, _nblocks, _nrows, _ncols;
     int _wordsize_block2block, _wordsize_tile2tile; 
     //should match with hTree
     int _wordsize_dram;
@@ -102,7 +104,7 @@ public:
     //void syncSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
     //void advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false);
     //void advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false, bool load=false);
-    void run();
+    void run(std::string workload);
     void finish();
 
     //int system_sendRow_receiveRow(Request& req); // add by Ruihao Li

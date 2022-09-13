@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t vecadd_multi_tile(System *sys) {
+int32_t vecadd_multi_tile_compiled(System *sys) {
   void* _1 = nullptr;
   // int16_t a_global[512], 0
   // int16_t b_global[512], 512
@@ -47,4 +47,4 @@ int32_t vecadd_multi_tile(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__vecadd_multi_tile__ = pimsim::registerFunc("vecadd_multi_tile", vecadd_multi_tile);
+static __attribute__((unused)) Registry::Entry &__vecadd_multi_tile_compiled__ = pimsim::registerFunc("vecadd_multi_tile_compiled", vecadd_multi_tile_compiled);

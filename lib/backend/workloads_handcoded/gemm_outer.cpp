@@ -13,8 +13,8 @@ int32_t gemm_outer(System* sys){
     int matrixBRowNum = matrixAColNum;
     int matrixBColNum = sys->_num_regs_per_rf;
 
-    int use_tiles = 128;
-    int dram_tile = 64;
+    int use_tiles = sys->_ntiles_used;
+    int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
     PrecisionT::Precision precision_input = PrecisionT::INT8;
     PrecisionT::Precision precision_multiply = PrecisionT::INT16;
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;

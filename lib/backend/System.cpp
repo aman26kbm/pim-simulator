@@ -3,7 +3,7 @@
 #include <chrono>
 #include <algorithm>
 //#include <thread>
-
+#include <array>
 
 
 using namespace pimsim;
@@ -13,6 +13,7 @@ System::System(Config* config) : _config(config)
 {
     _nchips = _config->get_nchips();
     _ntiles = _config->get_ntiles();
+    _ntiles_used = _config->get_ntiles_used();
     _nblocks = _config->get_nblocks();
     _nrows = config->get_nrows();
     _ncols = config->get_ncols();
@@ -35,6 +36,8 @@ System::System(Config* config) : _config(config)
     this->_chipsize = this->_tilesize * _ntiles;
 
     rstFile = fopen(config->get_rstfile().c_str(), "w");
+    std::string csv_filename = config->get_rstfile() + ".csv";
+    csv_file.open(csv_filename.c_str(), ios::out);
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
@@ -173,6 +176,7 @@ System::System(Config* config) : _config(config)
 System::~System()
 {
     fclose(rstFile);
+    csv_file.close();
 }
 
 void System::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number) {
@@ -894,10 +898,10 @@ int System::sendRequests(std::vector<Request>& reqs)
 }
 
 
-void System::run()
+void System::run(std::string workload)
 {
+    this->workload = workload;
     int finished = false;
-    
     
     while(!finished){
         //update chip status
@@ -908,7 +912,9 @@ void System::run()
         }
         //update time
         _time++;
+        #ifdef PRINT_TICK
         printf("current time: %d\n", _time);
+        #endif
         //check if all chips finished
         finished = true;
         for(int i=0; i< _nchips; i++){
@@ -949,8 +955,96 @@ void System::finish()
 
         }
     }
-}
 
+    ///////////////////////////////
+    //Generating csv file
+    ///////////////////////////////
+    for (int i = 0; i < _nchips; i++) {
+        
+        //Find the tile that ticked the most
+        long unsigned int max_ticks = 0;
+        int max_ticks_tile = 0;
+        for (int j = 0; j < _chips[i]->_nchildren; j++) {
+            if  (_chips[i]->_children[j]->_last_req_time > max_ticks) {
+                max_ticks = _chips[i]->_children[j]->_last_req_time;
+                max_ticks_tile = j;
+            }
+        }
+        
+        //now we have the tile that ticked the most
+        MemoryComponent* tile;
+        tile = _chips[i]->_children[max_ticks_tile];
+        
+        //now print the csv
+        #define NUM_CSV_COLUMNS 23
+        //header first
+        std::array<std::string, NUM_CSV_COLUMNS> header_row = {
+                          "Max_Tick_Tile",
+                          "Total_Cycles",
+                          "RowAdd_Count",
+                          "RowMul_Count",
+                          "TileSend_Count",
+                          "TileReceive_Count",
+                          "RowLoad_Count",
+                          "RowLoadRF_Count",
+                          "RowStore_Count",
+                          "RowShift_Count",
+                          "RowAdd_Cycles",
+                          "RowMul_Cycles",
+                          "TileSend_Cycles",
+                          "TileReceive_Cycles",
+                          "RowLoad_Cycles",
+                          "RowLoadRF_Cycles",
+                          "RowStore_Cycles",
+                          "RowShift_Cycles",
+                          "TileSend_Wait_Cycles",
+                          "TileReceive_Wait_Cycles",
+                          "RowLoad_Wait_Cycles",
+                          "RowLoadRF_Wait_Cycles",
+                          "RowStore_Wait_Cycles"
+        };
+
+        csv_file << "Workload, Logfile,";
+        for (int i=0; i<header_row.size(); i++) {
+            csv_file << header_row[i] << "," ;
+        }
+        csv_file << std::endl;
+
+        //now the actual data
+        std::array<long unsigned int, NUM_CSV_COLUMNS> value_row = {
+                (long unsigned int) max_ticks_tile,
+                max_ticks,
+                tile->req_cnt[int(Request::Type::RowAdd)],
+                tile->req_cnt[int(Request::Type::RowMul)],
+                tile->req_cnt[int(Request::Type::TileSend)],
+                tile->req_cnt[int(Request::Type::TileReceive)],
+                tile->req_cnt[int(Request::Type::RowLoad)],
+                tile->req_cnt[int(Request::Type::RowLoad_RF)],
+                tile->req_cnt[int(Request::Type::RowStore)],
+                tile->req_cnt[int(Request::Type::RowShift)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::RowAdd)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::RowMul)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::TileSend)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::TileReceive)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::RowLoad)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::RowLoad_RF)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::RowStore)],
+                (long unsigned int) tile->req_proctime[int(Request::Type::RowShift)],
+                (long unsigned int) tile->req_waittime[int(Request::Type::TileSend)],
+                (long unsigned int) tile->req_waittime[int(Request::Type::TileReceive)],
+                (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad)],
+                (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad_RF)],
+                (long unsigned int) tile->req_waittime[int(Request::Type::RowStore)]
+        };
+
+        csv_file << workload <<","<< this->_config->get_rstfile() <<",";
+        for (int i=0; i<value_row.size(); i++) {
+            csv_file << value_row[i] << "," ;
+        }
+        csv_file << std::endl;
+    }
+
+}
 
 
 std::map<std::string, Registry::Entry> & Registry::registeredSimulation() {

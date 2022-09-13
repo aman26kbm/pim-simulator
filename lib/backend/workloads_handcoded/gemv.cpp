@@ -12,8 +12,8 @@ int32_t gemv(System* sys)
 {
     int matrix_row = 32768*1;//32768 * X
     int matrix_col = 4096 *1;// 4096 * Y
-    int use_tiles = 128;
-    int dram_tile = 64;
+    int use_tiles = sys->_ntiles_used;
+    int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
     int basic_matrix_row = sys->_ncols * sys->_nblocks;//256*128=32768
     int basic_matrix_col = use_tiles * sys->_num_regs_per_rf;// 128*32=4096
     int effective_basic_col = (matrix_col>basic_matrix_col)?basic_matrix_col:matrix_col;

@@ -14,8 +14,6 @@ using namespace pimsim;
 
 int main(int argc, char *argv[]) {
 
-    printf("simulator start:\n");
-
     string config_file;
     string log_file;
     string workload;
@@ -67,9 +65,9 @@ int main(int argc, char *argv[]) {
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    printf("starting executing user program:\n");
+    std::cout<<"Starting executing user program: "<<workload<<std::endl;
     //Execute the requests queued by the workload above
-    system->run();
+    system->run(workload);
 
     //Collect and print stats
     system->finish();

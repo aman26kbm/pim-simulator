@@ -18,6 +18,8 @@ public:
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _meshHeight, _meshWidth;
     int _dramTile;
+    int _ntiles_used;
+
     int _rf_chunk_size;
     int _num_regs_per_rf;
     int _num_bits_per_reg;
@@ -71,6 +73,7 @@ public:
 
     int get_nchips() const {return _nchips;}
     int get_ntiles() const {return _ntiles;}
+    int get_ntiles_used() const {return _ntiles_used;}
     int get_nblocks() const {return _nblocks;}
     int get_blocksize() const {return _blocksize;}
     int get_nrows() const {return _nrows;}

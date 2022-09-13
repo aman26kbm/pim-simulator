@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 /////////////////////////////////////////////////////////////
-// Queuing requests for tile0
+// FIR filter micro benchmark
 /////////////////////////////////////////////////////////////
 
 void fir_tile0(System* sys)
@@ -321,8 +321,8 @@ void fir_tile64(System* sys)
     PrecisionT::Precision precision_multiply = PrecisionT::INT32;
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
 
-    int use_tiles = 128;
-    int dram_tile = 64;
+    int use_tiles = sys->_ntiles_used;
+    int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
 
 
     for(int iter_row_load=0; iter_row_load<(int)ceil(size_input/(double)(sys->_nblocks * sys->_ncols - size_filter)); iter_row_load++){
