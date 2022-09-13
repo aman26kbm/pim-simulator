@@ -4,6 +4,10 @@
 
 #include "backend/System.h"
 
+////////////////////////////////////////////////
+// Ignore this workload (see mv.cpp)
+////////////////////////////////////////////////
+
 int32_t gemv_compiled(System *sys) {
   void* _1 = nullptr;
   // int32_t c_global[1024], 0
