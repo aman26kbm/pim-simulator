@@ -58,6 +58,12 @@ void Config::parse(const string& fname) {
             _nrows = atoi(tokens[1].c_str());
         } else if (tokens[0] == "n_cols") {
             _ncols = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "meshHeight") {
+            _meshHeight = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "meshWidth") {
+            _meshWidth = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "dramTile") {
+            _dramTile = atoi(tokens[1].c_str());
         } else if (tokens[0] == "wordsize_block2block") {
             _wordsize_block2block = atoi(tokens[1].c_str());
         } else if (tokens[0] == "wordsize_tile2tile") {

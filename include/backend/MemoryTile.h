@@ -28,6 +28,7 @@ public:
         DRAM_WAIT,
         HTREE_WAIT,
         MESH_WAIT,
+        DYNA_MESH_WAIT,
         TILE_SEND_RECEIVE,
         BLOCK_SEND_RECEIVE,
         DRAM_LOAD_STORE,
@@ -44,6 +45,7 @@ public:
             case DRAM_WAIT: return       "DRAM_WAIT";
             case HTREE_WAIT: return       "HTREE_WAIT";
             case MESH_WAIT: return "MESH_WAIT";
+            case DYNA_MESH_WAIT: return "DYNA_MESH_WAIT";
             case TILE_SEND_RECEIVE: return       "TILE_SEND_RECEIVE";
             case BLOCK_SEND_RECEIVE: return       "BLOCK_SEND_RECEIVE";
             case DRAM_LOAD_STORE: return       "DRAM_LOAD_STORE";
