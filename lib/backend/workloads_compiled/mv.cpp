@@ -7,18 +7,25 @@
 int32_t mv_compiled(System *sys) {
   void* _1 = nullptr;
   // int32_t c_global[1024], 0
-  // int8_t a_global[256], 1024
+  // int8_t b_local[128], 1024
+  // int8_t a_global[256], 1152
   // cram-array axis
   {
     int32_t x_outer = 0;
     {
       // initialization skipped
     }
-    for (int32_t k_outer = 0; k_outer < 256; ++k_outer) {
-      for (int32_t k_inner = 0; k_inner < 16; ++k_inner) {
+    for (int32_t k_outer = 0; k_outer < 32; ++k_outer) {
+      {
+        Request request(Request::Type::RowLoad_RF); // Load register
+        request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8);
+        request.addOperand(0 /*default tile*/, 0, PrecisionT::INT8);
+        sys->sendRequest(request);
+      }
+      for (int32_t k_inner = 0; k_inner < 128; ++k_inner) {
         {
           Request request(Request::Type::RowLoad);
-          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8); // dst
+          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 36/*cram buffer*/), 0, PrecisionT::INT8); // dst
           request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8); // src
           sys->sendRequest(request);
         }
@@ -28,15 +35,14 @@ int32_t mv_compiled(System *sys) {
           request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
           {
             Request request(Request::Type::RowMul);
-            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 32/*cram buffer*/), 0, PrecisionT::INT8);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 36/*cram buffer*/), 0, PrecisionT::INT8);
             request.type = Request::Type::RowMul_CRAM_RF;
             request.addOperand(0, 0, PrecisionT::INT8);
-            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32/*Intermediate*/);
             sys->sendRequest(request);
           }
           request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
-          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
-          request.swapSrcDst(); // for source, dest, source operand order
+          request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32/*Store*/);
           sys->sendRequest(request);
         }
       }
@@ -49,6 +55,7 @@ int32_t mv_compiled(System *sys) {
     }
   }
   // freed a_global
+  // freed b_local
   // freed c_global
   return 0;
 }
