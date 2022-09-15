@@ -8,11 +8,12 @@ int32_t vadd(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    int array_size = 256*128*128;
+    int array_size = 256*128*sys->_ntiles_used;
     PrecisionT::Precision precision_input = PrecisionT::INT8;
     PrecisionT::Precision precision_output = PrecisionT::INT8;
     int use_tiles = sys->_config->_ntiles_used;
     int dram_tile = sys->_config->_dramTile;
+
     int word_size = sys->_config->_nblocks*sys->_config->_ncols;
     for(int tile=0; word_size * tile < array_size; tile++){
         int myTile = (dram_tile + tile) % use_tiles;
