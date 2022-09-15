@@ -81,6 +81,8 @@ public:
     AddrT getAddress(int, int, int);
     AddrT getAddress(int, int, int, int, int);
 
+    AddrT getRFAddress(int tile, int rf_index);
+
     int sendPIM_one_operand(Request& req);
     int sendPIM_two_operands(Request& req);
     int sendPimReq(Request& req);
@@ -88,164 +90,21 @@ public:
     int sendRF_one_operand(Request& req);
     int sendRF_two_operands(Request& req);
     int sendRFReq(Request& req);
-    //int system_sendPimReq(Request& req);
 
     int sendTileReq(Request& req, int para);
     int sendChipReq(Request& req, int para);
     int sendSyncReq(Request& req);
-    //int system_sendTileReq(Request& req, int para);
-    //int system_sendChipReq(Request& req, int para);
 
     int sendRequest(Request& req);
     int sendRequests(std::vector<Request>& reqs);
 
-    //void sync(std::vector<int> chips);
-    //void syncSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
-    //void syncSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd);
-    //void advanceTimeSpecificThings_OneOperand(AddrT req_addr, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false);
-    //void advanceTimeSpecificThings_TwoOperands(AddrT req_addr1, AddrT req_addr2, bool chip, bool tile, bool block, bool chip_upd, bool tile_upd, bool bloc_upd, bool involves_dram=false, bool load=false);
     void run(std::string workload);
     void finish();
-
-    //int system_sendRow_receiveRow(Request& req); // add by Ruihao Li
-    //int system_sendRow_receiveCol(Request& req); // add by Ruihao Li
-    //int system_sendCol_receiveRow(Request& req); // add by Ruihao Li
-    //int system_sendCol_receiveCol(Request& req); // add by Ruihao Li
-    //int system_DramStore(Request& req); // add by Ruihao Li
-    //int system_DramLoad(Request& req); // add by Ruihao Li
-    //int system_ColRead(Request& req); // add by Ruihao Li
-    //int system_ColWrite(Request& req); // add by Ruihao Li
-
-    //void matrix_mul_time_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-    //void matrix_mul_area_optimized(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-    //void matrix_mul_balanced(int A_row, int A_col, int B_row, int B_col);  // add by Ruihao Li
-
-    //PIMRA
-    // void gemv();
-    // void gemv_tile0();
-    // void gemv_tile1();
-
-    // void fir();
-    // void fir_tile0();
-    // void fir_tile1();
-
-    // void test();
-    // void test_tile0();
-    // void test_tile1();
 
 
     //DRAM addresses don't matter. We just define 1 address
     //and use it everywhere.
     AddrT DRAM_ADDR = 0;
-
-//tile0
-    AddrT cram_base_addr_tile0_block0; 
-    AddrT cram_addr_tile0_block0_row0;  
-    AddrT cram_addr_tile0_block0_row4;  
-    AddrT cram_addr_tile0_block0_row8;  
-    AddrT cram_addr_tile0_block0_row16;
-    AddrT cram_addr_tile0_block0_row24;
-
-    AddrT cram_base_addr_tile0_block1; 
-    AddrT cram_addr_tile0_block1_row0; 
-    AddrT cram_addr_tile0_block1_row4; 
-    AddrT cram_addr_tile0_block1_row8; 
-
-    AddrT cram_base_addr_tile0_block2; 
-    AddrT cram_addr_tile0_block2_row0; 
-    AddrT cram_addr_tile0_block2_row4; 
-    AddrT cram_addr_tile0_block2_row8; 
-
-    AddrT cram_base_addr_tile0_block3; 
-    AddrT cram_addr_tile0_block3_row0; 
-    AddrT cram_addr_tile0_block3_row4; 
-    AddrT cram_addr_tile0_block3_row8; 
-    AddrT cram_addr_tile0_block3_row16;
-    AddrT cram_addr_tile0_block3_row24;
-
-//tile1
-    AddrT cram_base_addr_tile1_block0; 
-    AddrT cram_addr_tile1_block0_row0;  
-    AddrT cram_addr_tile1_block0_row4;  
-    AddrT cram_addr_tile1_block0_row8;  
-    AddrT cram_addr_tile1_block0_row16;
-    AddrT cram_addr_tile1_block0_row24;
-
-    AddrT cram_base_addr_tile1_block1; 
-    AddrT cram_addr_tile1_block1_row0; 
-    AddrT cram_addr_tile1_block1_row4; 
-    AddrT cram_addr_tile1_block1_row8; 
-
-    AddrT cram_base_addr_tile1_block2; 
-    AddrT cram_addr_tile1_block2_row0; 
-    AddrT cram_addr_tile1_block2_row4; 
-    AddrT cram_addr_tile1_block2_row8; 
-
-    AddrT cram_base_addr_tile1_block3; 
-    AddrT cram_addr_tile1_block3_row0; 
-    AddrT cram_addr_tile1_block3_row4; 
-    AddrT cram_addr_tile1_block3_row8; 
-    AddrT cram_addr_tile1_block3_row16;
-    AddrT cram_addr_tile1_block3_row24;
-//tile2
-    AddrT cram_base_addr_tile2_block0; 
-    AddrT cram_addr_tile2_block0_row0; 
-    AddrT cram_addr_tile2_block0_row4; 
-    AddrT cram_addr_tile2_block0_row8; 
-    AddrT cram_addr_tile2_block0_row16;
-    AddrT cram_addr_tile2_block0_row24;
-
-    AddrT cram_base_addr_tile2_block1; 
-    AddrT cram_addr_tile2_block1_row0; 
-    AddrT cram_addr_tile2_block1_row4; 
-    AddrT cram_addr_tile2_block1_row8;
-
-    AddrT cram_base_addr_tile2_block2; 
-    AddrT cram_addr_tile2_block2_row0; 
-    AddrT cram_addr_tile2_block2_row4; 
-    AddrT cram_addr_tile2_block2_row8; 
-
-    AddrT cram_base_addr_tile2_block3; 
-    AddrT cram_addr_tile2_block3_row0; 
-    AddrT cram_addr_tile2_block3_row4; 
-    AddrT cram_addr_tile2_block3_row8; 
-    AddrT cram_addr_tile2_block3_row16;
-    AddrT cram_addr_tile2_block3_row24;
-//tile3
-    AddrT cram_base_addr_tile3_block0; 
-    AddrT cram_addr_tile3_block0_row0; 
-    AddrT cram_addr_tile3_block0_row4; 
-    AddrT cram_addr_tile3_block0_row8; 
-    AddrT cram_addr_tile3_block0_row16;
-    AddrT cram_addr_tile3_block0_row24;
-
-    AddrT cram_base_addr_tile3_block1; 
-    AddrT cram_addr_tile3_block1_row0; 
-    AddrT cram_addr_tile3_block1_row4; 
-    AddrT cram_addr_tile3_block1_row8;
-
-    AddrT cram_base_addr_tile3_block2; 
-    AddrT cram_addr_tile3_block2_row0; 
-    AddrT cram_addr_tile3_block2_row4; 
-    AddrT cram_addr_tile3_block2_row8; 
-
-
-    AddrT cram_base_addr_tile3_block3; 
-    AddrT cram_addr_tile3_block3_row0; 
-    AddrT cram_addr_tile3_block3_row4; 
-    AddrT cram_addr_tile3_block3_row8; 
-    AddrT cram_addr_tile3_block3_row16;
-    AddrT cram_addr_tile3_block3_row24;
-
-    //RF base addresses. These are aliases
-    //for CRAM addresses for now. That's coz
-    //the simulator doesn't need the actual address
-    //of the RF. It only need to know which tile's
-    //RF it is.
-    AddrT rf_base_addr_tile0;
-    AddrT rf_base_addr_tile1;
-    AddrT rf_base_addr_tile2;
-    AddrT rf_base_addr_tile3;
 
 };
 
