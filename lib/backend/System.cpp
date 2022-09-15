@@ -665,17 +665,20 @@ void System::finish()
         tile = _chips[i]->_children[max_ticks_tile];
         
         //now print the csv
-        #define NUM_CSV_COLUMNS 23
+        #define NUM_CSV_COLUMNS 27
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "Max_Tick_Tile",
-                          "Total_Cycles",
                           "RowAdd_Count",
                           "RowMul_Count",
+                          "RowMul_CRAM_RF_Count",
+                          "RowReset_Count",
+                          "RowRead_Count",
+                          "RowRead_RF_Count",
                           "TileSend_Count",
                           "TileReceive_Count",
                           "RowLoad_Count",
-                          "RowLoadRF_Count",
+                          "RowLoad_RF_Count",
                           "RowStore_Count",
                           "RowShift_Count",
                           "RowAdd_Cycles",
@@ -683,17 +686,18 @@ void System::finish()
                           "TileSend_Cycles",
                           "TileReceive_Cycles",
                           "RowLoad_Cycles",
-                          "RowLoadRF_Cycles",
+                          "RowLoad_RF_Cycles",
                           "RowStore_Cycles",
                           "RowShift_Cycles",
                           "TileSend_Wait_Cycles",
                           "TileReceive_Wait_Cycles",
                           "RowLoad_Wait_Cycles",
                           "RowLoadRF_Wait_Cycles",
-                          "RowStore_Wait_Cycles"
+                          "RowStore_Wait_Cycles",
+                          "Total_Cycles",
         };
 
-        csv_file << "Workload, Logfile,";
+        csv_file << "WorkloadName, Logfile,";
         for (int i=0; i<header_row.size(); i++) {
             csv_file << header_row[i] << "," ;
         }
@@ -702,9 +706,12 @@ void System::finish()
         //now the actual data
         std::array<long unsigned int, NUM_CSV_COLUMNS> value_row = {
                 (long unsigned int) max_ticks_tile,
-                max_ticks,
                 tile->req_cnt[int(Request::Type::RowAdd)],
                 tile->req_cnt[int(Request::Type::RowMul)],
+                tile->req_cnt[int(Request::Type::RowMul_CRAM_RF)],
+                tile->req_cnt[int(Request::Type::RowReset)],
+                tile->req_cnt[int(Request::Type::RowRead)],
+                tile->req_cnt[int(Request::Type::RowRead_RF)],
                 tile->req_cnt[int(Request::Type::TileSend)],
                 tile->req_cnt[int(Request::Type::TileReceive)],
                 tile->req_cnt[int(Request::Type::RowLoad)],
@@ -723,7 +730,8 @@ void System::finish()
                 (long unsigned int) tile->req_waittime[int(Request::Type::TileReceive)],
                 (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad)],
                 (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad_RF)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::RowStore)]
+                (long unsigned int) tile->req_waittime[int(Request::Type::RowStore)],
+                max_ticks
         };
 
         csv_file << workload <<","<< this->_config->get_rstfile() <<",";
