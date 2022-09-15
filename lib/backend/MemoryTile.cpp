@@ -192,174 +192,236 @@ MemoryTile::outputStats(FILE* rstFile)
 //state machine
 void MemoryTile::update_next(){
         next_state = cur_state;
-
-        switch(cur_state.status){
-            case IDLE:
-                if (_ctrl->_tile_q->is_empty()) {
-                    req = Request(Request::Type::NOP);
+        if(_values->_configuration == MemoryCharacteristics::Configuration::HTree 
+        || _values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+            switch(cur_state.status){
+                case IDLE:
+                    if (_ctrl->_tile_q->is_empty()) {
+                        req = Request(Request::Type::NOP);
+                        break;
+                    }
+                    req = _ctrl->_tile_q->pop_front();
+                    req.start_time = _time;
+                    dest = (MemoryTile*)_parent->getDestTile(req);
+                    source = (MemoryTile*)_parent->getSourceTile(req);
+                    // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
+                    if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                    || req.type == Request::Type::BlockSend_Receive
+                    || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
+                    || req.type == Request::Type::BlockBroadCast){
+                        req.send_receive_finished = false;
+                        if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
+                            req.hTree_ready = false;
+                            ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                            next_state.status = HTREE_WAIT;
+                        }
+                        else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+                            req.mesh_ready = false;
+                            ((MemoryChip*)_parent)->_mesh->receive_request(&req);
+                            next_state.status = MESH_WAIT;
+                        }
+                    }
+                    else if(req.type == Request::Type::Signal) {
+                        req.mail->signal(_time);
+                    }
+                    else if(req.type == Request::Type::Wait) {
+                        next_state.status = MAIL_WAIT;
+                    }
+                    else if(req.type == Request::Type::ResetSync) {
+                        req.mail->reset();
+                    }
+                    else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
+                    || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF) {
+                        // if (_parent->dram_busy) {
+                        //     next_state.status = DRAM_WAIT1;
+                        // }
+                        // else {
+                        //     next_state.status = DRAM_WAIT2;
+                        //     issueReq(req);
+                        // }
+                        req.dram_ready = false;
+                        ((MemoryChip*)_parent)->_Dram->receive_request(&req);
+                        next_state.status = DRAM_WAIT;
+                    }
+                    else {
+                        next_state.status = REQ_MODE;
+                        issueReq(req);
+                    }
                     break;
-                }
-                req = _ctrl->_tile_q->pop_front();
-                req.start_time = _time;
-                dest = (MemoryTile*)_parent->getDestTile(req);
-                source = (MemoryTile*)_parent->getSourceTile(req);
-                // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
-                if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                 || req.type == Request::Type::BlockSend_Receive
-                 || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
-                 || req.type == Request::Type::BlockBroadCast){
-                     req.send_receive_finished = false;
-                    if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
-                        req.hTree_ready = false;
-                        ((MemoryChip*)_parent)->_hTree->receive_request(&req);
-                        next_state.status = HTREE_WAIT;
-                    }
-                    else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
-                        req.mesh_ready = false;
-                        ((MemoryChip*)_parent)->_mesh->receive_request(&req);
-                        next_state.status = MESH_WAIT;
-                    }
-                    else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-                        req.DynaMesh_ready = false;
-                        ((MemoryChip*)_parent)->_DynaMesh->receive_request(&req);
-                        next_state.status = DYNA_MESH_WAIT;
-                    }
-                }
-                else if(req.type == Request::Type::Signal) {
-                    req.mail->signal(_time);
-                }
-                else if(req.type == Request::Type::Wait) {
-                    next_state.status = MAIL_WAIT;
-                }
-                else if(req.type == Request::Type::ResetSync) {
-                    req.mail->reset();
-                }
-                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
-                || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF) {
-                    // if (_parent->dram_busy) {
-                    //     next_state.status = DRAM_WAIT1;
-                    // }
-                    // else {
-                    //     next_state.status = DRAM_WAIT2;
-                    //     issueReq(req);
-                    // }
-                    req.dram_ready = false;
-                    ((MemoryChip*)_parent)->_Dram->receive_request(&req);
-                    next_state.status = DRAM_WAIT;
-                }
-                else {
-                    next_state.status = REQ_MODE;
-                    issueReq(req);
-                }
-                break;
 
-            case HTREE_WAIT:
-                if(!req.hTree_ready){
-                    next_state.status = HTREE_WAIT;
-                }
-                else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                     || req.type == Request::Type::BlockSend_Receive 
-                     || req.type == Request::Type::RowLoad
-                     || req.type == Request::Type::RowStore
-                     || req.type == Request::Type::RowLoad_RF
-                     || req.type == Request::Type::RowStore_RF){
-                    next_state.status = REQ_MODE;
-                    issueReq(req);
-                }
-                else{
-                    printf("Should not be here!\n");
-                    assert(false);
-                }
-                break;
-            case MESH_WAIT:
-                if(!req.mesh_ready){
-                    next_state.status = MESH_WAIT;
-                }
-                else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                     || req.type == Request::Type::BlockSend_Receive 
-                     || req.type == Request::Type::RowLoad
-                     || req.type == Request::Type::RowStore
-                     || req.type == Request::Type::RowLoad_RF
-                     || req.type == Request::Type::RowStore_RF
-                     || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
-                     || req.type == Request::Type::BlockBroadCast){
-                    next_state.status = REQ_MODE;
-                    issueReq(req);
-                }
-                else{
-                    printf("Should not be here!\n");
-                    assert(false);
-                }
-                break;
-            case DYNA_MESH_WAIT:
-                if(!req.DynaMesh_ready){
-                    next_state.status = DYNA_MESH_WAIT;
-                }
-                else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                     || req.type == Request::Type::BlockSend_Receive 
-                     || req.type == Request::Type::RowLoad
-                     || req.type == Request::Type::RowStore
-                     || req.type == Request::Type::RowLoad_RF
-                     || req.type == Request::Type::RowStore_RF
-                     || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
-                     || req.type == Request::Type::BlockBroadCast){
-                    next_state.status = REQ_MODE;
-                    issueReq(req);
-                }
-                else{
-                    printf("Should not be here!\n");
-                    assert(false);
-                }
-                break;
-            case REQ_MODE:
-                if (_time == _next_available){
-                    next_state.status = IDLE;
-                    req.send_receive_finished = true;
-                    if(_time > _last_req_time) _last_req_time = _time;
-                }
-                break;
-            case MAIL_WAIT:
-                if(req.mail->status()) {
-                    next_state.status = IDLE;
-                    if(_time > _last_req_time) _last_req_time = _time;
-                }
-                else {
-                    next_state.status = MAIL_WAIT;
-                }
-                break;
-            case DRAM_WAIT:
-                if(!req.dram_ready){
-                    next_state.status = DRAM_WAIT;
-                }
-                else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
-                || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
-                    if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
-                        req.hTree_ready = false;
-                        ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                case HTREE_WAIT:
+                    if(!req.hTree_ready){
                         next_state.status = HTREE_WAIT;
                     }
-                    else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
-                        req.mesh_ready = false;
-                        req.mesh_transfer_time = 0;
-                        ((MemoryChip*)_parent)->_mesh->receive_request(&req);
-                        next_state.status = MESH_WAIT;
-                    }
-                    else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-                        req.DynaMesh_ready = false;
-                        req.DynaMesh_transfer_time = 0;
-                        ((MemoryChip*)_parent)->_DynaMesh->receive_request(&req);
-                        next_state.status = DYNA_MESH_WAIT;
+                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                        || req.type == Request::Type::BlockSend_Receive 
+                        || req.type == Request::Type::RowLoad
+                        || req.type == Request::Type::RowStore
+                        || req.type == Request::Type::RowLoad_RF
+                        || req.type == Request::Type::RowStore_RF){
+                        next_state.status = REQ_MODE;
+                        issueReq(req);
                     }
                     else{
                         printf("Should not be here!\n");
                         assert(false);
                     }
-                }
-                else{
-                    printf("Should not be here!\n");
-                    assert(false);
-                }
-                break;
+                    break;
+                case MESH_WAIT:
+                    if(!req.mesh_ready){
+                        next_state.status = MESH_WAIT;
+                    }
+                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                        || req.type == Request::Type::BlockSend_Receive 
+                        || req.type == Request::Type::RowLoad
+                        || req.type == Request::Type::RowStore
+                        || req.type == Request::Type::RowLoad_RF
+                        || req.type == Request::Type::RowStore_RF
+                        || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
+                        || req.type == Request::Type::BlockBroadCast){
+                        next_state.status = REQ_MODE;
+                        issueReq(req);
+                    }
+                    else{
+                        printf("Should not be here!\n");
+                        assert(false);
+                    }
+                    break;
+                case REQ_MODE:
+                    if (_time == _next_available){
+                        next_state.status = IDLE;
+                        req.send_receive_finished = true;
+                        if(_time > _last_req_time) _last_req_time = _time;
+                    }
+                    break;
+                case MAIL_WAIT:
+                    if(req.mail->status()) {
+                        next_state.status = IDLE;
+                        if(_time > _last_req_time) _last_req_time = _time;
+                    }
+                    else {
+                        next_state.status = MAIL_WAIT;
+                    }
+                    break;
+                case DRAM_WAIT:
+                    if(!req.dram_ready){
+                        next_state.status = DRAM_WAIT;
+                    }
+                    else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
+                    || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
+                        if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
+                            req.hTree_ready = false;
+                            ((MemoryChip*)_parent)->_hTree->receive_request(&req);
+                            next_state.status = HTREE_WAIT;
+                        }
+                        else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
+                            req.mesh_ready = false;
+                            req.mesh_transfer_time = 0;
+                            ((MemoryChip*)_parent)->_mesh->receive_request(&req);
+                            next_state.status = MESH_WAIT;
+                        }
+                        else{
+                            printf("Should not be here!\n");
+                            assert(false);
+                        }
+                    }
+                    else{
+                        printf("Should not be here!\n");
+                        assert(false);
+                    }
+                    break;
+            }
+        }
+        if(_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+            assert(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                        || req.type == Request::Type::RowLoad
+                        || req.type == Request::Type::RowStore
+                        || req.type == Request::Type::RowLoad_RF
+                        || req.type == Request::Type::RowStore_RF);
+             next_state = cur_state;
+
+            switch(cur_state.status){
+                case IDLE:
+                    if (_ctrl->_tile_q->is_empty()) {
+                        req = Request(Request::Type::NOP);
+                        break;
+                    }
+                    req = _ctrl->_tile_q->pop_front();
+                    req.start_time = _time;
+
+                    // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
+                    if (req.type == Request::Type::TileSend
+                    || req.type == Request::Type::RowStore
+                    || req.type == Request::Type::RowStore_RF){
+                        req.packets2Mesh = req.bits;
+                        next_state.status = SEND_WAIT;   
+                    }
+                    else if(req.type == Request::Type::RowLoad
+                    || req.type == Request::Type::RowLoad_RF){
+                        req.packets2Mesh = 1;
+                        req.requesting_load = true;
+                        next_state.status = SEND_WAIT;   
+                    }
+                    
+                    else if(req.type == Request::Type::TileReceive) {
+                        req.packets2Mesh = req.bits;
+                        next_state.status = RECEIVE_WAIT; 
+                    }
+                    else {
+                        next_state.status = REQ_MODE;
+                        issueReq(req);
+                    }
+                    break;
+
+                
+                case SEND_WAIT:
+                    
+                    //in each cycle try to inject a packet to dynaMesh, untill there is no packets left.
+                    if(req.packets2Mesh>0){
+                        //packets>0
+                        if(((MemoryChip*)_parent)->_DynaMesh->receive_request(&req)){
+                            //push success
+                            req.packets2Mesh--;
+                            next_state.status = SEND_WAIT;
+                        }
+                        else{
+                            //push fail
+                            next_state.status = SEND_WAIT;
+                        } 
+                    }
+                    //packets = 0
+                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::RowStore || req.type == Request::Type::RowStore_RF){
+                        next_state.status = IDLE;
+                    }
+                    else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF){
+                        req.packets2Mesh = req.bits;
+                        next_state.status = RECEIVE_WAIT;
+                    }
+                    
+                    else{
+                        assert(false);
+                    }
+                    break;
+                case RECEIVE_WAIT:
+                    if(((MemoryChip*)_parent)->_DynaMesh->data_exist(&req))
+                        next_state.status = POPPING;
+                    else
+                        next_state.status = RECEIVE_WAIT;
+                case POPPING:
+                    if(req.packets2Mesh>0){
+                        ((MemoryChip*)_parent)->_DynaMesh->pop_data(&req);
+                        req.packets2Mesh--;
+                        next_state.status = POPPING;
+                    }
+                    else
+                        next_state.status = IDLE;
+                case REQ_MODE:
+                    if (_time == _next_available){
+                        next_state.status = IDLE;
+                        if(_time > _last_req_time) _last_req_time = _time;
+                    }
+                    break;
+            }
         }
 }
 

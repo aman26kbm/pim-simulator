@@ -15,6 +15,8 @@ private:
 public:
     DynaMesh(Config* cfg);
     bool receive_request(Request* req);
+    bool data_exist(Request* req);
+    bool pop_data(Request* req);
     void tick();
 
 //Utils

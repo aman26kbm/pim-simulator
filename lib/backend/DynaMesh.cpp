@@ -44,6 +44,16 @@ bool DynaMesh::receive_request(Request* req){
     }
 }
 
+bool DynaMesh::data_exist(Request* req){
+    int dest = get_dest_index(req);
+    return switch_list[dest].data_exist(req);
+}
+    
+bool DynaMesh::pop_data(Request* req){
+    int dest = get_dest_index(req);
+    return switch_list[dest].pop_data(req);
+}
+
 void DynaMesh::tick(){
     for(int i=0; i<cfg->_meshHeight * cfg->_meshWidth; i++){
         switch_list[i].tick();

@@ -56,7 +56,11 @@ public:
     // packetsRemaining[1]: int packets2S;
     // packetsRemaining[2]: int packets2W;
     // packetsRemaining[3]: int packets2E;
+    // packetsRemaining[4]: int packets2L;
     int* packetsRemaining;
+
+    //assume each router has a receive buffer that is *infinitely large*
+    std::vector<Request*> localReceiveBuffer;
 
     DynaSwitch* neighborN;
     DynaSwitch* neighborS;
@@ -67,6 +71,9 @@ public:
     
     bool inject(Request* req);
     void tick();
+    //given a receive/load request, find if the requested data is present in local receive buffer
+    bool data_exist(Request* req);
+    bool pop_data(Request* req);
 
     //utils
 private:
@@ -80,6 +87,7 @@ private:
     void push2Neighbor(Request* req, Direction direction);
     bool inputShouldSend(Direction in);
     void inputSend(Direction in);
+    bool isMatch(Request* bufferedReq, Request* ReceiveReq);
     
 
 };

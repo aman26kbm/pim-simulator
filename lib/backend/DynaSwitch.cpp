@@ -31,7 +31,7 @@ bool DynaSwitch::inject(Request* req){
 }
 
 void DynaSwitch::tick(){
-    //phase 1: setup possible connection
+    //phase 1: decode, setup possible connection or pop to local receive buffer
     for(Direction d=N; d<=L; d++){
         if(connectStates[d]==IDLE && !receiveQueues[d].empty()){
             Request* req = receiveQueues[d].front();
@@ -56,7 +56,24 @@ void DynaSwitch::tick(){
     }
 }
 
+bool DynaSwitch::data_exist(Request* req){
+    for(int i=0; i<localReceiveBuffer.size(); i++){
+        Request* thisReq = localReceiveBuffer[i];
+        if(isMatch(thisReq, req)) return true;
+    }
+    return false;
+}
 
+bool DynaSwitch::pop_data(Request* req){
+    for(int i=0; i<localReceiveBuffer.size(); i++){
+        Request* thisReq = localReceiveBuffer[i];
+        if(isMatch(thisReq, req)) {
+            localReceiveBuffer.erase(localReceiveBuffer.begin()+i);
+            return true;
+        }
+    }
+    return false;
+}
 
 
 //////////////////////////////////Utils///////////////////////////////
@@ -120,9 +137,13 @@ int DynaSwitch::get_source_index(Request* req){
 int DynaSwitch::get_dest_index(Request* req){
     if(req->type == Request::Type::RowStore_RF || req->type == Request::Type::RowStore) return cfg->_dramTile;
     else if(req->type == Request::Type::RowLoad_RF || req->type == Request::Type::RowLoad){
-        return get_addr0_index(req);
+        if(req->requesting_load)
+            return cfg->_dramTile;
+        else
+            return get_addr0_index(req);
     }
     else{
+        //send
         return get_addr1_index(req);
     } 
 }
@@ -142,7 +163,8 @@ bool DynaSwitch::neighborIsFull(Direction direction){
             return neighborE->receiveQueues[W].is_full();
             break;
         case L:
-            return receiveQueues[L].is_full();
+            //return receiveQueues[L].is_full();
+            return true;//since local receive buffer is infinitely large
             break;
         default:
             assert(false);
@@ -167,7 +189,7 @@ void DynaSwitch::push2Neighbor(Request* req, Direction direction){
             neighborE->receiveQueues[W].push(req);
             break;
         case L:
-            assert(false);
+            localReceiveBuffer.push_back(req);
             break;
         default:
             assert(false);
@@ -209,7 +231,7 @@ bool DynaSwitch::inputShouldSend(Direction in){
         }
     }
 }
-
+//push front of input to the neighbor it is routed to
 void DynaSwitch::inputSend(Direction in){
     assert(!receiveQueues[in].empty());
     assert(connectStates[in]!=IDLE);
@@ -217,4 +239,9 @@ void DynaSwitch::inputSend(Direction in){
     assert(!neighborIsFull((Direction)connectStates[in]));
     push2Neighbor(receiveQueues[in].front(), (Direction)connectStates[in]);
     receiveQueues[in].pop();
+    packetsRemaining[(Direction)connectStates[in]]--;
+}
+
+bool DynaSwitch::isMatch(Request* bufferedReq, Request* ReceiveReq){
+    return get_source_index(bufferedReq)==get_source_index(ReceiveReq) && get_dest_index(bufferedReq)==get_dest_index(ReceiveReq);
 }
