@@ -1,5 +1,5 @@
 #include "backend/DynaSwitch.h"
-
+#include <string.h>
 using namespace pimsim;
 
 DynaSwitch::DynaSwitch(int index, Config* cfg){
@@ -17,6 +17,9 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
     //initialize remaining packet numbers
     this->packetsRemaining = new int[5];
 
+    this->next = (DynaSwitch*)malloc(sizeof(DynaSwitch));
+    memcpy(next, this, sizeof(DynaSwitch));
+
     #ifdef _ROUTER_DEBUG_OUTPUT_
     printf("create router (%d,%d)\n", myRow, myCol);
     #endif
@@ -29,7 +32,7 @@ bool DynaSwitch::inject(Request* req){
         #endif
         return false;
     }
-    receiveQueues[L].push(req);
+    next->receiveQueues[L].push(req);
 
     #ifdef _ROUTER_DEBUG_OUTPUT_
     printf("router (%d,%d) inject success\n", myRow, myCol);
@@ -39,6 +42,11 @@ bool DynaSwitch::inject(Request* req){
 }
 
 void DynaSwitch::tick(){
+    //print before update
+    #ifdef _ROUTER_DEBUG_OUTPUT_
+    print_my_status();
+    #endif
+
     //phase 1: decode, setup possible connection or pop to local receive buffer
     for(Direction d=N; d<BOUND; d++){
         if(connectStates[d]==IDLE && !receiveQueues[d].empty()){
@@ -59,12 +67,10 @@ void DynaSwitch::tick(){
     //phase 3: update my states variables
     for(Direction d=N; d<BOUND; d++){
         if(packetsRemaining[connectStates[d]]==0){
-            connectStates[d]=IDLE;
+            next->connectStates[d]=IDLE;
         }
     }
-    #ifdef _ROUTER_DEBUG_OUTPUT_
-    print_my_status();
-    #endif
+    update_current();
 }
 
 bool DynaSwitch::data_exist(Request* req){
@@ -116,6 +122,13 @@ void DynaSwitch::print_remaining_packets(){
 void DynaSwitch::print_local_receive_buffer(){
     printf("local receive buffer: ");
     printf("%d", (int)localReceiveBuffer.size());
+}
+
+void DynaSwitch::update_current(){
+    memcpy(this->receiveQueues, next->receiveQueues, sizeof(*this->receiveQueues)*5);
+    memcpy(this->connectStates, next->connectStates, sizeof(*this->connectStates)*5);
+    memcpy(this->packetsRemaining, next->packetsRemaining, sizeof(*this->packetsRemaining)*5);
+    this->localReceiveBuffer = next->localReceiveBuffer;
 }
 
 
@@ -248,19 +261,19 @@ void DynaSwitch::push2Neighbor(Request* req, Direction direction){
     assert(!neighborIsFull(direction));
     switch(direction){
         case N:
-            neighborN->receiveQueues[S].push(req);
+            neighborN->next->receiveQueues[S].push(req);
             break;
         case S:
-            neighborS->receiveQueues[N].push(req);
+            neighborS->next->receiveQueues[N].push(req);
             break;
         case W:
-            neighborW->receiveQueues[E].push(req);
+            neighborW->next->receiveQueues[E].push(req);
             break;
         case E:
-            neighborE->receiveQueues[W].push(req);
+            neighborE->next->receiveQueues[W].push(req);
             break;
         case L:
-            localReceiveBuffer.push_back(req);
+            next->localReceiveBuffer.push_back(req);
             break;
         default:
             assert(false);
@@ -284,8 +297,8 @@ void DynaSwitch::setupConnection(Direction in, Direction out, int packets){
     //assert(out!=Direction::L);
     assert(!receiveQueues[in].empty());
     assert(packetsRemaining[out]==0);
-    packetsRemaining[out]=packets;
-    connectStates[in] = (ConnectState)out;
+    next->packetsRemaining[out]=packets;
+    next->connectStates[in] = (ConnectState)out;
 }
 
 
@@ -310,8 +323,8 @@ void DynaSwitch::inputSend(Direction in){
     assert(packetsRemaining[(Direction)connectStates[in]]>0);
     assert(!neighborIsFull((Direction)connectStates[in]));
     push2Neighbor(receiveQueues[in].front(), (Direction)connectStates[in]);
-    receiveQueues[in].pop();
-    packetsRemaining[(Direction)connectStates[in]]--;
+    next->receiveQueues[in].pop();
+    next->packetsRemaining[(Direction)connectStates[in]]--;
 }
 
 bool DynaSwitch::isMatch(Request* bufferedReq, Request* ReceiveReq){

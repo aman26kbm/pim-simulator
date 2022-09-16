@@ -424,7 +424,7 @@ void MemoryTile::update_next(){
             }
         }
 }
-
+//print before update
 void MemoryTile::update_current(){
     #ifdef DEBUG_OUTPUT
     printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. \n", 

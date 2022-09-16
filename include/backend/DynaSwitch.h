@@ -34,6 +34,7 @@ std::string toString(ConnectState d);
 
 class DynaSwitch{
 public:
+    
     int index;
     int myRow;
     int myCol;
@@ -85,6 +86,9 @@ public:
     void print_connection();
     void print_remaining_packets();
     void print_local_receive_buffer();
+
+    DynaSwitch* next= NULL;
+    void update_current();
 
     //utils
 private:
