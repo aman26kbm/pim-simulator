@@ -1,6 +1,8 @@
 #ifndef _DYNA_SWITCH_H_
 #define _DYNA_SWITCH_H_
 
+#define _ROUTER_DEBUG_OUTPUT_
+
 #include <assert.h>
 #include "Request.h"
 #include "Config.h"
@@ -16,16 +18,19 @@ public:
 };
 
 //N=North, S=South, W=West, E=East, L=Local
-enum Direction {N,S,W,E,L};
+enum Direction {N,S,W,E,L,BOUND};
 Direction operator ++ (Direction& d, int);
+std::string toString(Direction d);
 
 enum ConnectState {
     toN,
     toS,
     toW,
     toE,
+    toL,
     IDLE
 };
+std::string toString(ConnectState d);
 
 class DynaSwitch{
 public:
@@ -74,6 +79,12 @@ public:
     //given a receive/load request, find if the requested data is present in local receive buffer
     bool data_exist(Request* req);
     bool pop_data(Request* req);
+
+    void print_my_status();
+    void print_receive_Queues();
+    void print_connection();
+    void print_remaining_packets();
+    void print_local_receive_buffer();
 
     //utils
 private:

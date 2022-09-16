@@ -333,11 +333,11 @@ void MemoryTile::update_next(){
             }
         }
         if(_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-            assert(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
-                        || req.type == Request::Type::RowLoad
-                        || req.type == Request::Type::RowStore
-                        || req.type == Request::Type::RowLoad_RF
-                        || req.type == Request::Type::RowStore_RF);
+            // assert(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+            //             || req.type == Request::Type::RowLoad
+            //             || req.type == Request::Type::RowStore
+            //             || req.type == Request::Type::RowLoad_RF
+            //             || req.type == Request::Type::RowStore_RF);
              next_state = cur_state;
 
             switch(cur_state.status){

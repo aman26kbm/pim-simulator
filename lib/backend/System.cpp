@@ -232,7 +232,7 @@ int System::sendRF_one_operand(Request& req)
 
 }
 
-// first operand is cram address. second is rf address
+// rf arithmethics here. first operand is cram address. second is rf address
 int System::sendRF_two_operands(Request& req)
 {
     int chip_index, tile_index, block_index, row, col;
@@ -248,7 +248,7 @@ int System::sendRF_two_operands(Request& req)
     return res;
 }
 
-
+//load store send receive requests handled here
 int System::sendChipReq(Request& req, int para)
 {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
@@ -261,6 +261,7 @@ int System::sendChipReq(Request& req, int para)
         rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
+        rf_req->bits = 1;
         //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
         bool res = _chips[chip_index]->receiveReq(*rf_req);
         return res;
@@ -312,6 +313,7 @@ int System::sendChipReq(Request& req, int para)
 
             inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
             inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_tile_req->bits = req.precision_list[0].bits();
             //setLocation is used to tell which tile owns this request
             inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
         } 
@@ -323,6 +325,7 @@ int System::sendChipReq(Request& req, int para)
 
             inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
             inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+            inter_tile_req->bits = req.precision_list[0].bits();
             //setLocation is used to tell which tile owns this request
             inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         }

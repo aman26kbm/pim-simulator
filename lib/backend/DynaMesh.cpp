@@ -125,7 +125,7 @@ void DynaMesh::setSwitchNeighbors(int index){
         switch_list[index].neighborW = &switch_list[index - 1];
 
     //East neighbor
-    if(myRow==cfg->_meshWidth-1)
+    if(myCol==cfg->_meshWidth-1)
         switch_list[index].neighborE = NULL;
     else
         switch_list[index].neighborE = &switch_list[index + 1];
