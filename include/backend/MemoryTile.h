@@ -64,12 +64,16 @@ public:
     struct state {
         status_t status;
         // bool receive_ready;
-        // bool send_done;
+        // bool send_done;    
+        bool free_my_req=false;
     };
     state cur_state;
     state next_state;
 
     Request req;
+    Request* p_req;
+
+
     MemoryTile* dest;
     MemoryTile* source;
 

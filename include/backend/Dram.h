@@ -2,6 +2,7 @@
 #define _DRAM_H_
 
 #include "Request.h"
+#include "Config.h"
 
 namespace pimsim{
 
@@ -17,6 +18,7 @@ private:
 public:
     Dram();
     Dram(int _nbank, int row_open_delay);
+    Dram(Config* cfg);
     void receive_request(Request* req);
     void tick();
 };

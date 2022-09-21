@@ -347,6 +347,7 @@ void MemoryTile::update_next(){
                         break;
                     }
                     req = _ctrl->_tile_q->pop_front();
+                    
                     req.start_time = _time;
 
                     // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
@@ -379,7 +380,8 @@ void MemoryTile::update_next(){
                     //in each cycle try to inject a packet to dynaMesh, untill there is no packets left.
                     if(req.packets2Mesh>0){
                         //packets>0
-                        if(((MemoryChip*)_parent)->_DynaMesh->receive_request(&req)){
+                        Request req_to_inject = Request(req);
+                        if(((MemoryChip*)_parent)->_DynaMesh->receive_request(req_to_inject)){
                             //push success
                             req.packets2Mesh--;
                             next_state.status = SEND_WAIT;
@@ -403,18 +405,21 @@ void MemoryTile::update_next(){
                     }
                     break;
                 case RECEIVE_WAIT:
-                    if(((MemoryChip*)_parent)->_DynaMesh->data_exist(&req))
+                    if(((MemoryChip*)_parent)->_DynaMesh->data_exist(req))
                         next_state.status = POPPING;
                     else
                         next_state.status = RECEIVE_WAIT;
+                    break;
                 case POPPING:
                     if(req.packets2Mesh>0){
-                        ((MemoryChip*)_parent)->_DynaMesh->pop_data(&req);
+                        Request popped = ((MemoryChip*)_parent)->_DynaMesh->pop_data(req);
+                        assert(popped.type!=Request::Type::NOP);
                         req.packets2Mesh--;
                         next_state.status = POPPING;
                     }
                     else
                         next_state.status = IDLE;
+                    break;
                 case REQ_MODE:
                     if (_time == _next_available){
                         next_state.status = IDLE;

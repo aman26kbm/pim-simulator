@@ -14,17 +14,17 @@ private:
 
 public:
     DynaMesh(Config* cfg);
-    bool receive_request(Request* req);
-    bool data_exist(Request* req);
-    bool pop_data(Request* req);
+    bool receive_request(Request req);
+    bool data_exist(Request req);
+    Request pop_data(Request req);
     void tick();
 
 //Utils
 private:
-    int get_addr0_index(Request* req);
-    int get_addr1_index(Request* req);
-    int get_source_index(Request* req);
-    int get_dest_index(Request* req);
+    int get_addr0_index(Request req);
+    int get_addr1_index(Request req);
+    int get_source_index(Request req);
+    int get_dest_index(Request req);
     void setSwitchNeighbors(int index);
 };
 

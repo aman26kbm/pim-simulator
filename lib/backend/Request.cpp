@@ -77,6 +77,34 @@ std::string Request::print_name(Type type) {
         broadcast = b;
     }
 
+    Request::Request(const Request& req){
+        type = req.type;
+        dram_words = req.dram_words;
+        arrive_time = req.arrive_time;
+        start_time = req.start_time;
+        process_time = req.process_time;
+        finish_time = req.finish_time;
+        addr_list = std::vector<AddrT>(req.addr_list);
+        size_list = std::vector<int>(req.size_list);
+        precision_list = std::vector<PrecisionT::Precision>(req.precision_list);
+        bits = req.bits;
+        chip = req.chip;
+        tile = req.tile;
+        block = req.block;
+        row = req.row;
+        col = req.col;
+        mail = req.mail;
+        hTree_ready = req.hTree_ready;
+        mesh_ready = req.mesh_ready;
+        packets2Mesh = req.packets2Mesh;
+        requesting_load = req.requesting_load;
+        mesh_transfer_time = req.mesh_transfer_time;
+        DynaMesh_transfer_time = req.DynaMesh_transfer_time;
+        send_receive_finished = req.send_receive_finished;
+        dram_ready =req.dram_ready;
+        broadcast = req.broadcast;
+    }
+
     std::string Request::reqToStr() {
        char *buffer;
        buffer = new char[100];

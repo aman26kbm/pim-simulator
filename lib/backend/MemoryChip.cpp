@@ -170,6 +170,10 @@ MemoryChip::tick()
     for (int i = 0; i < _nchildren; i++) {
         _children[i]->update_next();
     }
+        //For each tile, update the current state
+    for (int i = 0; i < _nchildren; i++) {
+        _children[i]->update_current();
+    }
     if(_values->_configuration == MemoryCharacteristics::Configuration::HTree)
         _hTree->tick();
     else if(_values->_configuration == MemoryCharacteristics::Configuration::Mesh)
@@ -216,8 +220,5 @@ MemoryChip::tick()
     }
     */
 
-    //For each tile, update the current state
-    for (int i = 0; i < _nchildren; i++) {
-        _children[i]->update_current();
-    }
+
 }
