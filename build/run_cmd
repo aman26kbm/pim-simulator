@@ -10,8 +10,7 @@
 ./PIM_simulator -c ../configs/pimsim_1tile_used.cfg -m mv_compiled -l gemv_compiled.1tile.log
 ./PIM_simulator -c ../configs/pimsim_1tile_used.cfg -m vecadd_4k_compiled -l vecadd_compiled.1tile.log
 #Compiled multi core
-#Commenting out the following because the workload is not ready yet
-#./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m fir_multi_tile_compiled -l fir_compiled.128tile.log
+./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m fir_multi_tile_compiled -l fir_compiled.128tile.log
 #Commenting out the following because the workload is not ready yet
 #./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m conv_multi_tile_compiled -l conv_compiled.128tile.log
 ./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m gemm_multi_tile_compiled -l gemm_compiled.128tile.log
@@ -27,8 +26,7 @@
 #Handcoded multi core
 ./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m gemm_outer -l gemm_handcoded.128tile.log
 ./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m gemv -l gemv_handcoded.128tile.log
-#Commenting out the following because the workload is not ready yet
-#./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m fir -l fir_handcoded.128tile.log
+./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m fir_multi_tile -l fir_handcoded.128tile.log
 ./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m vadd -l vecadd_handcoded.128tile.log
 #Commenting out the following because the workload is not ready yet
 #./PIM_simulator -c ../configs/pimsim_128tiles_used.cfg -m conv -l conv_handcoded.128tile.log
