@@ -84,6 +84,16 @@ bool DynaSwitch::receive_from_dram(Request req){
     #endif
 }
 
+//remove 1 matching entry from dramReceiveBuffer
+bool DynaSwitch::store_to_dram(Request req){
+    for(int i=0; i<dramReceiveBuffer.size(); i++){
+        Request thisReq = dramReceiveBuffer[i];
+        if(isMatch(thisReq, req)){
+            dramReceiveBuffer.erase(dramReceiveBuffer.begin()+i--);
+        }
+    }
+}
+
 void DynaSwitch::tick(){
     //print before update
     #ifdef _ROUTER_DEBUG_OUTPUT_
@@ -100,12 +110,25 @@ void DynaSwitch::tick(){
             thisReq.requesting_load = false;
             thisReq.packets2Mesh = thisReq.bits;
             dram->receive_request(thisReq);
-            dramReceiveBuffer.erase(dramReceiveBuffer.begin()+i);
+            dramReceiveBuffer.erase(dramReceiveBuffer.begin()+i--);
             // i--;
+        }
+
+        if((thisReq.type == Request::Type::RowStore || thisReq.type == Request::Type::RowStore_RF)
+        && thisReq.requesting_store == true) {
+            if(remainingStore==0){
+                thisReq.requesting_store = false;
+                dram->receive_request(thisReq);
+                remainingStore = thisReq.bits-1;
+            }
+            else{
+                thisReq.requesting_store = false;
+                remainingStore--;
+            }
         }
     }
     //dram phase 2: if any dram load request is dram_ready, try receive from dram. deduct packets2Mesh by 1
-    //if any dram store request is ready, ?
+    //if any dram store request is ready, remove 1 entry from dramReceiveBuffer
     for(int i=0; i<dram->dramFinishedReqs.size(); i++){
         Request* thisReq = &dram->dramFinishedReqs[i];
         if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF) && thisReq->dram_ready == true){
@@ -113,13 +136,18 @@ void DynaSwitch::tick(){
             thisReq->packets2Mesh--;
             break;
         }
+        if((thisReq->type == Request::Type::RowStore || thisReq->type == Request::Type::RowStore_RF) && thisReq->dram_ready == true){
+            store_to_dram(*thisReq);
+            thisReq->packets2Mesh--;
+            break;
+        }
     }
 
-    //dram phase 3: if any dram load request has packets2Mesh==0, remove it from dramReceiveBuffer
+    //dram phase 3: if any dram load/store request has packets2Mesh==0, remove it from dramReceiveBuffer
     for(int i=0; i<dram->dramFinishedReqs.size(); i++){
         Request* thisReq = &dram->dramFinishedReqs[i];
-        if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF) && thisReq->packets2Mesh == 0){
-            dram->dramFinishedReqs.erase(dram->dramFinishedReqs.begin()+i);
+        if(thisReq->packets2Mesh == 0){
+            dram->dramFinishedReqs.erase(dram->dramFinishedReqs.begin()+i--);
         }
     }
 
@@ -186,7 +214,7 @@ void DynaSwitch::print_my_status(){
     print_connection();
     print_remaining_packets();
     print_local_receive_buffer();
-    //print_dram_receive_buffer();
+    print_dram_receive_buffer();
     dram->print_dram_finished_reqs();
     printf("\n");
 }
@@ -225,6 +253,14 @@ void DynaSwitch::update_current(){
     // this->localReceiveBuffer = next->localReceiveBuffer;
     // this->dramReceiveBuffer = next->dramReceiveBuffer;
     copy_content(this->next, this);
+}
+
+bool DynaSwitch::is_finished(){
+    return (receiveQueues.empty() 
+    && packetsRemaining.empty()
+    && localReceiveBuffer.empty()
+    && dramReceiveBuffer.empty()
+    && dram->is_finished());
 }
 
 

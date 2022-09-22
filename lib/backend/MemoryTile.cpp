@@ -5,22 +5,18 @@
 using namespace std;
 using namespace pimsim;
 
-MemoryTile::MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values)
+MemoryTile::MemoryTile(MemoryCharacteristics* values)
     : MemoryComponent(MemoryComponent::Level::Tile)
 {
-    _nblocks = n_blocks;
-    _nrows = n_rows;
-    _ncols = n_cols;
-    _blocksize = _nrows * _ncols;
+
     _values = values;
-    _nchildren = _nblocks;
 
 #ifdef DEBUG_OUTPUT
      printf("Create a tile!\n");
 #endif
 
-    for (int i = 0; i < _nblocks; i++) {
-        MemoryBlock* block = new MemoryBlock(_nrows, _ncols);
+    for (int i = 0; i < _values->config->_nblocks; i++) {
+        MemoryBlock* block = new MemoryBlock(_values->config->_nrows, _values->config->_ncols);
         //Removing controller for each block. we don't need it
         //Controller* ctrl = new Controller(block);
         //block->setController(ctrl);
@@ -44,27 +40,6 @@ MemoryTile::send2Child(Request& req)
     return _children[idx]->receiveReq(req);
 }
 
-
-bool
-MemoryTile::isReady(Request& req)
-{
-    cout<<"Unused code";
-    assert(0);
-    //_ctrl refers to the controller of the tile
-    TimeT cur_time = _time;
-    if (req.isTile()) {
-        TimeT next = getNextGlobalTime();
-        if (next <= cur_time) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        // Check the block time
-        return _children[req.block]->isReady(req);
-    }
-}
-
 void
 MemoryTile::issueReq(Request& req)
 {
@@ -75,11 +50,9 @@ MemoryTile::issueReq(Request& req)
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
         //precision_list[0] effectively contains the number of rows to transfer.
-        int words = int((_ncols  * getPrecisionBits(req)) / _values->_wordsize_tile2tile);
+        int words = int((_values->config->_ncols  * getPrecisionBits(req)) / _values->config->_wordsize_tile2tile);
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
-            bus_counter += words;
-            //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
-            req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
+            assert(false);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
 
             req.finish_time = cur_time + getReqTiming(req) ;
@@ -97,12 +70,9 @@ MemoryTile::issueReq(Request& req)
      else if (req.isTile()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-        int words = int((_ncols * getPrecisionBits(req)) / _values->_wordsize_block2block) ;
+        int words = int((_values->config->_ncols * getPrecisionBits(req)) / _values->config->_wordsize_block2block) ;
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
-            //bus_counter is reset after each tick in the MemoryComponent::tick() method
-            bus_counter += words;
-            //req.finish_time = cur_time + _timing[int(req.type)] * (bus_counter + 1);
-            req.finish_time = cur_time + getReqTiming(req) * (bus_counter);
+            assert(false);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
             
             req.finish_time = cur_time + getReqTiming(req);
@@ -355,6 +325,7 @@ void MemoryTile::update_next(){
                     || req.type == Request::Type::RowStore
                     || req.type == Request::Type::RowStore_RF){
                         req.packets2Mesh = req.bits;
+                        req.requesting_store = true;
                         next_state.status = SEND_WAIT;   
                     }
                     else if(req.type == Request::Type::RowLoad
@@ -442,14 +413,6 @@ void MemoryTile::update_current(){
     cur_state = next_state;
 }
 
-//void MemoryTile::issueReq(Request& req){
-//    if(req.type == Request::Type::TileSend) {
-//        next_available = *glb_clk + req.getWordNum() * _cycle_per_word;
-//    }
-//    else if (req.type == Request::Type::TileReceive) {
-//        next_available = *glb_clk + _hops * _cycle_per_word;
-//    }
-//    else {
-//        next_available = *glb_clk + (int)(_values->getTiming(req)/_time_per_cycle) +1;
-//    }
-//}
+bool MemoryTile::isFinished(){
+    return (_ctrl->isEmpty() && (isIdle()));
+}

@@ -77,3 +77,18 @@ void Dram_sendback::print_dram_finished_reqs(){
     printf("dram finished reqs buffer: ");
     printf("%d ", (int)dramFinishedReqs.size());
 }
+
+bool Dram_sendback::is_finished(){
+    bool req_q_list_is_empty = true;
+    for(int i=0; i<req_q_list.size(); i++){
+        if (!req_q_list[i].empty()){
+            req_q_list_is_empty = false;
+            break;
+        }
+
+    }
+    
+    return (dramFinishedReqs.empty()
+            && curr_req.empty()
+            && req_q_list_is_empty);
+}

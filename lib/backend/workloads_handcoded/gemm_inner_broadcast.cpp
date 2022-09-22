@@ -7,6 +7,7 @@
 int32_t gemm_inner_broadcast(System* sys){
     std::vector<Request> requests;
     Request *request;
+    Config* cfg = sys->_config;
 
     // int matrixARowNum = 128*16*16;
     // int matrixAColNum = 256*8;
@@ -21,18 +22,18 @@ int32_t gemm_inner_broadcast(System* sys){
     int matrixARowNum = 128*16;
     int matrixAColNum = 128*16;
     int matrixBRowNum = matrixAColNum;
-    int matrixBColNum = sys->_num_regs_per_rf;
+    int matrixBColNum = cfg->_num_regs_per_rf;
 
 
-    int basicMatrixARowNum = sys->_ntiles;
-    int basicMatrixAColNum = sys->_nblocks*sys->_ncols;
+    int basicMatrixARowNum = cfg->_ntiles;
+    int basicMatrixAColNum = cfg->_nblocks*cfg->_ncols;
     int basicMatrixBRowNum = matrixAColNum;
-    int basicMatrixBColNum = sys->_num_regs_per_rf;
+    int basicMatrixBColNum = cfg->_num_regs_per_rf;
 
-    int RowReduce_WithinTile_count = log2(matrixAColNum/sys->_ncols);
-    int rowReduce_count = log2(sys->_ncols/32);
-    for(int i=0; i<matrixARowNum*matrixAColNum/(sys->_ntiles*sys->_nblocks*sys->_ncols); i++){
-        for(int tile=0; tile<sys->_ntiles; tile++){
+    int RowReduce_WithinTile_count = log2(matrixAColNum/cfg->_ncols);
+    int rowReduce_count = log2(cfg->_ncols/32);
+    for(int i=0; i<matrixARowNum*matrixAColNum/(cfg->_ntiles*cfg->_nblocks*cfg->_ncols); i++){
+        for(int tile=0; tile<cfg->_ntiles; tile++){
              //a[0:]
                 request = new Request(Request::Type::RowLoad);
                 request->addOperand(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //cram addr
@@ -53,7 +54,7 @@ int32_t gemm_inner_broadcast(System* sys){
             request = new Request(Request::Type::Signal, sys->m1);
             request->addOperand(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //src
             requests.push_back(*request);
-            for(int tile=1; tile<sys->_ntiles; tile++){
+            for(int tile=1; tile<cfg->_ntiles; tile++){
                 request = new Request(Request::Type::Wait, sys->m1);
                 request->addOperand(sys->getAddress(tile,0,4), 0, PrecisionT::INT4); //src
                 requests.push_back(*request);
@@ -62,10 +63,10 @@ int32_t gemm_inner_broadcast(System* sys){
                 requests.push_back(*request);
             }
             
-            for(int tile=0; tile<sys->_ntiles; tile++){
+            for(int tile=0; tile<cfg->_ntiles; tile++){
                //broadcast for blocks
                 request = new Request(Request::Type::BlockBroadCast);
-                request->addOperand(sys->getAddress(tile,0,4), matrixAColNum/sys->_ncols, PrecisionT::INT4); //src
+                request->addOperand(sys->getAddress(tile,0,4), matrixAColNum/cfg->_ncols, PrecisionT::INT4); //src
                 requests.push_back(*request);              
                 //multiply
                 request = new Request(Request::Type::RowMul);
@@ -84,7 +85,7 @@ int32_t gemm_inner_broadcast(System* sys){
                 requests.push_back(*request);
                 request = new Request(Request::Type::PopCountReduce_RF);
                 request->addOperand(sys->getAddress(tile,0,12), 0, PrecisionT::INT4); //src
-                request->addOperand(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //dst
+                request->addOperand(cfg->_num_regs_per_rf * tile, 0, PrecisionT::INT4); //dst
                 requests.push_back(*request);
 
             }

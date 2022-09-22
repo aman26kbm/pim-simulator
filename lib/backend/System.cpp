@@ -14,29 +14,6 @@ using namespace std;
 
 System::System(Config* config) : _config(config)
 {
-    _nchips = _config->get_nchips();
-    _ntiles = _config->get_ntiles();
-    _ntiles_used = _config->get_ntiles_used();
-    _nblocks = _config->get_nblocks();
-    _nrows = config->get_nrows();
-    _ncols = config->get_ncols();
-    _clock_rate = config->get_clock_rate();
-    _blockctrl = config->get_blockctrl();
-    _tilectrl = config->get_tilectrl();
-    _chipctrl = config->get_chipctrl();
-    _wordsize_block2block = config->get_wordsize_block2block();
-    _wordsize_tile2tile = config->get_wordsize_tile2tile();
-    _wordsize_dram = config->get_wordsize_dram();
-    _dram_row_open_latency = config->get_dram_row_open_latency();
-    _dram_bank_number = config->get_dram_bank_number();
-    _rf_chunk_size = config->get_rf_chunk_size();
-    _num_regs_per_rf = config->get_num_regs_per_rf();
-    _num_bits_per_reg = config->get_num_bits_per_reg();
-    if (!(_blockctrl || _tilectrl || _chipctrl))
-        _blockctrl = true;
-    _blocksize = _nrows * _ncols; // set the blocksize based on columns and rows
-    this->_tilesize = this->_blocksize * _nblocks;
-    this->_chipsize = this->_tilesize * _ntiles;
 
     rstFile = fopen(config->get_rstfile().c_str(), "w");
     std::string csv_filename = config->get_rstfile() + ".csv";
@@ -54,8 +31,8 @@ System::System(Config* config) : _config(config)
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _config);
     }
 
-    for (int i = 0; i < _nchips; i++) {
-        MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _wordsize_block2block, _num_regs_per_rf, _num_bits_per_reg, _dram_row_open_latency, _dram_bank_number, _values);
+    for (int i = 0; i < config->_nchips; i++) {
+        MemoryChip* chip = new MemoryChip(_values);
         chip->setValues(_values);
         //We don't need a controller per chip
         //Controller* ctrl = new Controller(chip);
@@ -67,7 +44,7 @@ System::System(Config* config) : _config(config)
 
     //Inter tile communication
     m1 = new Mailbox();  //use as a semaphore
-    m2 = new Mailbox(_ntiles);  //use as a barrier for all tiles
+    m2 = new Mailbox(config->_ntiles);  //use as a barrier for all tiles
     m3 = new Mailbox();
 }
 
@@ -77,17 +54,6 @@ System::~System()
     csv_file.close();
 }
 
-void System::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number) {
-
-    int global_chip_id = _chips.size();
-    MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, wordsize_block2block, num_regs_per_rf, num_bits_per_reg, dram_row_open_latency, dram_bank_number,  _values );
-    Controller* ctrl = new Controller(chip);
-    chip->setId(global_chip_id);
-    chip->setController(ctrl);
-    chip->setParent(NULL);
-    chip->setValues(values);
-    _chips.push_back(chip);
-}
 
 //Form an address for the given tile, block, row
 //Chip and row numbers are assumed to be 0.
@@ -95,13 +61,13 @@ void System::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, i
 AddrT System::getAddress(int tile, int block, int row)
 {
     AddrT addr = 0;
-    addr *= _ntiles;
+    addr *= _config->_ntiles;
     addr += tile;
-    addr *= _nblocks;
+    addr *= _config->_nblocks;
     addr += block;
-    addr *= _nrows;
+    addr *= _config->_nrows;
     addr += row;
-    addr *= _ncols;
+    addr *= _config->_ncols;
     addr += 0;
     return addr;
 }
@@ -115,13 +81,13 @@ AddrT System::getRFAddress(int tile, int rf_index){
 AddrT System::getAddress(int chip, int tile, int block, int row, int col)
 {
     AddrT addr = chip;
-    addr *= _ntiles;
+    addr *= _config->_ntiles;
     addr += tile;
-    addr *= _nblocks;
+    addr *= _config->_nblocks;
     addr += block;
-    addr *= _nrows;
+    addr *= _config->_nrows;
     addr += row;
-    addr *= _ncols;
+    addr *= _config->_ncols;
     addr += col;
     return addr;
 }
@@ -131,15 +97,15 @@ void System::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_id
 {
     /* Here is the code for memory mapping
      * */
-    col_idx = addr % _ncols;
-    addr /= _ncols;
-    row_idx = addr % _nrows;
-    addr /= _nrows;
-    block_idx = addr % _nblocks;
-    addr /= _nblocks;
-    tile_idx = addr % _ntiles;
-    addr /= _ntiles;
-    chip_idx = addr % _nchips;
+    col_idx = addr % _config->_ncols;
+    addr /= _config->_ncols;
+    row_idx = addr % _config->_nrows;
+    addr /= _config->_nrows;
+    block_idx = addr % _config->_nblocks;
+    addr /= _config->_nblocks;
+    tile_idx = addr % _config->_ntiles;
+    addr /= _config->_ntiles;
+    chip_idx = addr % _config->_nchips;
 }
 
 
@@ -147,12 +113,12 @@ void System::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_id
 {
     /* Here is the code for memory mapping
      * */
-    addr /= _blocksize;
-    tile_idx = addr % _nblocks;
-    addr /= _nblocks;
-    block_idx = addr % _ntiles;
-    addr /= _ntiles;
-    chip_idx = addr % _nchips;
+    addr /= _config->_blocksize;
+    tile_idx = addr % _config->_nblocks;
+    addr /= _config->_nblocks;
+    block_idx = addr % _config->_ntiles;
+    addr /= _config->_ntiles;
+    chip_idx = addr % _config->_nchips;
 }
 
 
@@ -217,9 +183,9 @@ int System::sendPIM_two_operands(Request& req)
 //operand is rf address
 int System::sendRF_one_operand(Request& req)
 {
-    int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+    int chip_index = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
     assert(chip_index<=_chips.size());
-    int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+    int tile_index = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
     assert(tile_index<=_chips[chip_index]->_children.size());
     Request* rf_req = new Request(req.type);
     rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
@@ -253,9 +219,9 @@ int System::sendChipReq(Request& req, int para)
 {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
         //first operand is rf address, second operand is DRAM address
-        int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+        int chip_index = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
         assert(chip_index<=_chips.size());
-        int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+        int tile_index = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
         assert(tile_index<=_chips[chip_index]->_children.size());
         Request* rf_req = new Request(req.type);
         rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
@@ -597,7 +563,7 @@ void System::run(std::string workload)
     
     while(!finished){
         //update chip status
-        for (int i = 0; i < _nchips; i++) {
+        for (int i = 0; i < _config->_nchips; i++) {
             
             _chips[i]->tick();
             
@@ -609,14 +575,14 @@ void System::run(std::string workload)
         #endif
         //check if all chips finished
         finished = true;
-        for(int i=0; i< _nchips; i++){
+        for(int i=0; i< _config->_nchips; i++){
             if (!_chips[i]->isFinished()){
                 finished = false;
             }
         }
     }
     //print stats
-    for (int i = 0; i < _nchips; i++) {
+    for (int i = 0; i < _config->_nchips; i++) {
         _chips[i]->outputStats(rstFile);
     }
 
@@ -627,7 +593,7 @@ void System::finish()
 {
 
     fprintf(rstFile, "\n############# Summary #############\n");
-    for (int i = 0; i < _nchips; i++) {
+    for (int i = 0; i < _config->_nchips; i++) {
         fprintf(rstFile, "--------------------------------\n");
         //fprintf(rstFile, "Chip#%d has ticked %lu clocks\n", i, _chips[i]->getTime());
         //fprintf(rstFile, "Chip#%d has processed %lu instructions\n", i, _chips[i]->getDecoderTime());
@@ -636,7 +602,7 @@ void System::finish()
         //fprintf(rstFile, "Chip#%d leakage power is %.4lf W\n", i, _chips[i]->getTotalLeakageEnergy());
         fprintf(rstFile, "--------------------------------\n");
 
-        for (int j = 0; j < _chips[i]->_nchildren; j++) {
+        for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) {
             fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks, last active time is %lu\n", i, j, (long) _time, (long)_chips[i]->_children[j]->_last_req_time);
             fprintf(rstFile, "--------------------------------\n");
 
@@ -651,12 +617,12 @@ void System::finish()
     ///////////////////////////////
     //Generating csv file
     ///////////////////////////////
-    for (int i = 0; i < _nchips; i++) {
+    for (int i = 0; i < _config->_nchips; i++) {
         
         //Find the tile that ticked the most
         long unsigned int max_ticks = 0;
         int max_ticks_tile = 0;
-        for (int j = 0; j < _chips[i]->_nchildren; j++) {
+        for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) {
             if  (_chips[i]->_children[j]->_last_req_time > max_ticks) {
                 max_ticks = _chips[i]->_children[j]->_last_req_time;
                 max_ticks_tile = j;

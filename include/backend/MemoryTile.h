@@ -71,7 +71,6 @@ public:
     state next_state;
 
     Request req;
-    Request* p_req;
 
 
     MemoryTile* dest;
@@ -85,7 +84,7 @@ public:
     uint64_t n_unexpected_reqs = 0;
 
     MemoryTile() {};
-    MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
+    MemoryTile(MemoryCharacteristics* values);
     //MemoryTile(const MemoryTile &obj);
 
     //void copyContents(MemoryTile &obj);
@@ -94,7 +93,6 @@ public:
         return ((cur_state.status==IDLE) && (next_state.status==IDLE));
     };
     bool send2Child(Request& req);
-    bool isReady(Request& req);
     void issueReq(Request& req);
     void finishReq(Request& req);
     void commitReq(Request& req);
@@ -110,6 +108,8 @@ public:
     };
     void update_next();
     void update_current();
+
+    bool isFinished();
 
 private:
     MemoryTile* next;

@@ -19,11 +19,12 @@ void fir_tile(System* sys)
     PrecisionT::Precision precision_multiply = PrecisionT::INT32;
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
 
-    int use_tiles = sys->_ntiles_used;
+    Config* cfg = sys->_config;
+    int use_tiles = cfg->_ntiles_used;
     int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
 
 
-    for(int iter_row_load=0; iter_row_load<(int)ceil(size_input/(double)(sys->_nblocks * sys->_ncols - size_filter)); iter_row_load++){
+    for(int iter_row_load=0; iter_row_load<(int)ceil(size_input/(double)(cfg->_nblocks * cfg->_ncols - size_filter)); iter_row_load++){
         //Now we load inputs from DRAM
         //Currently, we're assuming just one load is enough.
         //Only one input in each column across all cores.
@@ -40,7 +41,7 @@ void fir_tile(System* sys)
         request->addOperand(sys->getAddress(0,0,precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
         requests.push_back(*request);
 
-        int iter_load_rf_count = (int)ceil(size_filter/(double)sys->_num_regs_per_rf);
+        int iter_load_rf_count = (int)ceil(size_filter/(double)cfg->_num_regs_per_rf);
 
         for(int iter_load_rf=0; iter_load_rf<iter_load_rf_count; iter_load_rf++){
             //Load filter coefficients into the RF.
@@ -59,7 +60,7 @@ void fir_tile(System* sys)
             //Loop over the following set of instructions N times,
             //where N is the number of filter coefficients
             for (int i=0; i< 32; i++) {
-                if(iter_load_rf*sys->_num_regs_per_rf+i<size_filter){
+                if(iter_load_rf*cfg->_num_regs_per_rf+i<size_filter){
 
                 //Read the coefficient we want to multiply with from the RF.
                 //This is not required if we make the RF out of flops.

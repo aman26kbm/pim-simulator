@@ -20,6 +20,9 @@ class MemoryComponent;
 
 class MemoryBlock : public MemoryComponent {
 public:
+    int _nrows;
+    int _ncols;
+    int _blocksize; 
     MemoryBlock(int n_rows, int n_cols);
 
     bool send2Child(Request& req);

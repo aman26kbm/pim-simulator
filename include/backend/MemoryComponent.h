@@ -30,15 +30,7 @@ public:
         MAX
     } _level;
 
-    int _ntiles, _nblocks, _nrows, _ncols, _blocksize;
     int _id;
-
-    int bus_counter = 0; // counter for bus congestion ----
-
-    //std::vector<int> htree_counters;
-
-    int dram_counter = 0; //counter for dram accesses
-    bool dram_busy = false; //status signal for dram
 
     Controller* _ctrl;
     MemoryCharacteristics* _values;
@@ -54,8 +46,7 @@ public:
 
     /* parent memory */
     MemoryComponent* _parent;
-    /* childrens */
-    int _nchildren;
+
     std::vector<MemoryComponent*> _children; 
 
     /* Statistics available at the current level */
@@ -63,9 +54,6 @@ public:
     double req_proctime[int(Request::Type::MAX)]; 
     double req_waittime[int(Request::Type::MAX)];
     double req_energy[int(Request::Type::MAX)];
-
-    double block_decoder_energy;
-    double inter_connection_energy;
 
     MemoryComponent() {};
     MemoryComponent(Level level);
@@ -87,25 +75,21 @@ public:
     //TimeT getTime();
     TimeT getDecoderTime();
     void setDecoderTime(TimeT time);
-    TimeT getNextGlobalTime();
+
     //void updateTime();
 
     virtual void outputStats(FILE* rstFile);
     void tick();
     bool receiveReq(Request& req);
-    bool isFinished();
-    virtual bool isIdle() = 0;
+    // bool isFinished();
 
     virtual bool send2Child(Request& req) = 0;
-    virtual bool isReady(Request& req) = 0;
     virtual void issueReq(Request& req) = 0; 
     virtual void commitReq(Request& req) = 0; 
     void finishReq(Request& req);
 
     virtual MemoryComponent* getDestTile(Request& req) = 0;
     virtual MemoryComponent* getSourceTile(Request& req) = 0;
-    virtual void update_next() = 0;
-    virtual void update_current() = 0;
 };
 
 }

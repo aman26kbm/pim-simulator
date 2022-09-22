@@ -24,6 +24,7 @@ public:
     void receive_request(Request req);
     void tick();
     void print_dram_finished_reqs();
+    bool is_finished();
 };
 
 }

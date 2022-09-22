@@ -14,12 +14,6 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration,
                                              Config* config) {
     _configuration = configuration;
     this->config = config; 
-    _wordsize_block2block = config->_wordsize_block2block;
-    _wordsize_tile2tile = config->_wordsize_tile2tile;
-    _wordsize_dram = config->_wordsize_dram;
-    _rf_chunk_size = config->_rf_chunk_size;
-    _freq = config->_clock_rate;
-    _popcount_pipeline_stages = config->_popcount_pipeline_stages;
 }
 
 
@@ -256,7 +250,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::PopCountReduce_RF:
         //TODO: how to calculate cycles?
-            time = T_CLK*(req.precision_list[0].bits()+_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
+            time = T_CLK*(req.precision_list[0].bits()+config->_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
             break;
         default:
             time = T_CLK;
@@ -264,150 +258,3 @@ double MemoryCharacteristics::getTiming(Request req) {
     }
     return time;
 }
-
-/*
-double MemoryCharacteristics::getEnergy(Request req) {
-    double energy = 0.0;
-    int idx = int(req.type);
-    switch (idx) {
-        case Request::Type::RowSet: 
-        case Request::Type::ColSet: 
-            energy = E_SET;
-            break;
-        case Request::Type::RowReset: 
-        case Request::Type::ColReset: 
-            energy = E_RESET;
-            break;
-        case Request::Type::RowMv: 
-        case Request::Type::ColMv: 
-            energy = E_NOR;
-            break;
-        case Request::Type::RowRead: 
-        case Request::Type::ColRead: 
-            energy = E_READ * getPrecisionBits(req);
-            break;
-        case Request::Type::RowWrite: 
-        case Request::Type::ColWrite: 
-            energy = E_WRITE * getPrecisionBits(req);
-            break;
-        case Request::Type::RowAdd: 
-        case Request::Type::ColAdd: 
-        case Request::Type::RowSub: 
-        case Request::Type::ColSub: 
-
-            //energy = (12 * N + 1) * E_NOR; //fixed-32
-            //energy = (3 + 16 * N_e + 19 * N_m + N_m * N_m) * E_NOR + (2 * N_m + 1) * E_SEARCH; //float-32
-            energy = getClocksForReq(req.precision_list[1], "add") * E_CLK;
-            break;
-        case Request::Type::RowMul: 
-        case Request::Type::RowDiv: 
-        case Request::Type::ColMul: 
-        case Request::Type::ColDiv: 
-
-            //energy = (13 * N * N - 14 * N + 6) * E_NOR; // fixed-32 (full precision)
-            //energy = (6.5 * N * N - 7.5 * N - 2) * E_NOR; // fixed-32 (half precision)
-            //energy = (12 * N_e + 6.5 * N_m * N_m - 7.5 * N_m - 2) * E_NOR; // float-32
-            energy = getClocksForReq(req.precision_list[0], "mul") * E_CLK;
-            break;
-        case Request::Type::RowBitwise: 
-        case Request::Type::ColBitwise: 
-            energy = E_NOR;
-            break;
-        case Request::Type::RowSearch: 
-        case Request::Type::ColSearch: 
-            energy = E_SEARCH;
-            break;
-        case Request::Type::BlockSend: 
-        case Request::Type::BlockReceive: 
-        case Request::Type::BlockSend_Receive: 
-        case Request::Type::TileSend: 
-        case Request::Type::TileReceive: 
-        case Request::Type::TileSend_Receive: 
-        case Request::Type::ChipSend_Receive: 
-//            if (_configuration == Configuration::Bus)
-//                energy = E_internal_bus[(int) log(_wordsize / 32)] + E_switching_bus[(int) log(_wordsize / 32)];
-//            else if (_configuration == Configuration::HTree)
-//                energy = E_internal_htree[(int) log(_wordsize / 32)] + E_switching_htree[(int) log(_wordsize / 32)];
-//            else
-//                energy = E_internal_htree[(int) log(_wordsize / 32)] + E_switching_htree[(int) log(_wordsize / 32)];
-            energy = 0;
-            break;
-        case Request::Type::RowReduce: 
-            // precision_list[0] tells the number of bits in the operand
-            // size_list[0] tells the number of levels
-            energy = getClocksForReq(req.precision_list[0], "reduction", req.size_list[0]) * E_CLK;
-        default:
-            energy = E_NOR;
-            break;
-    }
-    return energy;
-}
-
-
-double MemoryCharacteristics::getTotalLeakageEnergy(int cycles, int ntiles, int nblocks) {
-    double energy = 0.0;
-
-    int _tile_level = log2(ntiles) / 2;
-    int _block_level = log2(nblocks) / 2;
-    int switch_numbers = 0;
-    int bus_numbers = 0;
-
-    for (int i = 0; i < _block_level; i++)
-        switch_numbers += pow(4, i);
-
-    switch_numbers *= ntiles;
-
-    for (int i = 0; i < _tile_level; i++)
-        switch_numbers += pow(4, i);
-
-    bus_numbers = ntiles + 1;
-
-    //TODO: Commenting this out for not, until we focus on energy.
-    //Need to update the following code, _wordsize has been split into 
-    //_wordsize_block2block and _wordsize_tile2tile.
-    //if (_configuration == Configuration::Bus)
-    //    energy += E_leakage_bus[(int) log(_wordsize / 32)] * bus_numbers * ((float) cycles / _freq);
-    //else if (_configuration == Configuration::HTree)
-    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers * ((float) cycles / _freq);
-    //else
-    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers * ((float) cycles / _freq);
-
-    energy += E_leakage_per_block * ntiles * nblocks * ((float) cycles / _freq);
-
-    return energy;
-}
-
-
-double MemoryCharacteristics::getTotalLeakageEnergy(int ntiles, int nblocks) {
-    double energy = 0.0;
-
-    int _tile_level = log2(ntiles) / 2;
-    int _block_level = log2(nblocks) / 2;
-    int switch_numbers = 0;
-    int bus_numbers = 0;
-
-    for (int i = 0; i < _block_level; i++)
-        switch_numbers += pow(4, i);
-
-    switch_numbers *= ntiles;
-
-    for (int i = 0; i < _tile_level; i++)
-        switch_numbers += pow(4, i);
-
-    bus_numbers = ntiles + 1;
-
-    //TODO: Commenting this out for not, until we focus on energy.
-    //Need to update the following code, _wordsize has been split into 
-    //_wordsize_block2block and _wordsize_tile2tile.
-    //if (_configuration == Configuration::Bus)
-    //    energy += E_leakage_bus[(int) log(_wordsize / 32)] * bus_numbers;
-    //else if (_configuration == Configuration::HTree)
-    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers;
-    //else
-    //    energy += E_leakage_htree[(int) log(_wordsize / 32)] * switch_numbers;
-
-    energy += E_leakage_per_block * ntiles * nblocks;
-
-    return energy;
-}
-*/

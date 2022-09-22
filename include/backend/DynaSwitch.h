@@ -47,6 +47,8 @@ public:
     Config* cfg;
 
     int bitwidth;
+
+    int remainingStore=0;
     //receive queues
     // receiveQueues[0]: FixedQueue<Request*,2> queueN;
     // receiveQueues[1]: FixedQueue<Request*,2> queueS;
@@ -80,8 +82,6 @@ public:
     std::vector<Request> localReceiveBuffer;
     //buffers all dram requests
     std::vector<Request> dramReceiveBuffer;
-    //buffers all finished requests
-    //std::vector<Request> dramFinishedReqs;
 
     DynaSwitch* neighborN;
     DynaSwitch* neighborS;
@@ -94,6 +94,7 @@ public:
     
     bool inject(Request req);
     bool receive_from_dram(Request req);
+    bool store_to_dram(Request req);
     void tick();
     //given a receive/load request, find if the requested data is present in local receive buffer
     bool data_exist(Request req);
@@ -109,6 +110,8 @@ public:
     //the next state of this switch
     DynaSwitch* next= NULL;
     void update_current();
+
+    bool is_finished();
 
     //utils
 private:
