@@ -1,6 +1,7 @@
 #ifndef _MEMORY_COMPONENT_H_
 #define _MEMORY_COMPONENT_H_
 
+//#define DEBUG_PRINT_DECODE
 //#define DEBUG_OUTPUT
 
 #include "Util.h"

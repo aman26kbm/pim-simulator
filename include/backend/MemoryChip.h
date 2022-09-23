@@ -32,7 +32,8 @@ public:
     DynaMesh* _DynaMesh;
     Dram* _Dram;
     RegisterFile* _regFile;
-    MemoryChip(MemoryCharacteristics* values);
+    int* finishedReqNo_p;
+    MemoryChip(MemoryCharacteristics* values, int* finishedReqNo_p);
 
     bool send2Child(Request& req);
     bool isReady(Request& req);

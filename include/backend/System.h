@@ -2,6 +2,9 @@
 #define _SYSTEM_H_
 
 //#define DEBUG_OUTPUT
+//#define OLD
+#define PRINT_TICK
+#define NEW
 
 #include "Util.h"
 #include "Tool.h"
@@ -51,6 +54,9 @@ public:
     Config* _config;
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
+    int currReqNo = 0;
+    int totalReqNo = 0;
+    int finishedReqNo = 0;
     // int _nchips, _ntiles, _ntiles_used, _nblocks, _nrows, _ncols;
     // int _wordsize_block2block, _wordsize_tile2tile; 
     // //should match with hTree
@@ -93,8 +99,14 @@ public:
     int sendChipReq(Request& req, int para);
     int sendSyncReq(Request& req);
 
+    
+    #ifdef OLD
     int sendRequest(Request& req);
-    int sendRequests(std::vector<Request>& reqs);
+    #endif
+    #ifdef NEW
+    void decode(Request& req, int& chip, int& tile);
+    bool sendRequest(Request& req);
+    #endif
 
     void run(std::string workload);
     void finish();

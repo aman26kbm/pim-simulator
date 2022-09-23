@@ -1,6 +1,9 @@
 #ifndef _MEMORY_RANK_H_
 #define _MEMORY_RANK_H_
 
+//#define DEBUG_PRINT_STATES
+//#define TILE_DEBUG_OUTPUT
+
 #include <deque>
 
 #include "Util.h"

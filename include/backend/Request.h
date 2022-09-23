@@ -274,6 +274,7 @@ public:
 
 
     static std::string print_name(Type type);
+    int reqNo;
     
     int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue

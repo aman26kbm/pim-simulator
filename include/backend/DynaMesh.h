@@ -1,6 +1,6 @@
 #ifndef _DYNA_MESH_H_
 #define _DYNA_MESH_H_
-#define DYNA_MESH_DEBUG_OUTPUT
+//#define DYNA_MESH_DEBUG_OUTPUT
 #include "Request.h"
 #include "DynaSwitch.h"
 #include <map>

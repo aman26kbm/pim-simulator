@@ -72,10 +72,10 @@ MemoryComponent::outputStats(FILE* rstFile)
 bool 
 MemoryComponent::receiveReq(Request& req) 
 {
-#ifdef DEBUG_OUTPUT
-    printf("+++++%s_%d receives a reqeust! (%s : %lu)\n", level_str[int(_level)].c_str(), _id,
-            req.reqToStr().c_str(), req.arrive_time);
-#endif
+// #ifdef DEBUG_OUTPUT
+//     printf("+++++%s_%d receives a reqeust! (%s : %lu)\n", level_str[int(_level)].c_str(), _id,
+//             req.reqToStr().c_str(), req.arrive_time);
+// #endif
     bool res;
     if (getLevel() == MemoryComponent::Level::Chip) {
         //Send to tiles
@@ -83,6 +83,10 @@ MemoryComponent::receiveReq(Request& req)
         return _children[idx]->receiveReq(req);
     }
     else if (getLevel() == MemoryComponent::Level::Tile) {
+        #ifdef DEBUG_PRINT_DECODE
+            printf("+++++%s_%d receives a reqeust! (%s : %lu)\n", level_str[int(_level)].c_str(), _id,
+                req.reqToStr().c_str(), req.arrive_time);
+        #endif
         //Send to controller
         res = _ctrl->receiveReq(req);
         return res;
@@ -92,7 +96,7 @@ MemoryComponent::receiveReq(Request& req)
         assert(0);
     }
 
-#ifdef DEBUG_OUTPUT
+#ifdef DEBUG_PRINT_DECODE
     if (res)
         printf("-----%s_%d receives a reqeust (%s : %lu) successfully!\n", level_str[int(_level)].c_str(), _id, req.reqToStr().c_str(), req.arrive_time);
     else

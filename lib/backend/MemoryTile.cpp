@@ -92,7 +92,7 @@ MemoryTile::issueReq(Request& req)
         req.finish_time = cur_time + getReqTiming(req);
     }
 
-#ifdef DEBUG_OUTPUT
+#ifdef TILE_DEBUG_OUTPUT
             printf("%s_%d issues a request (%s) - arrive: %lu, process: %lu, finish: %lu\n", 
                     level_str[int(_level)].c_str(), _id, 
                     req.print_name(req.type).c_str(), req.arrive_time, req.process_time, req.finish_time);
@@ -172,6 +172,7 @@ void MemoryTile::update_next(){
                     }
                     req = _ctrl->_tile_q->pop_front();
                     req.start_time = _time;
+                    (*(((MemoryChip*)_parent)->finishedReqNo_p))++;
                     dest = (MemoryTile*)_parent->getDestTile(req);
                     source = (MemoryTile*)_parent->getSourceTile(req);
                     // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
@@ -317,7 +318,7 @@ void MemoryTile::update_next(){
                         break;
                     }
                     req = _ctrl->_tile_q->pop_front();
-                    
+                    (*(((MemoryChip*)_parent)->finishedReqNo_p))++;
                     req.start_time = _time;
 
                     // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
@@ -402,7 +403,7 @@ void MemoryTile::update_next(){
 }
 //print before update
 void MemoryTile::update_current(){
-    #ifdef DEBUG_OUTPUT
+    #ifdef DEBUG_PRINT_STATES
     printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. \n", 
    _time, _id, 
     print_name(cur_state.status).c_str(),

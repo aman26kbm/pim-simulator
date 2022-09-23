@@ -1,7 +1,7 @@
 #ifndef _DRAM_H_
 #define _DRAM_H_
 
-#define _DRAM_DEBUG_OUTPUT_
+//#define _DRAM_DEBUG_OUTPUT_
 
 #include "Request.h"
 #include "Config.h"

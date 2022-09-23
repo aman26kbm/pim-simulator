@@ -32,7 +32,7 @@ System::System(Config* config) : _config(config)
     }
 
     for (int i = 0; i < config->_nchips; i++) {
-        MemoryChip* chip = new MemoryChip(_values);
+        MemoryChip* chip = new MemoryChip(_values, &finishedReqNo);
         chip->setValues(_values);
         //We don't need a controller per chip
         //Controller* ctrl = new Controller(chip);
@@ -455,9 +455,48 @@ int System::sendRFReq(Request& req)
     return return_value;
 }
 
+#ifdef NEW
+void System::decode(Request& req, int& chip, int& tile){
+    int block= 0, row = 0, col = 0;
+    switch (req.type) {
+        case Request::Type::RowLoad_RF:
+        case Request::Type::RowStore_RF:
+            chip = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
+            assert(chip<=_chips.size());
+            tile = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
+            assert(tile<=_chips[chip]->_children.size());
+            req.setLocation(chip, tile, 0, 0, 0);
+            req.bits = 1;
+            break;
+        case Request::Type::TileReceive:
+            getLocation(req.addr_list[1], chip, tile, block, row, col);
+            req.setLocation(chip, tile, block, row, col);
+            req.bits = req.precision_list[0].bits();
+            break;
+        default:
+            getLocation(req.addr_list[0], chip, tile, block, row, col);
+            req.setLocation(chip, tile, block, row, col);
+            req.bits = req.precision_list[0].bits();
+            break;
+    }
+}
+
+bool System::sendRequest(Request& req)
+{
+    int chip = 0;
+    int tile = 0;
+    decode(req, chip, tile);
+    bool success = _chips[chip]->receiveReq(req);
+    currReqNo++;
+    totalReqNo++;
+    return success;
+}
+#endif
+
 //This is the main API using which an application program will queue
 //requests to be executed on the pimra accelerator
 
+#ifdef OLD
 int System::sendRequest(Request& req)
 {
 #ifdef DEBUG_OUTPUT
@@ -541,19 +580,8 @@ int System::sendRequest(Request& req)
 
     return ticks;
 }
-
-
-int System::sendRequests(std::vector<Request>& reqs)
-{
-#ifdef DEBUG_OUTPUT
-    // std::cout << "The system is sending a request - " ;
 #endif
-    int ticks = 0;
-    for (int i = 0; i < reqs.size(); i++) {
-        sendRequest(reqs[i]);
-    }
-    return ticks;
-}
+
 
 
 void System::run(std::string workload)
@@ -571,7 +599,8 @@ void System::run(std::string workload)
         //update time
         _time++;
         #ifdef PRINT_TICK
-        printf("current time: %d\n", _time);
+        //printf("current time: %d\n", _time);
+        cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
         #endif
         //check if all chips finished
         finished = true;

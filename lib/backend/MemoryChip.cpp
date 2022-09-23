@@ -4,10 +4,10 @@
 using namespace pimsim;
 using namespace std;
 
-MemoryChip::MemoryChip(MemoryCharacteristics* values)
+MemoryChip::MemoryChip(MemoryCharacteristics* values, int* finishedReqNo_p)
     : MemoryComponent(MemoryComponent::Level::Chip)
 {
-    
+    this->finishedReqNo_p = finishedReqNo_p;
     _values = values;
     int _ntiles= values->config->_ntiles;
     int _nblocks =values->config-> _nblocks;
@@ -135,8 +135,11 @@ bool MemoryChip::isFinished(){
         if (!((MemoryTile*)_children[i])->isFinished())
             return false;
     }
-    if(!_DynaMesh->is_finished()) 
-        return false;
+    if(_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
+        if(!_DynaMesh->is_finished()){
+            return false;
+        }
+    }
     
     return true;
 }

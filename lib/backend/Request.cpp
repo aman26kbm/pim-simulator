@@ -78,6 +78,7 @@ std::string Request::print_name(Type type) {
     }
 
     Request::Request(const Request& req){
+        reqNo = req.reqNo;
         type = req.type;
         dram_words = req.dram_words;
         arrive_time = req.arrive_time;
