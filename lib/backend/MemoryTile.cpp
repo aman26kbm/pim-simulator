@@ -60,7 +60,8 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
         }
         else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-            req.finish_time = cur_time + getReqTiming(req) + req.DynaMesh_transfer_time;
+            //should not be here
+            assert(false);
         }
         else { //ideal
             req.finish_time = cur_time + 0;
@@ -80,7 +81,7 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
         }
         else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-            req.finish_time = cur_time + getReqTiming(req) + req.DynaMesh_transfer_time;
+            req.finish_time = cur_time + getReqTiming(req);
         }
         else { //ideal
             req.finish_time = cur_time + 0;

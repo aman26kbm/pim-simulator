@@ -31,6 +31,8 @@ System::System(Config* config) : _config(config)
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _config);
     }
 
+    cout<<"distributed dram: "<<_values->config->_dramDistributed<<std::endl;
+
     for (int i = 0; i < config->_nchips; i++) {
         MemoryChip* chip = new MemoryChip(_values, &finishedReqNo);
         chip->setValues(_values);
@@ -486,6 +488,7 @@ bool System::sendRequest(Request& req)
     int chip = 0;
     int tile = 0;
     decode(req, chip, tile);
+    req.reqNo = currReqNo;
     bool success = _chips[chip]->receiveReq(req);
     currReqNo++;
     totalReqNo++;

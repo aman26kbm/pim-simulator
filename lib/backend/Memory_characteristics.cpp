@@ -164,15 +164,25 @@ double MemoryCharacteristics::getTiming(Request req) {
     TimeT time = 0;
     switch (req.type) {
         case Request::Type::RowSet: 
-            time = T_CLK;
-            break;
         case Request::Type::RowReset: 
+        case Request::Type::RowBitwise: 
+        case Request::Type::ColBitwise: 
+        case Request::Type::RowSearch: 
+        case Request::Type::ColSearch: 
+        case Request::Type::RowAdd_RF: 
+        case Request::Type::RowSub_RF: 
+        case Request::Type::RowRead_RF: 
             time = T_CLK;
             break;
         case Request::Type::RowRead: 
-            time = T_CLK * getPrecisionBits(req);
-            break;
-        case Request::Type::RowWrite:  
+        case Request::Type::RowWrite: 
+        case Request::Type::BlockBroadCast:  
+        case Request::Type::BlockSend_Receive: 
+        case Request::Type::TileSend: 
+        case Request::Type::TileReceive: 
+        case Request::Type::ChipSend_Receive: 
+        case Request::Type::TileSend_BroadCast:
+        case Request::Type::TileReceive_BroadCast: 
             time = T_CLK * getPrecisionBits(req);
             break;
         case Request::Type::RowAdd:  
@@ -185,25 +195,6 @@ double MemoryCharacteristics::getTiming(Request req) {
            //Number of src bits gives the right value for multiplication cycles.
             time = getClocksForReq(req.precision_list, "mul") * T_CLK;
             break;
-        case Request::Type::RowBitwise: 
-        case Request::Type::ColBitwise: 
-            time = T_CLK;
-            break;
-        case Request::Type::RowSearch: 
-        case Request::Type::ColSearch: 
-            time = T_CLK;
-            break;
-        case Request::Type::BlockBroadCast:  
-        case Request::Type::BlockSend_Receive: 
-        case Request::Type::TileSend: 
-        case Request::Type::TileReceive: 
-        case Request::Type::ChipSend_Receive: 
-        case Request::Type::TileSend_BroadCast:
-        case Request::Type::TileReceive_BroadCast:
-            time = getPrecisionBits(req) * T_CLK ; // Assuming the global clock frequency is 1/T_CLK. 10 is for testing
-            break;
-
-        //cases 29-37 are System commands
 
         case Request::Type::RowReduce: 
             // precision_list[0] tells the number of bits in the operand
@@ -216,8 +207,6 @@ double MemoryCharacteristics::getTiming(Request req) {
             time = getClocksForReq(req.precision_list, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
-            time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
-            break;
         case Request::Type::RowStore: 
             time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
@@ -242,11 +231,6 @@ double MemoryCharacteristics::getTiming(Request req) {
            //Number of destination bits tells the right value for addition because it could be more
            //than the operands. (Eg. in case where accumulator is wider)
             time = getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
-            break;
-        case Request::Type::RowAdd_RF: 
-        case Request::Type::RowSub_RF: 
-        case Request::Type::RowRead_RF: 
-            time = T_CLK; //Only 1 cycle is consumed in these RF only instructions
             break;
         case Request::Type::PopCountReduce_RF:
         //TODO: how to calculate cycles?

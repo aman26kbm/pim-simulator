@@ -380,10 +380,13 @@ int DynaSwitch::get_source_index(Request req){
 }
 
 int DynaSwitch::get_dest_index(Request req){
-    if(req.type == Request::Type::RowStore_RF || req.type == Request::Type::RowStore) return cfg->_dramTile;
+    if(req.type == Request::Type::RowStore_RF || req.type == Request::Type::RowStore) 
+        //return cfg->_dramTile;
+        return get_addr0_index(req)%cfg->_meshWidth;
     else if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowLoad){
         if(req.requesting_load)
-            return cfg->_dramTile;
+            //return cfg->_dramTile;
+            return get_addr0_index(req)%cfg->_meshWidth;
         else
             return get_addr0_index(req);
     }

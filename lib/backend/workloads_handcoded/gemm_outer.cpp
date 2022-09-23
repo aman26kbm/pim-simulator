@@ -11,6 +11,7 @@ int32_t gemm_outer(System* sys){
 
     int matrixARowNum = 128*256;
     int matrixAColNum = 256*8;
+    //int matrixAColNum = 8;
     int matrixBRowNum = matrixAColNum;
     int matrixBColNum = cfg->_num_regs_per_rf;
 

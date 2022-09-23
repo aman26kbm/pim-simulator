@@ -11,8 +11,21 @@ DynaMesh::DynaMesh(Config* cfg){
     #endif
     this->cfg = cfg;
     //create dynaSwitches
-    for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
-        switch_list.push_back(DynaSwitch(index, cfg));
+    
+    if(cfg->_dramDistributed){
+        for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
+            DynaSwitch dSwitch = DynaSwitch(index, cfg);
+            dSwitch.dram = new Dram_sendback(cfg);
+            switch_list.push_back(DynaSwitch(index, cfg));
+        }
+    }
+    else{
+        Dram_sendback* dram = new Dram_sendback(cfg);
+        for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
+            DynaSwitch dSwitch = DynaSwitch(index, cfg);
+            dSwitch.dram = dram;
+            switch_list.push_back(DynaSwitch(index, cfg));
+        }
     }
     //set neighbors
     for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
