@@ -18,6 +18,7 @@ public:
     bool data_exist(Request req);
     Request pop_data(Request req);
     void tick();
+    bool is_finished();
 
 //Utils
 private:

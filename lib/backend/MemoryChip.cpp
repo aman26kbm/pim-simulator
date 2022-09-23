@@ -135,5 +135,8 @@ bool MemoryChip::isFinished(){
         if (!((MemoryTile*)_children[i])->isFinished())
             return false;
     }
+    if(!_DynaMesh->is_finished()) 
+        return false;
+    
     return true;
 }

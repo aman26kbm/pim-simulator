@@ -1,5 +1,6 @@
 #ifndef _DRAM_SENDBACK_H_
 #define _DRAM_SENDBACK_H_
+#define _DRAM_SB_DEBUG_OUTPUT_
 
 #include "Request.h"
 #include "Config.h"

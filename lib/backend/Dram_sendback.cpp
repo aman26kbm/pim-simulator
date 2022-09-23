@@ -36,9 +36,9 @@ Dram_sendback::Dram_sendback(Config* cfg){
 }
 
 void Dram_sendback::receive_request(Request req){
-    #ifdef DEBUG_OUTPUT
-    printf("Dram receives a request (%s), tile %d\n",  
-                    req->print_name(req->type).c_str(), req->src_tile);
+    #ifdef _DRAM_SB_DEBUG_OUTPUT_
+    printf("Dram receives a request (%s)\n",  
+                    req.print_name(req.type).c_str());
     #endif
     //int bank_number = rand()%_nbank;
     //int bank_number = 0;
@@ -87,8 +87,6 @@ bool Dram_sendback::is_finished(){
         }
 
     }
-    
-    return (dramFinishedReqs.empty()
-            && curr_req.empty()
-            && req_q_list_is_empty);
+    bool finished = dramFinishedReqs.empty() && req_q_list_is_empty;
+    return finished;
 }

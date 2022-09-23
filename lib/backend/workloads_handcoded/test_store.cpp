@@ -19,13 +19,13 @@ int32_t test_store_simple(System* sys){
     request->addOperand(sys->DRAM_ADDR, 0, precision);//DST
     requests.push_back(*request);
 
-    for(int i=0; i<5; i++){
-        request = new Request(Request::Type::RowAdd);
-        request->addOperand(sys->getAddress(0,0,0), 0, precision);//src
-        request->addOperand(sys->getAddress(0,0,0), 0, precision);//src
-        request->addOperand(sys->getAddress(0,0,0), 0, precision);//src
-        requests.push_back(*request);
-    }
+    // for(int i=0; i<5; i++){
+    //     request = new Request(Request::Type::RowAdd);
+    //     request->addOperand(sys->getAddress(0,0,0), 0, precision);//src
+    //     request->addOperand(sys->getAddress(0,0,0), 0, precision);//src
+    //     request->addOperand(sys->getAddress(0,0,0), 0, precision);//src
+    //     requests.push_back(*request);
+    // }
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);

@@ -64,6 +64,16 @@ void DynaMesh::tick(){
     }
 }
 
+bool DynaMesh::is_finished(){
+    for(int i=0; i<cfg->_meshHeight * cfg->_meshWidth; i++){
+        if(!switch_list[i].is_finished())
+            return false;
+        if(!switch_list[i].dram->is_finished())
+            return false;
+    }
+    return true;
+}
+
 
 ///////////////////////////Utils/////////////////////////
 //get addr_list[0] index
