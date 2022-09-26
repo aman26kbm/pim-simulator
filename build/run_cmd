@@ -49,4 +49,6 @@ vecadd_compiled.128tile.log.csv \
 vecadd_handcoded.128tile.log.csv \
 fir_compiled.1tile.log.csv \
 fir_handcoded.1tile.log.csv \
+fir_compiled.128tile.log.csv \
+fir_handcoded.128tile.log.csv \
 > all_results.csv
