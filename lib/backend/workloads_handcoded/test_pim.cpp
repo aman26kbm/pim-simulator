@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t vadd(System* sys){
+int32_t test_pim(System* sys){
     std::vector<Request> requests;
     Request *request;
 
@@ -17,25 +17,11 @@ int32_t vadd(System* sys){
     int word_size = sys->_config->_nblocks*sys->_config->_ncols;
     for(int tile=0; word_size * tile < array_size; tile++){
         int myTile = (dram_tile + tile) % use_tiles;
-        request = new Request(Request::Type::RowLoad);
-        request->addOperand(sys->getAddress(myTile,0,0), 0, precision_input);//dst
-        request->addOperand(sys->DRAM_ADDR,0, precision_input);//src
-        requests.push_back(*request);
-
-        request = new Request(Request::Type::RowLoad);
-        request->addOperand(sys->getAddress(myTile,0,precision_input.bits()), 0, precision_input);//dst
-        request->addOperand(sys->DRAM_ADDR,0, precision_input);//src
-        requests.push_back(*request);
 
         request = new Request(Request::Type::RowAdd);
         request->addOperand(sys->getAddress(myTile,0,0), 0, precision_input);//src1
         request->addOperand(sys->getAddress(myTile,0,precision_input.bits()), 0, precision_input);//src2
         request->addOperand(sys->getAddress(myTile,0,precision_input.bits()+precision_input.bits()), 0, precision_output);//dst
-        requests.push_back(*request);
-
-        request = new Request(Request::Type::RowStore);
-        request->addOperand(sys->getAddress(myTile,0,precision_input.bits()+precision_input.bits()), 0, precision_output);//dst
-        request->addOperand(sys->DRAM_ADDR,0, precision_output);//src
         requests.push_back(*request);
     }
 
@@ -45,4 +31,4 @@ int32_t vadd(System* sys){
 
 
 
-static __attribute__((unused)) Registry::Entry &__vadd__ = pimsim::registerFunc("vadd", vadd);
+static __attribute__((unused)) Registry::Entry &__test_pim__ = pimsim::registerFunc("test_pim", test_pim);

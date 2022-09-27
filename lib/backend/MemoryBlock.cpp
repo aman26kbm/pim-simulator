@@ -10,8 +10,6 @@ MemoryBlock::MemoryBlock(int n_rows, int n_cols)
     _ncols = n_cols;
     _blocksize = _nrows * _ncols;
 
-    _nchildren = 0;
-
 #ifdef DEBUG_OUTPUT
      printf("Create a block!\n");
 #endif

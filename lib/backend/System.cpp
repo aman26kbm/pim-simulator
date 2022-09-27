@@ -5,35 +5,15 @@
 //#include <thread>
 #include <array>
 
+#define SEND 0
+#define RECEIVE 1
+#define SEND_RECEIVE 2
 
 using namespace pimsim;
 using namespace std;
 
 System::System(Config* config) : _config(config)
 {
-    _nchips = _config->get_nchips();
-    _ntiles = _config->get_ntiles();
-    _ntiles_used = _config->get_ntiles_used();
-    _nblocks = _config->get_nblocks();
-    _nrows = config->get_nrows();
-    _ncols = config->get_ncols();
-    _clock_rate = config->get_clock_rate();
-    _blockctrl = config->get_blockctrl();
-    _tilectrl = config->get_tilectrl();
-    _chipctrl = config->get_chipctrl();
-    _wordsize_block2block = config->get_wordsize_block2block();
-    _wordsize_tile2tile = config->get_wordsize_tile2tile();
-    _wordsize_dram = config->get_wordsize_dram();
-    _dram_row_open_latency = config->get_dram_row_open_latency();
-    _dram_bank_number = config->get_dram_bank_number();
-    _rf_chunk_size = config->get_rf_chunk_size();
-    _num_regs_per_rf = config->get_num_regs_per_rf();
-    _num_bits_per_reg = config->get_num_bits_per_reg();
-    if (!(_blockctrl || _tilectrl || _chipctrl))
-        _blockctrl = true;
-    _blocksize = _nrows * _ncols; // set the blocksize based on columns and rows
-    this->_tilesize = this->_blocksize * _nblocks;
-    this->_chipsize = this->_tilesize * _ntiles;
 
     rstFile = fopen(config->get_rstfile().c_str(), "w");
     std::string csv_filename = config->get_rstfile() + ".csv";
@@ -51,8 +31,10 @@ System::System(Config* config) : _config(config)
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _config);
     }
 
-    for (int i = 0; i < _nchips; i++) {
-        MemoryChip* chip = new MemoryChip(_ntiles, _nblocks, _nrows, _ncols, _wordsize_block2block, _num_regs_per_rf, _num_bits_per_reg, _dram_row_open_latency, _dram_bank_number, _values);
+    cout<<"distributed dram: "<<_values->config->_dramDistributed<<std::endl;
+
+    for (int i = 0; i < config->_nchips; i++) {
+        MemoryChip* chip = new MemoryChip(_values, &finishedReqNo);
         chip->setValues(_values);
         //We don't need a controller per chip
         //Controller* ctrl = new Controller(chip);
@@ -64,113 +46,8 @@ System::System(Config* config) : _config(config)
 
     //Inter tile communication
     m1 = new Mailbox();  //use as a semaphore
-    m2 = new Mailbox(_ntiles);  //use as a barrier for all tiles
+    m2 = new Mailbox(config->_ntiles);  //use as a barrier for all tiles
     m3 = new Mailbox();
-
-    //                                      t, b, r
-    cram_base_addr_tile0_block0 = getAddress(0,0,0); 
-    cram_addr_tile0_block0_row0 = getAddress(0,0,0);  //src1
-    cram_addr_tile0_block0_row4 = getAddress(0,0,4);  //src2
-    cram_addr_tile0_block0_row8 = getAddress(0,0,8);  //dst
-    cram_addr_tile0_block0_row16 = getAddress(0,0,16);
-    cram_addr_tile0_block0_row24 = getAddress(0,0,24);
-
-    cram_base_addr_tile0_block1 = getAddress(0,1,0); 
-    cram_addr_tile0_block1_row0 = getAddress(0,1,0); 
-    cram_addr_tile0_block1_row4 = getAddress(0,1,4); 
-    cram_addr_tile0_block1_row8 = getAddress(0,1,8); 
-
-    cram_base_addr_tile0_block2 = getAddress(0,2,0); 
-    cram_addr_tile0_block2_row0 = getAddress(0,2,0); 
-    cram_addr_tile0_block2_row4 = getAddress(0,2,4); 
-    cram_addr_tile0_block2_row8 = getAddress(0,2,8); 
-
-    cram_base_addr_tile0_block3 = getAddress(0,3,0); 
-    cram_addr_tile0_block3_row0 = getAddress(0,3,0); 
-    cram_addr_tile0_block3_row4 = getAddress(0,3,4); 
-    cram_addr_tile0_block3_row8 = getAddress(0,3,8); 
-    cram_addr_tile0_block3_row16 =getAddress(0,3,16);
-    cram_addr_tile0_block3_row24 =getAddress(0,3,24);
-
-    //                                      t, b, r
-    cram_base_addr_tile1_block0 = getAddress(1,0,0); 
-    cram_addr_tile1_block0_row0 = getAddress(1,0,0);  //src1
-    cram_addr_tile1_block0_row4 = getAddress(1,0,4);  //src2
-    cram_addr_tile1_block0_row8 = getAddress(1,0,8);  //dst
-    cram_addr_tile1_block0_row16 = getAddress(1,0,16);
-    cram_addr_tile1_block0_row24 = getAddress(1,0,24);
-
-    cram_base_addr_tile1_block1 = getAddress(1,1,0); 
-    cram_addr_tile1_block1_row0 = getAddress(1,1,0); 
-    cram_addr_tile1_block1_row4 = getAddress(1,1,4); 
-    cram_addr_tile1_block1_row8 = getAddress(1,1,8); 
-
-    cram_base_addr_tile1_block2 = getAddress(1,2,0); 
-    cram_addr_tile1_block2_row0 = getAddress(1,2,0); 
-    cram_addr_tile1_block2_row4 = getAddress(1,2,4); 
-    cram_addr_tile1_block2_row8 = getAddress(1,2,8); 
-
-    cram_base_addr_tile1_block3 = getAddress(1,3,0); 
-    cram_addr_tile1_block3_row0 = getAddress(1,3,0); 
-    cram_addr_tile1_block3_row4 = getAddress(1,3,4); 
-    cram_addr_tile1_block3_row8 = getAddress(1,3,8); 
-    cram_addr_tile1_block3_row16 =getAddress(1,3,16);
-    cram_addr_tile1_block3_row24 =getAddress(1,3,24);
-
-    //                                      t, b, r
-    cram_base_addr_tile2_block0 = getAddress(2,0,0); 
-    cram_addr_tile2_block0_row0 = getAddress(2,0,0);  //src1
-    cram_addr_tile2_block0_row4 = getAddress(2,0,4);  //src2
-    cram_addr_tile2_block0_row8 = getAddress(2,0,8);  //dst
-    cram_addr_tile2_block0_row16 = getAddress(2,0,16);
-    cram_addr_tile2_block0_row24 = getAddress(2,0,24);
-
-    cram_base_addr_tile2_block1 = getAddress(2,1,0); 
-    cram_addr_tile2_block1_row0 = getAddress(2,1,0); 
-    cram_addr_tile2_block1_row4 = getAddress(2,1,4); 
-    cram_addr_tile2_block1_row8 = getAddress(2,1,8); 
-
-    cram_base_addr_tile2_block2 = getAddress(2,2,0); 
-    cram_addr_tile2_block2_row0 = getAddress(2,2,0); 
-    cram_addr_tile2_block2_row4 = getAddress(2,2,4); 
-    cram_addr_tile2_block2_row8 = getAddress(2,2,8); 
-
-    cram_base_addr_tile2_block3 = getAddress(2,3,0); 
-    cram_addr_tile2_block3_row0 = getAddress(2,3,0); 
-    cram_addr_tile2_block3_row4 = getAddress(2,3,4); 
-    cram_addr_tile2_block3_row8 = getAddress(2,3,8); 
-    cram_addr_tile2_block3_row16 =getAddress(2,3,16);
-    cram_addr_tile2_block3_row24 =getAddress(2,3,24);
-
-    //                                      t, b, r
-    cram_base_addr_tile3_block0 = getAddress(3,0,0); 
-    cram_addr_tile3_block0_row0 = getAddress(3,0,0);  //src1
-    cram_addr_tile3_block0_row4 = getAddress(3,0,4);  //src2
-    cram_addr_tile3_block0_row8 = getAddress(3,0,8);  //dst
-    cram_addr_tile3_block0_row16 = getAddress(3,0,16);
-    cram_addr_tile3_block0_row24 = getAddress(3,0,24);
-
-    cram_base_addr_tile3_block1 = getAddress(3,1,0); 
-    cram_addr_tile3_block1_row0 = getAddress(3,1,0); 
-    cram_addr_tile3_block1_row4 = getAddress(3,1,4); 
-    cram_addr_tile3_block1_row8 = getAddress(3,1,8); 
-
-    cram_base_addr_tile3_block2 = getAddress(3,2,0); 
-    cram_addr_tile3_block2_row0 = getAddress(3,2,0); 
-    cram_addr_tile3_block2_row4 = getAddress(3,2,4); 
-    cram_addr_tile3_block2_row8 = getAddress(3,2,8); 
-
-    cram_base_addr_tile3_block3 = getAddress(3,3,0); 
-    cram_addr_tile3_block3_row0 = getAddress(3,3,0); 
-    cram_addr_tile3_block3_row4 = getAddress(3,3,4); 
-    cram_addr_tile3_block3_row8 = getAddress(3,3,8); 
-    cram_addr_tile3_block3_row16 =getAddress(3,3,16);
-    cram_addr_tile3_block3_row24 =getAddress(3,3,24);
-
-    rf_base_addr_tile0 = 0; 
-    rf_base_addr_tile1 = _num_regs_per_rf; 
-    rf_base_addr_tile2 = _num_regs_per_rf*2; 
-    rf_base_addr_tile3 = _num_regs_per_rf*3; 
 }
 
 System::~System()
@@ -179,17 +56,6 @@ System::~System()
     csv_file.close();
 }
 
-void System::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, int n_rows, int n_cols, int wordsize_block2block, int num_regs_per_rf, int num_bits_per_reg, int dram_row_open_latency, int dram_bank_number) {
-
-    int global_chip_id = _chips.size();
-    MemoryChip* chip = new MemoryChip(n_tiles, n_blocks, n_rows, n_cols, wordsize_block2block, num_regs_per_rf, num_bits_per_reg, dram_row_open_latency, dram_bank_number,  _values );
-    Controller* ctrl = new Controller(chip);
-    chip->setId(global_chip_id);
-    chip->setController(ctrl);
-    chip->setParent(NULL);
-    chip->setValues(values);
-    _chips.push_back(chip);
-}
 
 //Form an address for the given tile, block, row
 //Chip and row numbers are assumed to be 0.
@@ -197,15 +63,19 @@ void System::addChip(MemoryCharacteristics* values, int n_tiles, int n_blocks, i
 AddrT System::getAddress(int tile, int block, int row)
 {
     AddrT addr = 0;
-    addr *= _ntiles;
+    addr *= _config->_ntiles;
     addr += tile;
-    addr *= _nblocks;
+    addr *= _config->_nblocks;
     addr += block;
-    addr *= _nrows;
+    addr *= _config->_nrows;
     addr += row;
-    addr *= _ncols;
+    addr *= _config->_ncols;
     addr += 0;
     return addr;
+}
+
+AddrT System::getRFAddress(int tile, int rf_index){
+    return _config->_num_regs_per_rf * tile + rf_index;
 }
 
 //Form an address for the given chip, tile, block, row, column
@@ -213,13 +83,13 @@ AddrT System::getAddress(int tile, int block, int row)
 AddrT System::getAddress(int chip, int tile, int block, int row, int col)
 {
     AddrT addr = chip;
-    addr *= _ntiles;
+    addr *= _config->_ntiles;
     addr += tile;
-    addr *= _nblocks;
+    addr *= _config->_nblocks;
     addr += block;
-    addr *= _nrows;
+    addr *= _config->_nrows;
     addr += row;
-    addr *= _ncols;
+    addr *= _config->_ncols;
     addr += col;
     return addr;
 }
@@ -229,15 +99,15 @@ void System::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_id
 {
     /* Here is the code for memory mapping
      * */
-    col_idx = addr % _ncols;
-    addr /= _ncols;
-    row_idx = addr % _nrows;
-    addr /= _nrows;
-    block_idx = addr % _nblocks;
-    addr /= _nblocks;
-    tile_idx = addr % _ntiles;
-    addr /= _ntiles;
-    chip_idx = addr % _nchips;
+    col_idx = addr % _config->_ncols;
+    addr /= _config->_ncols;
+    row_idx = addr % _config->_nrows;
+    addr /= _config->_nrows;
+    block_idx = addr % _config->_nblocks;
+    addr /= _config->_nblocks;
+    tile_idx = addr % _config->_ntiles;
+    addr /= _config->_ntiles;
+    chip_idx = addr % _config->_nchips;
 }
 
 
@@ -245,12 +115,12 @@ void System::getLocation(AddrT addr, int &chip_idx, int &tile_idx, int &block_id
 {
     /* Here is the code for memory mapping
      * */
-    addr /= _blocksize;
-    tile_idx = addr % _nblocks;
-    addr /= _nblocks;
-    block_idx = addr % _ntiles;
-    addr /= _ntiles;
-    chip_idx = addr % _nchips;
+    addr /= _config->_blocksize;
+    tile_idx = addr % _config->_nblocks;
+    addr /= _config->_nblocks;
+    block_idx = addr % _config->_ntiles;
+    addr /= _config->_ntiles;
+    chip_idx = addr % _config->_nchips;
 }
 
 
@@ -290,8 +160,6 @@ int System::sendPIM_two_operands(Request& req)
         // Third address is the dst.
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col); 
         getLocation(req.addr_list[2], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         Request *pim_req = new Request(req.type);
@@ -299,8 +167,6 @@ int System::sendPIM_two_operands(Request& req)
         pim_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         pim_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
         pim_req->addOperand(req.addr_list[2], req.size_list[2], req.precision_list[2]);
-        pim_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        pim_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
@@ -319,15 +185,13 @@ int System::sendPIM_two_operands(Request& req)
 //operand is rf address
 int System::sendRF_one_operand(Request& req)
 {
-    int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+    int chip_index = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
     assert(chip_index<=_chips.size());
-    int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+    int tile_index = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
     assert(tile_index<=_chips[chip_index]->_children.size());
     Request* rf_req = new Request(req.type);
     rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
     //rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-    rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
-    rf_req->setDstLocation(0, 0, 0, 0, 0);
     rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
     //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
     bool res = _chips[chip_index]->receiveReq(*rf_req);
@@ -336,7 +200,7 @@ int System::sendRF_one_operand(Request& req)
 
 }
 
-// first operand is cram address. second is rf address
+// rf arithmethics here. first operand is cram address. second is rf address
 int System::sendRF_two_operands(Request& req)
 {
     int chip_index, tile_index, block_index, row, col;
@@ -346,29 +210,26 @@ int System::sendRF_two_operands(Request& req)
     Request* rf_req = new Request(req.type);
     rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
     rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-    rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
-    rf_req->setDstLocation(0, 0, 0, 0, 0);
     rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
     //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
     bool res = _chips[chip_index]->receiveReq(*rf_req);
     return res;
 }
 
-
+//load store send receive requests handled here
 int System::sendChipReq(Request& req, int para)
 {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
         //first operand is rf address, second operand is DRAM address
-        int chip_index = req.addr_list[0]/(_ntiles*_num_regs_per_rf);
+        int chip_index = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
         assert(chip_index<=_chips.size());
-        int tile_index = (req.addr_list[0]%(_ntiles*_num_regs_per_rf))/_num_regs_per_rf;
+        int tile_index = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
         assert(tile_index<=_chips[chip_index]->_children.size());
         Request* rf_req = new Request(req.type);
         rf_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
         rf_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        rf_req->setSrcLocation(chip_index, tile_index, 0, 0, 0);
-        rf_req->setDstLocation(0, 0, 0, 0, 0);
         rf_req->setLocation(chip_index, tile_index, 0, 0, 0);
+        rf_req->bits = 1;
         //rf_req->precision_bits = _num_bits_per_reg*_num_regs_per_rf/_wordsize_dram;
         bool res = _chips[chip_index]->receiveReq(*rf_req);
         return res;
@@ -377,13 +238,9 @@ int System::sendChipReq(Request& req, int para)
         Request* inter_tile_req = new Request(req.type);
         int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         //req.setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
          inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        //inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        //inter_tile_req->setDstLocation(src_chip, src_tile, src_block, src_row, src_col);
         //setLocation is used to tell which tile owns this request
         inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
        
@@ -397,13 +254,8 @@ int System::sendChipReq(Request& req, int para)
         Request* inter_tile_req = new Request(req.type);
         int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
         getLocation(req.addr_list[0], dst_chip, dst_tile, dst_block, dst_row, dst_col);
-        //req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
          inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        //inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-        //inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-        inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         //setLocation is used to tell which tile owns this request
         inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
        
@@ -425,14 +277,11 @@ int System::sendChipReq(Request& req, int para)
             getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
             getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
 
-            req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
             inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
             inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-            inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            inter_tile_req->bits = req.precision_list[0].bits();
             //setLocation is used to tell which tile owns this request
             inter_tile_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
         } 
@@ -440,14 +289,11 @@ int System::sendChipReq(Request& req, int para)
             getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
             getLocation(req.addr_list[1], dst_chip, dst_tile, dst_block, dst_row, dst_col);
 
-            req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             req.setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
 
             inter_tile_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
             inter_tile_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-            inter_tile_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            inter_tile_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
+            inter_tile_req->bits = req.precision_list[0].bits();
             //setLocation is used to tell which tile owns this request
             inter_tile_req->setLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
         }
@@ -478,10 +324,8 @@ int System::sendTileReq(Request& req, int para)
     if (para == SEND_RECEIVE) {
         if(req.type == Request::Type::BlockBroadCast){
                 getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
-                req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
                 req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
                 inter_block_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-                inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
                 inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
         }
         else{
@@ -491,14 +335,10 @@ int System::sendTileReq(Request& req, int para)
             assert(src_chip==dst_chip);
             assert(src_tile==dst_tile);
 
-            req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            req.setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
             inter_block_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
             inter_block_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
-            inter_block_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
-            inter_block_req->setDstLocation(dst_chip, dst_tile, dst_block, dst_row, dst_col);
             inter_block_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
         }
     }
@@ -526,11 +366,9 @@ int System::sendSyncReq(Request& req)
         Request *sync_req1 = new Request(Request::Type::Signal, req.mail);
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
 
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         sync_req1->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        sync_req1->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         sync_req1->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
@@ -540,11 +378,9 @@ int System::sendSyncReq(Request& req)
         Request *sync_req2 = new Request(Request::Type::Wait, req.mail);
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
 
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         sync_req2->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        sync_req2->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         sync_req2->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
@@ -555,11 +391,9 @@ int System::sendSyncReq(Request& req)
         Request *sync_req = new Request(req.type, req.mail);
         getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col);
 
-        req.setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         sync_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
-        sync_req->setSrcLocation(src_chip, src_tile, src_block, src_row, src_col);
         sync_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
 
         tot_clks++;
@@ -623,9 +457,49 @@ int System::sendRFReq(Request& req)
     return return_value;
 }
 
+#ifdef NEW
+void System::decode(Request& req, int& chip, int& tile){
+    int block= 0, row = 0, col = 0;
+    switch (req.type) {
+        case Request::Type::RowLoad_RF:
+        case Request::Type::RowStore_RF:
+            chip = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
+            assert(chip<=_chips.size());
+            tile = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
+            assert(tile<=_chips[chip]->_children.size());
+            req.setLocation(chip, tile, 0, 0, 0);
+            req.bits = 1;
+            break;
+        case Request::Type::TileReceive:
+            getLocation(req.addr_list[1], chip, tile, block, row, col);
+            req.setLocation(chip, tile, block, row, col);
+            req.bits = req.precision_list[0].bits();
+            break;
+        default:
+            getLocation(req.addr_list[0], chip, tile, block, row, col);
+            req.setLocation(chip, tile, block, row, col);
+            req.bits = req.precision_list[0].bits();
+            break;
+    }
+}
+
+bool System::sendRequest(Request& req)
+{
+    int chip = 0;
+    int tile = 0;
+    decode(req, chip, tile);
+    req.reqNo = currReqNo;
+    bool success = _chips[chip]->receiveReq(req);
+    currReqNo++;
+    totalReqNo++;
+    return success;
+}
+#endif
+
 //This is the main API using which an application program will queue
 //requests to be executed on the pimra accelerator
 
+#ifdef OLD
 int System::sendRequest(Request& req)
 {
 #ifdef DEBUG_OUTPUT
@@ -635,40 +509,20 @@ int System::sendRequest(Request& req)
     tot_reqs++;
     switch (req.type) {
         case Request::Type::RowSet:
-        //case Request::Type::ColSet:
         case Request::Type::RowReset:
-        //case Request::Type::ColReset:
         case Request::Type::RowRead:
-        //case Request::Type::ColRead:
         case Request::Type::RowWrite:
-        //case Request::Type::ColWrite:
-        //case Request::Type::RowMv:
-        //case Request::Type::ColMv:
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
-        //case Request::Type::ColAdd:
         case Request::Type::RowSub:
-        //case Request::Type::ColSub:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
-        //case Request::Type::RowDiv:
-        //case Request::Type::ColMul:
-        //case Request::Type::ColDiv:
         case Request::Type::RowBitwise:
-        //case Request::Type::ColBitwise:
-        //case Request::Type::RowSearch:
-        //case Request::Type::ColSearch:
         case Request::Type::RowReduce:
         case Request::Type::RowReduce_WithinTile:
         case Request::Type::RowShift:
             ticks = sendPimReq(req);
             break;
-        //case Request::Type::BlockSend:
-        //    ticks = system_sendTileReq(req, SEND);
-        //    break;
-        //case Request::Type::BlockReceive:
-        //    ticks = system_sendTileReq(req, RECEIVE);
-        //    break;
         case Request::Type::BlockSend_Receive:
         case Request::Type::BlockBroadCast:
             ticks = sendTileReq(req, SEND_RECEIVE);
@@ -693,27 +547,6 @@ int System::sendRequest(Request& req)
         case Request::Type::ResetSync:
             ticks = sendSyncReq(req);
             break;
-        //case Request::Type::TileSend_Receive:
-        //    ticks = system_sendChipReq(req, SEND_RECEIVE);
-        //    break;
-        //case Request::Type::ChipSend_Receive:
-        //    ticks = sendNetReq(req);
-        //    break;
-        //case Request::Type::SystemRow2Row:
-        //    ticks = system_sendRow_receiveRow(req);
-        //    break;
-        //case Request::Type::SystemRow2Col:
-        //    ticks = system_sendRow_receiveCol(req);
-        //    break;
-        //case Request::Type::SystemCol2Row:
-        //    ticks = system_sendCol_receiveRow(req);
-        //    break;
-        //case Request::Type::SystemCol2Col:
-        //    ticks = system_sendCol_receiveCol(req);
-        //    break;
-        //case Request::Type::SystemLookUpTable:
-        //    ticks = system_lookuptable(req);
-        //    break;
         case Request::Type::RowStore:
             ticks = sendChipReq(req, SEND);
             break;
@@ -726,18 +559,6 @@ int System::sendRequest(Request& req)
         case Request::Type::RowLoad_RF:
             ticks = sendChipReq(req, SEND);
             break;
-        //case Request::Type::SystemRowStore:
-        //    ticks = system_DramStore(req);
-        //    break;
-        //case Request::Type::SystemRowLoad:
-        //    ticks = system_DramLoad(req);
-        //    break;
-        //case Request::Type::SystemColRead:
-        //    ticks = system_ColRead(req);
-        //    break;
-        //case Request::Type::SystemColWrite:
-        //    ticks = system_ColWrite(req);
-        //    break;
         case Request::Type::RowRead_RF:
             ticks = sendRFReq(req);
             break;
@@ -762,140 +583,8 @@ int System::sendRequest(Request& req)
 
     return ticks;
 }
-
-
-int System::sendRequests(std::vector<Request>& reqs)
-{
-#ifdef DEBUG_OUTPUT
-    // std::cout << "The system is sending a request - " ;
 #endif
-    int ticks = 0;
-    for (int i = 0; i < reqs.size(); i++) {
-        tot_reqs++;
-        switch (reqs[i].type) {
-            case Request::Type::RowSet:
-            //case Request::Type::ColSet:
-            case Request::Type::RowReset:
-            //case Request::Type::ColReset:
-            case Request::Type::RowRead:
-            //case Request::Type::ColRead:
-            case Request::Type::RowWrite:
-            //case Request::Type::ColWrite:
-            //case Request::Type::RowMv:
-            //case Request::Type::ColMv:
-            case Request::Type::RowAdd:
-            case Request::Type::RowAdd_CRAM_RF:
-            //case Request::Type::ColAdd:
-            case Request::Type::RowSub:
-            //case Request::Type::ColSub:
-            case Request::Type::RowMul:
-            case Request::Type::RowMul_CRAM_RF:
-            //case Request::Type::RowDiv:
-            //case Request::Type::ColMul:
-            //case Request::Type::ColDiv:
-            case Request::Type::RowBitwise:
-            //case Request::Type::ColBitwise:
-            case Request::Type::RowSearch:
-            //case Request::Type::ColSearch:
-            case Request::Type::RowReduce:
-            case Request::Type::RowReduce_WithinTile:
-            case Request::Type::RowShift:
-                ticks = sendPimReq(reqs[i]);
-                break;
-            //case Request::Type::BlockSend:
-            //    ticks = system_sendTileReq(reqs[i], SEND);
-            //    break;
-            //case Request::Type::BlockReceive:
-            //    ticks = system_sendTileReq(reqs[i], RECEIVE);
-            //    break;
-            case Request::Type::BlockSend_Receive:
-                ticks = sendTileReq(reqs[i], SEND_RECEIVE);
-                break;
-            case Request::Type::TileSend:
-                ticks = sendChipReq(reqs[i], SEND);
-                break;
-            case Request::Type::TileReceive:
-                ticks = sendChipReq(reqs[i], RECEIVE);
-                break;
-            case Request::Type::Signal:
-                ticks = sendSyncReq(reqs[i]);
-                break;
-            case Request::Type::Wait:
-                ticks = sendSyncReq(reqs[i]);
-                break;
-            case Request::Type::Barrier:
-                ticks = sendSyncReq(reqs[i]);
-                break;
-            case Request::Type::ResetSync:
-                ticks = sendSyncReq(reqs[i]);
-                break;
-            //case Request::Type::TileSend_Receive:
-            //    ticks = system_sendChipReq(reqs[i], SEND_RECEIVE);
-            //    break;
-            //case Request::Type::ChipSend_Receive:
-            //    ticks = sendNetReq(reqs[i]);
-            //    break;
-            //case Request::Type::SystemRow2Row:
-            //    ticks = system_sendRow_receiveRow(reqs[i]);
-            //    break;
-            //case Request::Type::SystemRow2Col:
-            //    ticks = system_sendRow_receiveCol(reqs[i]);
-            //    break;
-            //case Request::Type::SystemCol2Row:
-            //    ticks = system_sendCol_receiveRow(reqs[i]);
-            //    break;
-            //case Request::Type::SystemCol2Col:
-            //    ticks = system_sendCol_receiveCol(reqs[i]);
-            //    break;
-            //case Request::Type::SystemLookUpTable:
-            //    ticks = system_lookuptable(reqs[i]);
-            //    break;
-            case Request::Type::RowStore:
-                ticks = sendChipReq(reqs[i], SEND);
-                break;
-            case Request::Type::RowStore_RF:
-                ticks = sendChipReq(reqs[i], SEND);
-                break;
-            case Request::Type::RowLoad:
-                ticks = sendChipReq(reqs[i], SEND);
-                break;
-            case Request::Type::RowLoad_RF:
-                ticks = sendChipReq(reqs[i], SEND);
-                break;
-            //case Request::Type::SystemRowStore:
-            //    ticks = system_DramStore(reqs[i]);
-            //    break;
-            //case Request::Type::SystemRowLoad:
-            //    ticks = system_DramLoad(reqs[i]);
-            //    break;
-            //case Request::Type::SystemColRead:
-            //    ticks = system_ColRead(reqs[i]);
-            //    break;
-            //case Request::Type::SystemColWrite:
-            //    ticks = system_ColWrite(reqs[i]);
-            //    break;
-            case Request::Type::RowRead_RF:
-                ticks = sendRFReq(reqs[i]);
-                break;
-            default:
-                cout << "[Error] unrecognized request!\n";
-                break;
-        }
-#ifdef SCHED_DEBUG_OUTPUT
-        printf("The system receives a Request#%lu: %s, ticks: %d\n",
-            tot_reqs, req.reqToStr().c_str(), ticks);
-#endif
-#ifdef DEBUG_OUTPUT
-        // std::cout << req.reqToStr() << std::endl;
-#endif
-        if (ticks < 0) {
-            std::cout << "Wrong Address!" << std::endl;
-            exit(1);
-        }
-    }
 
-    return ticks;
-}
 
 
 void System::run(std::string workload)
@@ -905,7 +594,7 @@ void System::run(std::string workload)
     
     while(!finished){
         //update chip status
-        for (int i = 0; i < _nchips; i++) {
+        for (int i = 0; i < _config->_nchips; i++) {
             
             _chips[i]->tick();
             
@@ -913,18 +602,19 @@ void System::run(std::string workload)
         //update time
         _time++;
         #ifdef PRINT_TICK
-        printf("current time: %d\n", _time);
+        //printf("current time: %d\n", _time);
+        cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
         #endif
         //check if all chips finished
         finished = true;
-        for(int i=0; i< _nchips; i++){
+        for(int i=0; i< _config->_nchips; i++){
             if (!_chips[i]->isFinished()){
                 finished = false;
             }
         }
     }
     //print stats
-    for (int i = 0; i < _nchips; i++) {
+    for (int i = 0; i < _config->_nchips; i++) {
         _chips[i]->outputStats(rstFile);
     }
 
@@ -935,7 +625,7 @@ void System::finish()
 {
 
     fprintf(rstFile, "\n############# Summary #############\n");
-    for (int i = 0; i < _nchips; i++) {
+    for (int i = 0; i < _config->_nchips; i++) {
         fprintf(rstFile, "--------------------------------\n");
         //fprintf(rstFile, "Chip#%d has ticked %lu clocks\n", i, _chips[i]->getTime());
         //fprintf(rstFile, "Chip#%d has processed %lu instructions\n", i, _chips[i]->getDecoderTime());
@@ -944,7 +634,7 @@ void System::finish()
         //fprintf(rstFile, "Chip#%d leakage power is %.4lf W\n", i, _chips[i]->getTotalLeakageEnergy());
         fprintf(rstFile, "--------------------------------\n");
 
-        for (int j = 0; j < _chips[i]->_nchildren; j++) {
+        for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) {
             fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks, last active time is %lu\n", i, j, (long) _time, (long)_chips[i]->_children[j]->_last_req_time);
             fprintf(rstFile, "--------------------------------\n");
 
@@ -959,16 +649,48 @@ void System::finish()
     ///////////////////////////////
     //Generating csv file
     ///////////////////////////////
-    for (int i = 0; i < _nchips; i++) {
+
+    long unsigned int tot_row_add_cnt = 0;
+    long unsigned int tot_row_mul_cnt = 0;
+    long unsigned int tot_row_mul_cram_rf_cnt = 0;
+    long unsigned int tot_row_reset_cnt = 0;
+    long unsigned int tot_row_read_cnt = 0;
+    long unsigned int tot_row_read_rf_cnt = 0;
+    long unsigned int tot_tile_send_cnt = 0;
+    long unsigned int tot_tile_receive_cnt = 0;
+    long unsigned int tot_row_load_cnt = 0;
+    long unsigned int tot_row_load_rf_cnt = 0;
+    long unsigned int tot_row_store_cnt = 0;
+    long unsigned int tot_row_shift_cnt = 0;
+
+    for (int i = 0; i < _config->_nchips; i++) {
         
         //Find the tile that ticked the most
         long unsigned int max_ticks = 0;
         int max_ticks_tile = 0;
-        for (int j = 0; j < _chips[i]->_nchildren; j++) {
+        for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) {
             if  (_chips[i]->_children[j]->_last_req_time > max_ticks) {
                 max_ticks = _chips[i]->_children[j]->_last_req_time;
                 max_ticks_tile = j;
             }
+
+            MemoryComponent* cur_tile;
+            cur_tile = _chips[i]->_children[j];
+
+            //Add up req counts of each type across all tiles
+            tot_row_add_cnt += cur_tile->req_cnt[int(Request::Type::RowAdd)];
+            tot_row_mul_cnt += cur_tile->req_cnt[int(Request::Type::RowMul)];
+            tot_row_mul_cram_rf_cnt += cur_tile->req_cnt[int(Request::Type::RowMul_CRAM_RF)];
+            tot_row_reset_cnt += cur_tile->req_cnt[int(Request::Type::RowReset)];
+            tot_row_read_cnt += cur_tile->req_cnt[int(Request::Type::RowRead)];
+            tot_row_read_rf_cnt += cur_tile->req_cnt[int(Request::Type::RowRead_RF)];
+            tot_tile_send_cnt += cur_tile->req_cnt[int(Request::Type::TileSend)];
+            tot_tile_receive_cnt += cur_tile->req_cnt[int(Request::Type::TileReceive)];
+            tot_row_load_cnt += cur_tile->req_cnt[int(Request::Type::RowLoad)];
+            tot_row_load_rf_cnt += cur_tile->req_cnt[int(Request::Type::RowLoad_RF)];
+            tot_row_store_cnt += cur_tile->req_cnt[int(Request::Type::RowStore)];
+            tot_row_shift_cnt += cur_tile->req_cnt[int(Request::Type::RowShift)];
+
         }
         
         //now we have the tile that ticked the most
@@ -976,17 +698,20 @@ void System::finish()
         tile = _chips[i]->_children[max_ticks_tile];
         
         //now print the csv
-        #define NUM_CSV_COLUMNS 23
+        #define NUM_CSV_COLUMNS 39
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "Max_Tick_Tile",
-                          "Total_Cycles",
                           "RowAdd_Count",
                           "RowMul_Count",
+                          "RowMul_CRAM_RF_Count",
+                          "RowReset_Count",
+                          "RowRead_Count",
+                          "RowRead_RF_Count",
                           "TileSend_Count",
                           "TileReceive_Count",
                           "RowLoad_Count",
-                          "RowLoadRF_Count",
+                          "RowLoad_RF_Count",
                           "RowStore_Count",
                           "RowShift_Count",
                           "RowAdd_Cycles",
@@ -994,17 +719,30 @@ void System::finish()
                           "TileSend_Cycles",
                           "TileReceive_Cycles",
                           "RowLoad_Cycles",
-                          "RowLoadRF_Cycles",
+                          "RowLoad_RF_Cycles",
                           "RowStore_Cycles",
                           "RowShift_Cycles",
                           "TileSend_Wait_Cycles",
                           "TileReceive_Wait_Cycles",
                           "RowLoad_Wait_Cycles",
                           "RowLoadRF_Wait_Cycles",
-                          "RowStore_Wait_Cycles"
+                          "RowStore_Wait_Cycles",
+                          "Total_Cycles",
+                          "Total_RowAdd_Count",
+                          "Total_RowMul_Count",
+                          "Total_RowMul_CRAM_RF_Count",
+                          "Total_RowReset_Count",
+                          "Total_RowRead_Count",
+                          "Total_RowRead_RF_Count",
+                          "Total_TileSend_Count",
+                          "Total_TileReceive_Count",
+                          "Total_RowLoad_Count",
+                          "Total_RowLoad_RF_Count",
+                          "Total_RowStore_Count",
+                          "Total_RowShift_Count"
         };
 
-        csv_file << "Workload, Logfile,";
+        csv_file << "WorkloadName, Logfile,";
         for (int i=0; i<header_row.size(); i++) {
             csv_file << header_row[i] << "," ;
         }
@@ -1013,9 +751,12 @@ void System::finish()
         //now the actual data
         std::array<long unsigned int, NUM_CSV_COLUMNS> value_row = {
                 (long unsigned int) max_ticks_tile,
-                max_ticks,
                 tile->req_cnt[int(Request::Type::RowAdd)],
                 tile->req_cnt[int(Request::Type::RowMul)],
+                tile->req_cnt[int(Request::Type::RowMul_CRAM_RF)],
+                tile->req_cnt[int(Request::Type::RowReset)],
+                tile->req_cnt[int(Request::Type::RowRead)],
+                tile->req_cnt[int(Request::Type::RowRead_RF)],
                 tile->req_cnt[int(Request::Type::TileSend)],
                 tile->req_cnt[int(Request::Type::TileReceive)],
                 tile->req_cnt[int(Request::Type::RowLoad)],
@@ -1034,7 +775,20 @@ void System::finish()
                 (long unsigned int) tile->req_waittime[int(Request::Type::TileReceive)],
                 (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad)],
                 (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad_RF)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::RowStore)]
+                (long unsigned int) tile->req_waittime[int(Request::Type::RowStore)],
+                max_ticks,
+                tot_row_add_cnt,
+                tot_row_mul_cnt,
+                tot_row_mul_cram_rf_cnt,
+                tot_row_reset_cnt,
+                tot_row_read_cnt,
+                tot_row_read_rf_cnt,
+                tot_tile_send_cnt,
+                tot_tile_receive_cnt,
+                tot_row_load_cnt,
+                tot_row_load_rf_cnt,
+                tot_row_store_cnt,
+                tot_row_shift_cnt
         };
 
         csv_file << workload <<","<< this->_config->get_rstfile() <<",";

@@ -12,10 +12,11 @@ int32_t gemv(System* sys)
 {
     int matrix_row = 32768*1;//32768 * X
     int matrix_col = 4096 *1;// 4096 * Y
-    int use_tiles = sys->_ntiles_used;
-    int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
-    int basic_matrix_row = sys->_ncols * sys->_nblocks;//256*128=32768
-    int basic_matrix_col = use_tiles * sys->_num_regs_per_rf;// 128*32=4096
+    Config* cfg = sys->_config;
+    int use_tiles = cfg->_ntiles_used;
+    int dram_tile = cfg->_dramTile;
+    int basic_matrix_row = cfg->_ncols * cfg->_nblocks;//256*128=32768
+    int basic_matrix_col = use_tiles * cfg->_num_regs_per_rf;// 128*32=4096
     int effective_basic_col = (matrix_col>basic_matrix_col)?basic_matrix_col:matrix_col;
     int effective_basic_row = (matrix_row>basic_matrix_row)?basic_matrix_row:matrix_row;
     int cols_per_tile = effective_basic_col/use_tiles;//equal to # register iteration <=32
@@ -51,7 +52,7 @@ int32_t gemv(System* sys)
     for(int row_iteration =0; row_iteration<row_iter_num; row_iteration++){
         for(int col_iteration=0; col_iteration<col_iter_num; col_iteration++){
             for(int iter_tile=dram_tile; iter_tile<dram_tile+use_tiles; iter_tile++){
-                int tile = iter_tile % sys->_ntiles;
+                int tile = iter_tile % cfg->_ntiles;
                 //Load weight matrix values into CRAM
                 //This is typically done beforehand/offline.
                 //Each core is loading separate data, so no broadcasting here.
@@ -68,7 +69,7 @@ int32_t gemv(System* sys)
                 //Now load vector values into RF.
                 //Only 4 elements need to be loaded per core, so just 1 instruction is enough.
                 request = new Request(Request::Type::RowLoad_RF);
-                request->addOperand(sys->_num_regs_per_rf * tile, 4, input_precision); //dst
+                request->addOperand(cfg->_num_regs_per_rf * tile, 4, input_precision); //dst
                 request->addOperand(sys->DRAM_ADDR, 4, input_precision); //src
                 requests.push_back(*request);
 
@@ -82,13 +83,13 @@ int32_t gemv(System* sys)
                 for (int i=0; i<cols_per_tile; i++) {
                     //Read an element from the RF
                     request = new Request(Request::Type::RowRead_RF);
-                    request->addOperand(sys->_num_regs_per_rf * tile, 0, input_precision); //src
+                    request->addOperand(cfg->_num_regs_per_rf * tile, 0, input_precision); //src
                     requests.push_back(*request);
 
                     //Multiply in this core/tile.
                     request = new Request(Request::Type::RowMul_CRAM_RF);
                     request->addOperand(sys->getAddress(tile,0,i*4), 0, input_precision); //src
-                    request->addOperand(sys->_num_regs_per_rf * tile, 4, input_precision);//rf
+                    request->addOperand(cfg->_num_regs_per_rf * tile, 4, input_precision);//rf
                     request->addOperand(sys->getAddress(tile,0,i*4), 0, multiply_precision); //dst
                     requests.push_back(*request);
 
@@ -105,15 +106,15 @@ int32_t gemv(System* sys)
             if(use_tiles>1){                
                 for(int gap =1; gap<use_tiles; gap = gap*2){
                     for(int iter_tile=dram_tile; iter_tile+gap<dram_tile+use_tiles; iter_tile=iter_tile+2*gap){
-                        int tile = iter_tile % sys->_ntiles;
+                        int tile = iter_tile % cfg->_ntiles;
                         //receive partial results from tile that is gap away
                         request = new Request(Request::Type::TileSend);
-                        request->addOperand(sys->getAddress((tile+gap)%sys->_ntiles,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+                        request->addOperand(sys->getAddress((tile+gap)%cfg->_ntiles,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
                         request->addOperand(sys->getAddress(tile,0,cols_per_tile*4 + round*16 + 16), 0, accumulate_precision); //dst
                         requests.push_back(*request);
 
                         request = new Request(Request::Type::TileReceive);
-                        request->addOperand(sys->getAddress((tile+gap)%sys->_ntiles,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+                        request->addOperand(sys->getAddress((tile+gap)%cfg->_ntiles,0,cols_per_tile*4 + round*16), 0, accumulate_precision); //src
                         request->addOperand(sys->getAddress(tile,0,cols_per_tile*4 + round*16 + 16), 0, accumulate_precision); //dst
                         requests.push_back(*request);
 

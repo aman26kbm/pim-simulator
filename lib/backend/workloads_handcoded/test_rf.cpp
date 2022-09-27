@@ -10,8 +10,8 @@ void test_rf_tile0(System* sys){
 
     //popCount_reduce_RF tile0 row0->tile0 RF
     request = new Request(Request::Type::PopCountReduce_RF);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->rf_base_addr_tile0, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getRFAddress(0,0), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
@@ -24,8 +24,8 @@ void test_rf_tile1(System* sys){
 
     //popCount_reduce_RF tile1 row0->tile1 RF
     request = new Request(Request::Type::PopCountReduce_RF);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getRFAddress(1,0), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)

@@ -15,47 +15,47 @@ void test_sync_tile0(System *sys)
     
     //rowLoad_RF dram->tile0 RF
     request = new Request(Request::Type::RowLoad_RF);
-    request->addOperand(sys->rf_base_addr_tile0, 0, PrecisionT::INT4); //rf
+    request->addOperand(sys->getRFAddress(0,0), 0, PrecisionT::INT4); //rf
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
     //0. rowLoad dram->tile0 row0
     request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
     //1. tilesend tile0 row0-> tile1 row8
     request = new Request(Request::Type::TileSend);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //2. tileReceive tile1 row0 -> tile0 row8
     //should execute after the previous request
     request = new Request(Request::Type::TileReceive);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
     
     //3. blocksend tile0 block0 row8 -> block2 row8
     //should execute after the previous request
     request = new Request(Request::Type::BlockSend_Receive);
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,2,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //RowAdd INT8
     request = new Request(Request::Type::RowAdd);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT8); //src1
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT8); //src2
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT8); //src1
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT8); //src2
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT8); //dst
     
     requests.push_back(*request);
 
     //4. rowStore tile0 row8
     request = new Request(Request::Type::RowStore);
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);
     requests.push_back(*request);
 
@@ -70,46 +70,46 @@ void test_sync_tile1(System *sys)
 
     //rowLoad_RF dram->tile1 RF
     request = new Request(Request::Type::RowLoad_RF);
-    request->addOperand(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //rf
+    request->addOperand(sys->getRFAddress(1,0), 0, PrecisionT::INT4); //rf
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
     
     //0. rowLoad dram -> tile1 row0 
     request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);
     requests.push_back(*request);
 
     //1. tileReceive tile0 row0-> tile1 row8
     request = new Request(Request::Type::TileReceive);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //4. blocksend tile1 block0 row8 -> block2 row8
     //should execute after the previous request
     request = new Request(Request::Type::BlockSend_Receive);
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block2_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,2,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //2. tileSend tile1 row0 -> tile0 row8
     request = new Request(Request::Type::TileSend);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //RowAdd INT8
     request = new Request(Request::Type::RowAdd);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT8); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT8); //src2
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT8); //src
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT8); //src2
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT8); //dst
     
     requests.push_back(*request);
 
     //4. rowStore tile1 row8
     request = new Request(Request::Type::RowStore);
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
@@ -125,47 +125,47 @@ void test_sync_tile2(System *sys)
 
     //rowLoad_RF dram->tile2 RF
     request = new Request(Request::Type::RowLoad_RF);
-    request->addOperand(sys->rf_base_addr_tile2, 0, PrecisionT::INT4); //rf
+    request->addOperand(sys->getRFAddress(2,0), 0, PrecisionT::INT4); //rf
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
     //0. rowLoad dram->tile2 row0
     request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
     //1. tilesend tile2 row0-> tile3 row8
     request = new Request(Request::Type::TileSend);
-    request->addOperand(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(3,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //2. tileReceive tile3 row0 -> tile2 row8
     //should execute after the previous request
     request = new Request(Request::Type::TileReceive);
-    request->addOperand(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(2,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
     
     //3. blocksend tile2 block0 row8 -> block2 row8
     //should execute after the previous request
     request = new Request(Request::Type::BlockSend_Receive);
-    request->addOperand(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile2_block2_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(2,0,8), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(2,2,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //RowAdd INT8
     request = new Request(Request::Type::RowAdd);
-    request->addOperand(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT8); //src1
-    request->addOperand(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT8); //src2
-    request->addOperand(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT8); //src1
+    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT8); //src2
+    request->addOperand(sys->getAddress(2,0,8), 0, PrecisionT::INT8); //dst
     
     requests.push_back(*request);
 
     //4. rowStore tile2 row8
     request = new Request(Request::Type::RowStore);
-    request->addOperand(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(2,0,8), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
@@ -181,46 +181,46 @@ void test_sync_tile3(System *sys)
 
     //rowLoad_RF dram->tile3 RF
     request = new Request(Request::Type::RowLoad_RF);
-    request->addOperand(sys->rf_base_addr_tile3, 0, PrecisionT::INT4); //rf
+    request->addOperand(sys->getRFAddress(3,0), 0, PrecisionT::INT4); //rf
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
     //0. rowLoad dram -> tile3 row0
     request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 
     //1. tileReceive tile2 row0-> tile3 row8
     request = new Request(Request::Type::TileReceive);
-    request->addOperand(sys->cram_addr_tile2_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(3,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //4. blocksend tile3 block0 row8 -> block2 row8
     //should execute after the previous request
     request = new Request(Request::Type::BlockSend_Receive);
-    request->addOperand(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile3_block2_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(3,0,8), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(3,2,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //2. tileSend tile3 row0 -> tile2 row8
     request = new Request(Request::Type::TileSend);
-    request->addOperand(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile2_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(2,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     //RowAdd INT8
     request = new Request(Request::Type::RowAdd);
-    request->addOperand(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT8); //src
-    request->addOperand(sys->cram_addr_tile3_block0_row0, 0, PrecisionT::INT8); //src2 not used
-    request->addOperand(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT8); //dst
+    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT8); //src
+    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT8); //src2 not used
+    request->addOperand(sys->getAddress(3,0,8), 0, PrecisionT::INT8); //dst
     
     requests.push_back(*request);
 
     //4. rowStore tile3 row8
     request = new Request(Request::Type::RowStore);
-    request->addOperand(sys->cram_addr_tile3_block0_row8, 0, PrecisionT::INT4); //cram
+    request->addOperand(sys->getAddress(3,0,8), 0, PrecisionT::INT4); //cram
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4);//dram
     requests.push_back(*request);
 

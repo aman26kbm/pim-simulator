@@ -9,10 +9,6 @@
 #include <string>
 #include <cstdio>
 
-#define SEND 0
-#define RECEIVE 1
-#define SEND_RECEIVE 2
-
 namespace pimsim {
 
 class Request {
@@ -277,61 +273,9 @@ public:
     } type;
 
 
-    static std::string print_name(Type type) {
-        switch(type) {
-            case Type::RowSet: return        "RowSet";
-            case Type::RowReset: return        "RowReset";
-            case Type::RowRead: return        "RowRead";
-            case Type::RowWrite: return        "RowWrite";
-            case Type::RowAdd: return        "RowAdd";
-            case Type::RowMul: return        "RowMul";
-            case Type::RowBitwise: return        "RowBitwise";
-            case Type::ColBitwise: return        "ColBitwise";
-            case Type::RowSearch: return        "RowSearch";
-            case Type::ColSearch: return        "ColSearch";
-            case Type::RowReduce: return        "RowReduce";
-            case Type::RowReduce_WithinTile: return        "RowReduce_WithinTile";
-            case Type::RowShift: return        "RowShift";
-
-            case Type::BlockSend_Receive: return        "BlockSend_Receive";
-            case Type::TileSend: return        "TileSend";
-            case Type::TileReceive: return        "TileReceive";
-            case Type::BlockBroadCast: return  "BlockBroadCast";
-            case Type::TileSend_BroadCast: return "TileSend_BroadCast";
-            case Type::TileReceive_BroadCast: return "TileReceive_BroadCast";
-            case Type::ChipSend_Receive: return        "ChipSend_Receive";
-            case Type::SystemRow2Row: return        "SystemRow2Row";
-            case Type::SystemRow2Col: return        "SystemRow2Col";
-            case Type::SystemCol2Row: return        "SystemCol2Row";
-            case Type::SystemCol2Col: return        "SystemCol2Col";
-            case Type::SystemLookUpTable: return        "SystemLookUpTable";
-            case Type::SystemRowStore: return        "SystemRowStore";
-            case Type::SystemColRead: return        "SystemColRead";
-            case Type::SystemRowLoad: return        "SystemRowLoad";
-            case Type::SystemColWrite: return        "SystemColWrite";
-
-            case Type::RowLoad: return        "RowLoad";
-            case Type::RowStore: return        "RowStore";
-            case Type::Signal: return        "Signal";
-            case Type::Wait: return        "Wait";
-            case Type::Barrier: return        "Barrier";
-            case Type::ResetSync: return        "ResetSync";
-            case Type::NOP: return        "NOP";
-
-            case Type::RowLoad_RF: return        "RowLoad_RF";
-            case Type::RowStore_RF: return        "RowStore_RF";
-            case Type::RowMul_CRAM_RF: return        "RowMul_CRAM_RF";
-            case Type::RowAdd_CRAM_RF: return        "RowAdd_CRAM_RF";
-            case Type::RowRead_RF: return        "RowRead_RF";
-            case Type::RowWrite_RF: return        "RowWrite_RF";
-            case Type::RowAdd_RF: return        "RowAdd_RF";
-            case Type::RowSub_RF: return        "RowSub_RF";
-            case Type::PopCountReduce_RF: return  "PopCountReduce_RF";
-            default: return        "None";
-        };
-
-    }
-
+    static std::string print_name(Type type);
+    int reqNo;
+    
     int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue
     TimeT start_time = 0; //The time at which the request is decoded and start waiting
@@ -340,239 +284,60 @@ public:
     std::vector<AddrT> addr_list; //address list
     std::vector<int> size_list; //size list
     std::vector<PrecisionT::Precision> precision_list;
-    //int precision_bits;//only used for rowLoad_RF and rowStore_RF. Indicates how many times of transfer is needed
-    int chip, tile, block, row, col;
-    int src_chip, src_tile, src_block, src_row, src_col;
-    int dst_chip, dst_tile, dst_block, dst_row, dst_col;
+    int bits=0;
+    int chip, tile, block, row, col=0;
     Mailbox* mail;
     //indicates if the htree is configured for this request. Value owned by htree.
     bool hTree_ready=false;
     bool mesh_ready=false;
-    bool DynaMesh_ready = false;
+    int packets2Mesh = 0;
+    bool requesting_load = false;
+    bool requesting_store = false;
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     int mesh_transfer_time=0;//only used for mesh. Indicates transfer time of a request
     int DynaMesh_transfer_time=0;
     bool send_receive_finished=false;
 
-    bool dram_ready;
+    bool dram_ready=false;
 
     enum class BroadcastType: int {
         NONE,
         ALL
     } broadcast;
 
-    Request() {}
+    Request();
+    Request(Type t);
+    Request(Type t, AddrT addr);
+    Request(Type t, Mailbox* m);
+    Request(Type t, BroadcastType b);
+    Request(const Request& req);
 
-    Request(Type t) {
-        type = t;
-    }
+    std::string reqToStr();
 
-    Request(Type t, AddrT addr) {
-        type = t;
-        addr_list.push_back(addr);
-    }
-
-    Request(Type t, Mailbox* m) {
-        type = t;
-        mail = m;
-    }
-
-    Request(Type t, BroadcastType b) {
-        type = t;
-        broadcast = b;
-    }
-
-   std::string reqToStr() {
-       char *buffer;
-       buffer = new char[100];
-       snprintf(buffer, 100, "[%s] chip: %d, tile: %d,  block: %d, row: %d, col: %d",
-               print_name(type).c_str(), chip, tile, block, row, col);
-       std::string output = buffer;
-       return output;
-   }
-//
-//    std::string typeStr() {
-//        return req_str[int(type)];
-//    }
-//
-//    std::string typeStr(int idx) {
-//        return req_str[idx];
-//    }
-
-    void setLocation(int chip_id, int tile_id, int block_id, int row_id, int col_id) {
-        chip = chip_id;
-        tile = tile_id;
-        block = block_id;
-        row = row_id;
-        col = col_id;
-    }
-
-    void setSrcLocation(int chip_id, int tile_id, int block_id, int row_id, int col_id) {
-        src_chip = chip_id;
-        src_tile = tile_id;
-        src_block = block_id;
-        src_row = row_id;
-        src_col = col_id;
-    }
-
-    void setDstLocation(int chip_id, int tile_id, int block_id, int row_id, int col_id) {
-        dst_chip = chip_id;
-        dst_tile = tile_id;
-        dst_block = block_id;
-        dst_row = row_id;
-        dst_col = col_id;
-    }
-
-    void addOperand(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8) {
-        addr_list.push_back(addr);
-        size_list.push_back(size);
-        precision_list.push_back(precision);
-    }
-
-    void swapSrcDst() {
-      assert(addr_list.size() == 3);
-      std::swap(addr_list[1], addr_list[2]);
-      assert(size_list.size() == 3);
-      std::swap(size_list[1], size_list[2]);
-      assert(precision_list.size() == 3);
-      std::swap(precision_list[1], precision_list[2]);
-    }
-
-    bool isSystem() {
-        if ((type == Type::SystemRow2Row) || (type == Type::SystemRow2Col)
-        || (type == Type::SystemCol2Row) || (type == Type::SystemCol2Col)
-        || (type == Type::SystemLookUpTable)
-        || (type == Type::SystemRowStore) || (type == Type::SystemColRead)
-        || (type == Type::SystemRowLoad) || (type == Type::SystemColWrite) ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    bool isNet() {
-        if (type == Type::ChipSend_Receive)
-            return true;
-        else
-            return false;
-    }
-
-    bool isChipDram() {
-        if (type == Type::RowLoad || type == Type::RowStore || type == Type::RowLoad_RF || type == Type::RowStore_RF)
-            return true;
-        else
-            return false;
-    }
-
-    bool isChip() {
-        if (type == Type::TileSend || type == Type::TileReceive || type == Type::TileSend_BroadCast || type == Type::TileReceive_BroadCast)
-            return true;
-        else
-            return false;
-    }
-
-    bool isTile() {
-        if ( type == Type::BlockSend_Receive || type == Type::BlockBroadCast)
-            return true;
-        else
-            return false;
-    }
-    
-    bool isPIM() {
-        switch (type) {
-            case Type::RowSet:
-            case Type::RowReset:
-            case Type::RowRead:
-            case Type::RowWrite:
-            case Type::RowAdd:
-            case Type::RowAdd_CRAM_RF:
-            case Type::RowSub:
-            case Type::RowMul:
-            case Type::RowMul_CRAM_RF:
-            case Type::RowBitwise:
-            case Type::ColBitwise:
-            case Type::RowSearch:
-            case Type::ColSearch:
-            case Type::RowReduce:
-            case Type::RowReduce_WithinTile:
-            case Type::RowShift:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    bool isRF() {
-        if ((type == Type::RowMul_CRAM_RF || type == Type::RowAdd_CRAM_RF 
-        || type == Type::RowLoad_RF || type == Type::RowStore_RF
-        || type == Type::PopCountReduce_RF))
-            return true;
-        else
-            return false;
-    }
-
-    bool isRFonly() {
-        if (type == Type::RowAdd_RF || type == Type::RowSub_RF || type == Type::RowRead_RF)
-            return true;
-        else
-            return false;
-    }
-
-    bool isSync() {
-        if (type == Type::Signal || type == Type::Wait)
-            return true;
-        else
-            return false;
-    }
+    void addOperand(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8);
+    void swapSrcDst();
+    void setLocation(int chip, int tile, int block, int row, int col);
+    //a request is load or store
+    bool isChipDram();
+    //a request is transferation between tiles
+    bool isChip();
+    //a request is transferation between blocks within a tile
+    bool isTile();
+    //a request is only a PIM operation on its own
+    bool isPIM();
+    //a request is an explicit synchronization request
+    bool isSync();
 
 };
 
 struct ReqQueue {
     std::queue<Request> *q = new std::queue<Request>();
-//    ReqQueue() {
-////        q = new std::vector<Request>();
-//        q->resize(1024);
-//    }
     unsigned int max = 64;
-    unsigned int size() {return q->size();}
-    void push_back(Request req) {q->push(req);}
-    Request pop_front() {
-        Request req = q->front();
-        q->pop();
-        return req;
-    }
-//    void push_front(Request req) {q->push_front(req);}
-//    void pop_front() {q->pop_front();}
-//    bool contains(Request req) {
-//        std::list<Request>::iterator it;
-////        if (req.isChip()) {
-////            for (it = q.begin(); it != q.end(); ++it) {
-////                if (it->src_tile == req.src_tile || it->dst_tile == req.dst_tile) {
-////                    return true;
-////                }
-////            }
-////        }
-////
-////        else if (req.isTile()) {
-////            for (it = q.begin(); it != q.end(); ++it) {
-////                if ((it->src_block == req.src_block && it->src_tile == req.src_tile) || (it->dst_block == req.dst_block && it->dst_tile == req.dst_tile)) {
-////                    return true;
-////                }
-////
-////            }
-////        }
-//
-//        return false;
-//    }
-    void clear() {
-        //pop until the end
-        while (!q->empty()) {
-            q->pop();
-        }
-    }
-    bool is_empty() {
-        return (q->empty());
-    };
+    unsigned int size();
+    void push_back(Request req);
+    Request pop_front();
+    void clear();
+    bool is_empty();
 };
 
 }

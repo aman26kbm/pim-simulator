@@ -7,29 +7,31 @@
 int32_t gemm_outer(System* sys){
     std::vector<Request> requests;
     Request *request;
+    Config* cfg = sys->_config;
 
     int matrixARowNum = 128*256;
     int matrixAColNum = 256*8;
+    //int matrixAColNum = 8;
     int matrixBRowNum = matrixAColNum;
-    int matrixBColNum = sys->_num_regs_per_rf;
+    int matrixBColNum = cfg->_num_regs_per_rf;
 
-    int use_tiles = sys->_ntiles_used;
-    int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
+    int use_tiles = cfg->_ntiles_used;
+    int dram_tile = cfg->_dramTile; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
     PrecisionT::Precision precision_input = PrecisionT::INT8;
     PrecisionT::Precision precision_multiply = PrecisionT::INT16;
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
 
-    int basicMatrixARowNum = sys->_nblocks*sys->_ncols;
+    int basicMatrixARowNum = cfg->_nblocks*cfg->_ncols;
     int basicMatrixAColNum = matrixAColNum;
     int basicMatrixBRowNum = matrixAColNum;
-    int basicMatrixBColNum = min(sys->_num_regs_per_rf, (sys->_nrows-precision_input.bits()-precision_accumulate.bits())/precision_accumulate.bits());//6
+    int basicMatrixBColNum = min(cfg->_num_regs_per_rf, (cfg->_nrows-precision_input.bits()-precision_accumulate.bits())/precision_accumulate.bits());//6
     
     int partial_result_matrix_start_row = precision_input.bits();
     int accumulate_row = precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits();
     for(int i=0; i<(int)ceil(matrixARowNum/(float)basicMatrixARowNum); i++){//1
         for(int j=0; j<(int)ceil(matrixBColNum/(float)basicMatrixBColNum); j++){//6
             for(int iter_tile=dram_tile; iter_tile<dram_tile+use_tiles; iter_tile++){//1
-                int tile = iter_tile % sys->_ntiles;
+                int tile = iter_tile % cfg->_ntiles;
                 for(int basicA_col_idx=0; basicA_col_idx<matrixAColNum; basicA_col_idx+=use_tiles){//striped basicA columns X basicB rows //256*8
                     request = new Request(Request::Type::RowLoad);
                     request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //cram addr
@@ -37,7 +39,7 @@ int32_t gemm_outer(System* sys){
                     requests.push_back(*request);
 
                     request = new Request(Request::Type::RowLoad_RF);
-                    request->addOperand(sys->_num_regs_per_rf * tile, basicMatrixBRowNum, precision_input); //RF addr
+                    request->addOperand(cfg->_num_regs_per_rf * tile, basicMatrixBRowNum, precision_input); //RF addr
                     request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
                     requests.push_back(*request);
                     //multiply add to get partial sum matrix in 1 core
@@ -45,7 +47,7 @@ int32_t gemm_outer(System* sys){
                         
                         request = new Request(Request::Type::RowMul_CRAM_RF);
                         request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
-                        request->addOperand(sys->_num_regs_per_rf * tile + regIndex, 4, precision_input);//rf
+                        request->addOperand(cfg->_num_regs_per_rf * tile + regIndex, 4, precision_input);//rf
                         request->addOperand(sys->getAddress(tile,0,accumulate_row), 0, precision_multiply); //dst
                         requests.push_back(*request);    
 
@@ -63,20 +65,20 @@ int32_t gemm_outer(System* sys){
                     //Send partial results to tile that is gap away
                     for(int resultColIndex=0; resultColIndex<basicMatrixBColNum; resultColIndex++){
                         request = new Request(Request::Type::TileSend);
-                        request->addOperand(sys->getAddress((tile+gap)%sys->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_multiply); //src
-                        request->addOperand(sys->getAddress(tile%sys->_ntiles,0, precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits()), 0, precision_multiply); //dst
+                        request->addOperand(sys->getAddress((tile+gap)%cfg->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_multiply); //src
+                        request->addOperand(sys->getAddress(tile%cfg->_ntiles,0, precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits()), 0, precision_multiply); //dst
                         requests.push_back(*request);
 
                         request = new Request(Request::Type::TileReceive);
-                        request->addOperand(sys->getAddress((tile+gap)%sys->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_multiply); //src
-                        request->addOperand(sys->getAddress(tile%sys->_ntiles,0,precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits()), 0, precision_multiply); //dst
+                        request->addOperand(sys->getAddress((tile+gap)%cfg->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_multiply); //src
+                        request->addOperand(sys->getAddress(tile%cfg->_ntiles,0,precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits()), 0, precision_multiply); //dst
                         requests.push_back(*request);
 
                         //add
                         request = new Request(Request::Type::RowAdd);
-                        request->addOperand(sys->getAddress(tile%sys->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_multiply); //src
-                        request->addOperand(sys->getAddress(tile%sys->_ntiles,0,precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits()), 0, precision_multiply); //src2
-                        request->addOperand(sys->getAddress(tile%sys->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_accumulate); //dst
+                        request->addOperand(sys->getAddress(tile%cfg->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_multiply); //src
+                        request->addOperand(sys->getAddress(tile%cfg->_ntiles,0,precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits()), 0, precision_multiply); //src2
+                        request->addOperand(sys->getAddress(tile%cfg->_ntiles,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_accumulate); //dst
                         requests.push_back(*request);
                     }
                 }

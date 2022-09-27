@@ -18,6 +18,7 @@ public:
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _meshHeight, _meshWidth;
     int _dramTile;
+    bool _dramDistributed=false;
     int _ntiles_used;
 
     int _rf_chunk_size;

@@ -14,69 +14,69 @@ void test_tile0(System* sys)
 
     request = new Request(Request::Type::RowLoad);
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowMul);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row4, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowAdd);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row4, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::Signal, sys->m1);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     request = new Request(Request::Type::BlockSend_Receive);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::Barrier, sys->m2);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowStore);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowMul);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row4, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,4), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowLoad);
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowLoad_RF);
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->rf_base_addr_tile0, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getRFAddress(0,0), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowStore_RF);
-    request->addOperand(sys->rf_base_addr_tile0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getRFAddress(0,0), 0, PrecisionT::INT4); //src
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowMul_CRAM_RF);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->rf_base_addr_tile0, 0, PrecisionT::INT4);
-    request->addOperand(sys->cram_addr_tile0_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getRFAddress(0,0), 0, PrecisionT::INT4);
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowAdd_CRAM_RF);
-    request->addOperand(sys->cram_addr_tile0_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(0,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
@@ -93,46 +93,46 @@ void test_tile1(System* sys)
     Request *request;
 
     request = new Request(Request::Type::RowAdd);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowLoad);
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT8); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT8); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowMul);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowShift);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::Wait, sys->m1);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowStore);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::Barrier, sys->m2);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowMul);
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row8, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+    request->addOperand(sys->getAddress(1,0,8), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
     request = new Request(Request::Type::RowLoad);
     request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //src
-    request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //dst
+    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //dst
     requests.push_back(*request);
 
 

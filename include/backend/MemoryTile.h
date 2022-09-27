@@ -1,6 +1,9 @@
 #ifndef _MEMORY_RANK_H_
 #define _MEMORY_RANK_H_
 
+//#define DEBUG_PRINT_STATES
+//#define TILE_DEBUG_OUTPUT
+
 #include <deque>
 
 #include "Util.h"
@@ -28,7 +31,9 @@ public:
         DRAM_WAIT,
         HTREE_WAIT,
         MESH_WAIT,
-        DYNA_MESH_WAIT,
+        SEND_WAIT,//dyna mesh
+        RECEIVE_WAIT,//dyna mesh
+        POPPING,//dyna mesh
         TILE_SEND_RECEIVE,
         BLOCK_SEND_RECEIVE,
         DRAM_LOAD_STORE,
@@ -45,7 +50,9 @@ public:
             case DRAM_WAIT: return       "DRAM_WAIT";
             case HTREE_WAIT: return       "HTREE_WAIT";
             case MESH_WAIT: return "MESH_WAIT";
-            case DYNA_MESH_WAIT: return "DYNA_MESH_WAIT";
+            case SEND_WAIT: return "SEND_WAIT";
+            case RECEIVE_WAIT: return "RECEIVE_WAIT";
+            case POPPING: return "POPPING";
             case TILE_SEND_RECEIVE: return       "TILE_SEND_RECEIVE";
             case BLOCK_SEND_RECEIVE: return       "BLOCK_SEND_RECEIVE";
             case DRAM_LOAD_STORE: return       "DRAM_LOAD_STORE";
@@ -60,12 +67,15 @@ public:
     struct state {
         status_t status;
         // bool receive_ready;
-        // bool send_done;
+        // bool send_done;    
+        bool free_my_req=false;
     };
     state cur_state;
     state next_state;
 
     Request req;
+
+
     MemoryTile* dest;
     MemoryTile* source;
 
@@ -77,7 +87,7 @@ public:
     uint64_t n_unexpected_reqs = 0;
 
     MemoryTile() {};
-    MemoryTile(int n_blocks, int n_rows, int n_cols, MemoryCharacteristics* values);
+    MemoryTile(MemoryCharacteristics* values);
     //MemoryTile(const MemoryTile &obj);
 
     //void copyContents(MemoryTile &obj);
@@ -86,7 +96,6 @@ public:
         return ((cur_state.status==IDLE) && (next_state.status==IDLE));
     };
     bool send2Child(Request& req);
-    bool isReady(Request& req);
     void issueReq(Request& req);
     void finishReq(Request& req);
     void commitReq(Request& req);
@@ -102,6 +111,8 @@ public:
     };
     void update_next();
     void update_current();
+
+    bool isFinished();
 
 private:
     MemoryTile* next;
