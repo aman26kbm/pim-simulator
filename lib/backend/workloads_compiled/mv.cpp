@@ -15,7 +15,7 @@ int32_t mv_compiled(System *sys) {
     {
       // initialization skipped
     }
-    for (int32_t k_outer = 0; k_outer < 32; ++k_outer) {
+    for (int32_t k_outer = 0, acc_offset_k_outer = 1, precision_cnt_k_outer; k_outer < 32; ++k_outer) {
       {
         Request request(Request::Type::RowLoad_RF); // Load register
         request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT8);
@@ -38,11 +38,16 @@ int32_t mv_compiled(System *sys) {
             request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 1/*bytes*/) / 32/*row-number*/ + 36/*cram buffer*/), 0, PrecisionT::INT8);
             request.type = Request::Type::RowMul_CRAM_RF;
             request.addOperand(0, 0, PrecisionT::INT8);
-            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32/*Intermediate*/);
+            request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::Precision{false, 15, 0}/*Intermediate*/);
             sys->sendRequest(request);
           }
           request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32);
           request.addOperand(sys->getAddress(0 /*default tile*/, 0/*block-id*/, ((0) * 4/*bytes*/) / 32/*row-number*/ + 0/*cram buffer*/), 0, PrecisionT::INT32/*Store*/);
+          precision_cnt_k_outer = (k_outer) * 128 + k_inner;
+          acc_offset_k_outer += (precision_cnt_k_outer & -precision_cnt_k_outer) == precision_cnt_k_outer;
+          request.precision_list[0] = PrecisionT::Precision{false, 15 + acc_offset_k_outer, 0};
+          request.precision_list[1] = PrecisionT::Precision{false, 15 + acc_offset_k_outer, 0};
+          request.precision_list[2] = PrecisionT::Precision{false, 15 + acc_offset_k_outer, 0};
           sys->sendRequest(request);
         }
       }
