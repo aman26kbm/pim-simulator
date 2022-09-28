@@ -74,7 +74,7 @@ bool DynaSwitch::inject(Request req){
 
     return true;
 }
-
+//push 1 packet of data to receiveQueueD
 bool DynaSwitch::receive_from_dram(Request req){
     assert(!receiveQueues[D].is_full());
     next->receiveQueues[D].push(req);
@@ -107,10 +107,11 @@ void DynaSwitch::tick(){
         Request* thisReq = &dramReceiveBuffer[i];
         assert(thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF 
         || thisReq->type == Request::Type::RowStore || thisReq->type == Request::Type::RowStore_RF);
+        
         if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF)
         && thisReq->requesting_load== true) {
             thisReq->requesting_load = false;
-            thisReq->packets2Mesh = thisReq->bits;
+            thisReq->packets2Mesh = thisReq->bits * cfg->_ncols * cfg->_nblocks /cfg->_wordsize_tile2tile;
             dram->receive_request(*thisReq);
             dramReceiveBuffer.erase(dramReceiveBuffer.begin()+i--);
             // i--;
@@ -121,7 +122,8 @@ void DynaSwitch::tick(){
             if(remainingStore==0){
                 thisReq->requesting_store = false;
                 dram->receive_request(*thisReq);
-                remainingStore = thisReq->bits-1;
+                //remainingStore = thisReq->bits-1;
+                remainingStore = thisReq->packets2Mesh-1;
             }
             else{
                 thisReq->requesting_store = false;
@@ -131,6 +133,7 @@ void DynaSwitch::tick(){
     }
     //dram phase 2: if any dram load request is dram_ready, try receive from dram. deduct packets2Mesh by 1
     //if any dram store request is ready, remove 1 entry from dramReceiveBuffer
+    //only process the first dram_ready request in dramFinishedReqs
     for(int i=0; i<dram->dramFinishedReqs.size(); i++){
         Request* thisReq = &dram->dramFinishedReqs[i];
         if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF) && thisReq->dram_ready == true){
@@ -164,12 +167,12 @@ void DynaSwitch::tick(){
             Request req = receiveQueues[d].front();
             Direction downstream = decode(req);
             if(!connected[downstream]){
-                //setupConnection(d,downstream, req.bits);
-                if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
-                && req.requesting_load == true)
-                    setupConnection(d,downstream, 1);
-                else
-                    setupConnection(d,downstream, req.bits);
+                setupConnection(d,downstream, req.packets2Mesh);
+                // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
+                // && req.requesting_load == true)
+                //     setupConnection(d,downstream, 1);
+                // else
+                //     setupConnection(d,downstream, req.bits);
             }
         }
     }

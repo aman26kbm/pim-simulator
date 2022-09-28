@@ -4,6 +4,7 @@
 #include <cmath>
 #include "MemoryComponent.h"
 #include "Config.h"
+#include "hTreeTile.h"
 
 namespace pimsim {
 class MemoryCharacteristics {

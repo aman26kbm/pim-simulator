@@ -62,6 +62,10 @@ void Config::parse(const string& fname) {
             _meshHeight = atoi(tokens[1].c_str());
         } else if (tokens[0] == "meshWidth") {
             _meshWidth = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "tile_interconnect") {
+            _tile_interconnect = tokens[1];
+        } else if (tokens[0] == "htree_tile_depth") {
+            _htreeTileDepth = atoi(tokens[1].c_str());
         } else if (tokens[0] == "dramTile") {
             _dramTile = atoi(tokens[1].c_str());
         } else if (tokens[0] == "dram_distributed") {

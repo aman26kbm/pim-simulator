@@ -17,6 +17,8 @@ public:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _meshHeight, _meshWidth;
+    std::string _tile_interconnect = "ideal";
+    int _htreeTileDepth;
     int _dramTile;
     bool _dramDistributed=false;
     int _ntiles_used;
@@ -24,6 +26,7 @@ public:
     int _rf_chunk_size;
     int _num_regs_per_rf;
     int _num_bits_per_reg;
+    //not used by hTreeTile
     int _wordsize_block2block;
     //not used by hTree
     int _wordsize_tile2tile;

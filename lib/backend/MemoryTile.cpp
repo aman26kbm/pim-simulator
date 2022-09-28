@@ -326,19 +326,19 @@ void MemoryTile::update_next(){
                     if (req.type == Request::Type::TileSend
                     || req.type == Request::Type::RowStore
                     || req.type == Request::Type::RowStore_RF){
-                        req.packets2Mesh = req.bits;
+                        req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                         req.requesting_store = true;
                         next_state.status = SEND_WAIT;   
                     }
                     else if(req.type == Request::Type::RowLoad
                     || req.type == Request::Type::RowLoad_RF){
-                        req.packets2Mesh = 1;
+                        req.packets2Mesh = 1;// * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                         req.requesting_load = true;
                         next_state.status = SEND_WAIT;   
                     }
                     
                     else if(req.type == Request::Type::TileReceive) {
-                        req.packets2Mesh = req.bits;
+                        req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                         next_state.status = RECEIVE_WAIT; 
                     }
                     else {
@@ -369,7 +369,7 @@ void MemoryTile::update_next(){
                         next_state.status = IDLE;
                     }
                     else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF){
-                        req.packets2Mesh = req.bits;
+                        req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                         next_state.status = RECEIVE_WAIT;
                     }
                     

@@ -174,12 +174,17 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowRead_RF: 
             time = T_CLK;
             break;
+        case Request::Type::TileSend: 
+        case Request::Type::TileReceive: 
+            if(config->_tile_interconnect == "htree")
+                time = hTreeTile::getCycles(req, config);
+            else
+                time = T_CLK * getPrecisionBits(req);
+            break;
         case Request::Type::RowRead: 
         case Request::Type::RowWrite: 
         case Request::Type::BlockBroadCast:  
         case Request::Type::BlockSend_Receive: 
-        case Request::Type::TileSend: 
-        case Request::Type::TileReceive: 
         case Request::Type::ChipSend_Receive: 
         case Request::Type::TileSend_BroadCast:
         case Request::Type::TileReceive_BroadCast: 
@@ -204,10 +209,14 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowReduce_WithinTile: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
-            time = getClocksForReq(req.precision_list, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
+            if(config->_tile_interconnect == "htree")
+                time = hTreeTile::getCycles(req, config);
+            else
+                time = getClocksForReq(req.precision_list, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
         case Request::Type::RowStore: 
+            
             time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
         case Request::Type::RowShift: 
