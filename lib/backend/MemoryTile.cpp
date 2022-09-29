@@ -60,8 +60,7 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
         }
         else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-            //should not be here
-            assert(false);
+            req.finish_time = cur_time + getReqTiming(req);
         }
         else { //ideal
             req.finish_time = cur_time + 0;
@@ -321,23 +320,8 @@ void MemoryTile::update_next(){
                     req = _ctrl->_tile_q->pop_front();
                     (*(((MemoryChip*)_parent)->finishedReqNo_p))++;
                     req.start_time = _time;
-
-                    // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
-                    if (req.type == Request::Type::TileSend
-                    || req.type == Request::Type::RowStore
-                    || req.type == Request::Type::RowStore_RF){
-                        req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
-                        req.requesting_store = true;
-                        next_state.status = SEND_WAIT;   
-                    }
-                    else if(req.type == Request::Type::RowLoad
-                    || req.type == Request::Type::RowLoad_RF){
-                        req.packets2Mesh = 1;// * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
-                        req.requesting_load = true;
-                        next_state.status = SEND_WAIT;   
-                    }
-                    
-                    else if(req.type == Request::Type::TileReceive) {
+             
+                    if(req.type == Request::Type::TileReceive) {
                         req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                         next_state.status = RECEIVE_WAIT; 
                     }
@@ -390,13 +374,35 @@ void MemoryTile::update_next(){
                         req.packets2Mesh--;
                         next_state.status = POPPING;
                     }
-                    else
-                        next_state.status = IDLE;
+                    else{
+                        issueReq(req);
+                        next_state.status = REQ_MODE;
+                    }
                     break;
                 case REQ_MODE:
                     if (_time == _next_available){
-                        next_state.status = IDLE;
+                        //update tile last active time
                         if(_time > _last_req_time) _last_req_time = _time;
+                        // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
+                        if (req.type == Request::Type::TileSend
+                        || req.type == Request::Type::RowStore
+                        || req.type == Request::Type::RowStore_RF){
+                            req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
+                            req.requesting_store = true;
+                            next_state.status = SEND_WAIT;   
+                        }
+                        //req.requesting_load == false means it is the first time load request enters REQ_MODE
+                        else if((req.type == Request::Type::RowLoad
+                        || req.type == Request::Type::RowLoad_RF)
+                        && req.requesting_load == false){
+                            req.packets2Mesh = 1;// * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
+                            req.requesting_load = true;
+                            next_state.status = SEND_WAIT;   
+                        }
+                        else{
+                            next_state.status = IDLE;
+                        }
+                        
                     }
                     break;
             }

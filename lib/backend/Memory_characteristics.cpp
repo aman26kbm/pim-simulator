@@ -216,8 +216,10 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::RowLoad: 
         case Request::Type::RowStore: 
-            
-            time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
+            if(config->_tile_interconnect == "htree")
+                time = hTreeTile::getCycles(req, config);
+            else
+                time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
         case Request::Type::RowShift: 
             // precision_list[0] tells the number of bits in the operand
@@ -226,7 +228,10 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::RowLoad_RF: 
         case Request::Type::RowStore_RF: 
-            time = T_CLK * (int)ceil(config->_num_regs_per_rf * config->_num_bits_per_reg / (double)config->_wordsize_dram);
+            if(config->_tile_interconnect == "htree")
+                time = hTreeTile::getCycles(req, config);
+            else
+                time = T_CLK * (int)ceil(config->_num_regs_per_rf * config->_num_bits_per_reg / (double)config->_wordsize_dram);
             break;
         case Request::Type::RowMul_CRAM_RF: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the

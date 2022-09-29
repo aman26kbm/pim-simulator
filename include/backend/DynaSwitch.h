@@ -1,7 +1,7 @@
 #ifndef _DYNA_SWITCH_H_
 #define _DYNA_SWITCH_H_
 
-#define _ROUTER_DEBUG_OUTPUT_
+//#define _ROUTER_DEBUG_OUTPUT_
 
 #include <assert.h>
 #include "Request.h"
