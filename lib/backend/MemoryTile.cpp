@@ -50,7 +50,7 @@ MemoryTile::issueReq(Request& req)
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
         //precision_list[0] effectively contains the number of rows to transfer.
-        int words = int((_values->config->_ncols  * getPrecisionBits(req)) / _values->config->_wordsize_tile2tile);
+        //int words = int((_values->config->_ncols  * getPrecisionBits(req)) / _values->config->_wordsize_tile2tile);
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             assert(false);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
@@ -70,7 +70,7 @@ MemoryTile::issueReq(Request& req)
      else if (req.isTile()) {
         req.process_time = cur_time;
         //int words = (req.size_list[0] - 1) / _values->_wordsize + 1;
-        int words = int((_values->config->_ncols * getPrecisionBits(req)) / _values->config->_wordsize_block2block) ;
+        //int words = int((_values->config->_ncols * getPrecisionBits(req)) / _values->config->_wordsize_block2block) ;
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             assert(false);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
