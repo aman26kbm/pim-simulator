@@ -179,7 +179,7 @@ void System::generate_states_csv(){
                         "DRAM_WAIT1",  //Wait for a prior/ongoing dram request to finish so you can issue a new dram request
                         "DRAM_WAIT2"   //Wait for the current dram request to finish
         };
-        states_csv_file << "WorkloadName, Logfile,";
+        states_csv_file << "WorkloadName, Logfile, Tile,";
         for (int i=0; i<header_row.size(); i++) {
             states_csv_file << header_row[i] << "," ;
         }
@@ -216,6 +216,40 @@ void System::generate_states_csv(){
                 states_csv_file << value_row[i] << "," ;
             }
             states_csv_file << std::endl;
+        }
+    }
+}
+
+void System::generate_req_states_csv(){
+///////////////////////////////
+    //Generating csv file
+    ///////////////////////////////
+
+    for (int i = 0; i < _config->_nchips; i++) {
+        //header first
+        std::array<std::string, ENTRY_LENGTH> header_row = ReqStatsEntry::reqStatsHeader();
+        reqs_csv_file << "WorkloadName,";
+        for (int i=0; i<header_row.size(); i++) {
+            reqs_csv_file << header_row[i] << "," ;
+        }
+       reqs_csv_file << std::endl;
+
+        for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) { 
+            //now we have the tile that ticked the most
+            MemoryTile* tile;
+            tile = (MemoryTile*)(_chips[i]->_children[j]);
+            
+            for(int k =0; k<tile->reqStats.size(); k++){
+
+                //now the actual data
+                std::array<long unsigned int, ENTRY_LENGTH> value_row = tile->reqStats[k].reqStatsValue();
+
+                reqs_csv_file << workload <<","<<i<<","<<j<<",";
+                for (int i=0; i<value_row.size(); i++) {
+                    reqs_csv_file << value_row[i] << "," ;
+                }
+                reqs_csv_file << std::endl;
+            }
         }
     }
 }

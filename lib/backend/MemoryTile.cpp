@@ -313,6 +313,7 @@ void MemoryTile::update_next(){
 
             switch(cur_state.status){
                 case status_t::IDLE:
+                    if(reqStats.size()>=1) reqStats.back().endTime = _time-1;
                     if (_ctrl->_tile_q->is_empty()) {
                         req = Request(Request::Type::NOP);
                         break;
@@ -420,6 +421,12 @@ void MemoryTile::update_current(){
     );
     #endif
     states_cnt[(int)cur_state.status]++;
+    if(reqStats.size()>=1){
+        reqStats.back().cyclesInStates[(int)cur_state.status]++;
+        if(next_state.status == status_t::IDLE){
+            reqStats.back().endTime = _time;
+        }
+    }
     cur_state = next_state;
 }
 

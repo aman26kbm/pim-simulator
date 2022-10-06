@@ -19,6 +19,7 @@ System::System(Config* config) : _config(config)
     std::string csv_filename = config->get_rstfile() + ".csv";
     csv_file.open(csv_filename.c_str(), ios::out);
     states_csv_file.open("states_count.csv",ios::out);
+    reqs_csv_file.open("reqs_stats.csv",ios::out);
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
@@ -56,6 +57,7 @@ System::~System()
     fclose(rstFile);
     csv_file.close();
     states_csv_file.close();
+    reqs_csv_file.close();
 }
 
 
@@ -465,6 +467,7 @@ void System::decode(Request& req, int& chip, int& tile){
     switch (req.type) {
         case Request::Type::RowLoad_RF:
         case Request::Type::RowStore_RF:
+        case Request::Type::RowRead_RF:
             chip = req.addr_list[0]/(_config->_ntiles*_config->_num_regs_per_rf);
             assert(chip<=_chips.size());
             tile = (req.addr_list[0]%(_config->_ntiles*_config->_num_regs_per_rf))/_config->_num_regs_per_rf;
@@ -650,6 +653,7 @@ void System::finish()
 
     generate_csv();
     generate_states_csv();
+    generate_req_states_csv();
 
 }
 

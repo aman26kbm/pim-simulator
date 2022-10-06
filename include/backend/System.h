@@ -49,6 +49,7 @@ public:
     FILE* rstFile;
     std::ofstream csv_file;
     std::ofstream states_csv_file;
+    std::ofstream reqs_csv_file;
     std::string workload;
     uint64_t tot_reqs = 0;
     //TimeT _time; // Global cycles for processing
@@ -113,6 +114,7 @@ public:
     void finish();
     void generate_csv();
     void generate_states_csv();
+    void generate_req_states_csv();
 
 
     //DRAM addresses don't matter. We just define 1 address
