@@ -29,7 +29,7 @@ MemoryTile::MemoryTile(MemoryCharacteristics* values)
     RegisterFile* rf = new RegisterFile();
 
 
-    cur_state.status = IDLE;
+    cur_state.status = status_t::IDLE;
     n_reads = 0; n_writes = 0; n_unexpected_reqs = 0;
 }
 
@@ -165,7 +165,7 @@ void MemoryTile::update_next(){
         if(_values->_configuration == MemoryCharacteristics::Configuration::HTree 
         || _values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             switch(cur_state.status){
-                case IDLE:
+                case status_t::IDLE:
                     if (_ctrl->_tile_q->is_empty()) {
                         req = Request(Request::Type::NOP);
                         break;
@@ -184,19 +184,19 @@ void MemoryTile::update_next(){
                         if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
                             req.hTree_ready = false;
                             ((MemoryChip*)_parent)->_hTree->receive_request(&req);
-                            next_state.status = HTREE_WAIT;
+                            next_state.status = status_t::HTREE_WAIT;
                         }
                         else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
                             req.mesh_ready = false;
                             ((MemoryChip*)_parent)->_mesh->receive_request(&req);
-                            next_state.status = MESH_WAIT;
+                            next_state.status = status_t::MESH_WAIT;
                         }
                     }
                     else if(req.type == Request::Type::Signal) {
                         req.mail->signal(_time);
                     }
                     else if(req.type == Request::Type::Wait) {
-                        next_state.status = MAIL_WAIT;
+                        next_state.status = status_t::MAIL_WAIT;
                     }
                     else if(req.type == Request::Type::ResetSync) {
                         req.mail->reset();
@@ -212,17 +212,17 @@ void MemoryTile::update_next(){
                         // }
                         req.dram_ready = false;
                         ((MemoryChip*)_parent)->_Dram->receive_request(&req);
-                        next_state.status = DRAM_WAIT;
+                        next_state.status = status_t::DRAM_WAIT;
                     }
                     else {
-                        next_state.status = REQ_MODE;
+                        next_state.status = status_t::REQ_MODE;
                         issueReq(req);
                     }
                     break;
 
-                case HTREE_WAIT:
+                case status_t::HTREE_WAIT:
                     if(!req.hTree_ready){
-                        next_state.status = HTREE_WAIT;
+                        next_state.status = status_t::HTREE_WAIT;
                     }
                     else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
                         || req.type == Request::Type::BlockSend_Receive 
@@ -230,7 +230,7 @@ void MemoryTile::update_next(){
                         || req.type == Request::Type::RowStore
                         || req.type == Request::Type::RowLoad_RF
                         || req.type == Request::Type::RowStore_RF){
-                        next_state.status = REQ_MODE;
+                        next_state.status = status_t::REQ_MODE;
                         issueReq(req);
                     }
                     else{
@@ -238,9 +238,9 @@ void MemoryTile::update_next(){
                         assert(false);
                     }
                     break;
-                case MESH_WAIT:
+                case status_t::MESH_WAIT:
                     if(!req.mesh_ready){
-                        next_state.status = MESH_WAIT;
+                        next_state.status = status_t::MESH_WAIT;
                     }
                     else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
                         || req.type == Request::Type::BlockSend_Receive 
@@ -250,7 +250,7 @@ void MemoryTile::update_next(){
                         || req.type == Request::Type::RowStore_RF
                         || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
                         || req.type == Request::Type::BlockBroadCast){
-                        next_state.status = REQ_MODE;
+                        next_state.status = status_t::REQ_MODE;
                         issueReq(req);
                     }
                     else{
@@ -258,38 +258,38 @@ void MemoryTile::update_next(){
                         assert(false);
                     }
                     break;
-                case REQ_MODE:
+                case status_t::REQ_MODE:
                     if (_time == _next_available){
-                        next_state.status = IDLE;
+                        next_state.status = status_t::IDLE;
                         req.send_receive_finished = true;
                         if(_time > _last_req_time) _last_req_time = _time;
                     }
                     break;
-                case MAIL_WAIT:
+                case status_t::MAIL_WAIT:
                     if(req.mail->status()) {
-                        next_state.status = IDLE;
+                        next_state.status = status_t::IDLE;
                         if(_time > _last_req_time) _last_req_time = _time;
                     }
                     else {
-                        next_state.status = MAIL_WAIT;
+                        next_state.status = status_t::MAIL_WAIT;
                     }
                     break;
-                case DRAM_WAIT:
+                case status_t::DRAM_WAIT:
                     if(!req.dram_ready){
-                        next_state.status = DRAM_WAIT;
+                        next_state.status = status_t::DRAM_WAIT;
                     }
                     else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
                     || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
                         if (_values->_configuration == MemoryCharacteristics::Configuration::HTree){
                             req.hTree_ready = false;
                             ((MemoryChip*)_parent)->_hTree->receive_request(&req);
-                            next_state.status = HTREE_WAIT;
+                            next_state.status = status_t::HTREE_WAIT;
                         }
                         else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
                             req.mesh_ready = false;
                             req.mesh_transfer_time = 0;
                             ((MemoryChip*)_parent)->_mesh->receive_request(&req);
-                            next_state.status = MESH_WAIT;
+                            next_state.status = status_t::MESH_WAIT;
                         }
                         else{
                             printf("Should not be here!\n");
@@ -312,27 +312,28 @@ void MemoryTile::update_next(){
              next_state = cur_state;
 
             switch(cur_state.status){
-                case IDLE:
+                case status_t::IDLE:
                     if (_ctrl->_tile_q->is_empty()) {
                         req = Request(Request::Type::NOP);
                         break;
                     }
                     req = _ctrl->_tile_q->pop_front();
                     (*(((MemoryChip*)_parent)->finishedReqNo_p))++;
+                    reqStats.push_back(ReqStatsEntry(req, _time));
                     req.start_time = _time;
              
                     if(req.type == Request::Type::TileReceive) {
                         req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
-                        next_state.status = RECEIVE_WAIT; 
+                        next_state.status = status_t::RECEIVE_WAIT; 
                     }
                     else {
-                        next_state.status = REQ_MODE;
+                        next_state.status = status_t::REQ_MODE;
                         issueReq(req);
                     }
                     break;
 
                 
-                case SEND_WAIT:
+                case status_t::SEND_WAIT:
                     
                     //in each cycle try to inject a packet to dynaMesh, untill there is no packets left.
                     if(req.packets2Mesh>0){
@@ -341,45 +342,45 @@ void MemoryTile::update_next(){
                         if(((MemoryChip*)_parent)->_DynaMesh->receive_request(req_to_inject)){
                             //push success
                             req.packets2Mesh--;
-                            next_state.status = SEND_WAIT;
+                            next_state.status = status_t::SEND_WAIT;
                         }
                         else{
                             //push fail
-                            next_state.status = SEND_WAIT;
+                            next_state.status = status_t::SEND_WAIT;
                         } 
                     }
                     //packets = 0
                     else if(req.type == Request::Type::TileSend || req.type == Request::Type::RowStore || req.type == Request::Type::RowStore_RF){
-                        next_state.status = IDLE;
+                        next_state.status = status_t::IDLE;
                     }
                     else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF){
                         req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
-                        next_state.status = RECEIVE_WAIT;
+                        next_state.status = status_t::RECEIVE_WAIT;
                     }
                     
                     else{
                         assert(false);
                     }
                     break;
-                case RECEIVE_WAIT:
+                case status_t::RECEIVE_WAIT:
                     if(((MemoryChip*)_parent)->_DynaMesh->data_exist(req))
-                        next_state.status = POPPING;
+                        next_state.status = status_t::POPPING;
                     else
-                        next_state.status = RECEIVE_WAIT;
+                        next_state.status = status_t::RECEIVE_WAIT;
                     break;
-                case POPPING:
+                case status_t::POPPING:
                     if(req.packets2Mesh>0){
                         Request popped = ((MemoryChip*)_parent)->_DynaMesh->pop_data(req);
                         assert(popped.type!=Request::Type::NOP);
                         req.packets2Mesh--;
-                        next_state.status = POPPING;
+                        next_state.status = status_t::POPPING;
                     }
                     else{
                         issueReq(req);
-                        next_state.status = REQ_MODE;
+                        next_state.status = status_t::REQ_MODE;
                     }
                     break;
-                case REQ_MODE:
+                case status_t::REQ_MODE:
                     if (_time == _next_available){
                         //update tile last active time
                         if(_time > _last_req_time) _last_req_time = _time;
@@ -389,7 +390,7 @@ void MemoryTile::update_next(){
                         || req.type == Request::Type::RowStore_RF){
                             req.packets2Mesh = req.bits * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                             req.requesting_store = true;
-                            next_state.status = SEND_WAIT;   
+                            next_state.status = status_t::SEND_WAIT;   
                         }
                         //req.requesting_load == false means it is the first time load request enters REQ_MODE
                         else if((req.type == Request::Type::RowLoad
@@ -397,10 +398,10 @@ void MemoryTile::update_next(){
                         && req.requesting_load == false){
                             req.packets2Mesh = 1;// * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
                             req.requesting_load = true;
-                            next_state.status = SEND_WAIT;   
+                            next_state.status = status_t::SEND_WAIT;   
                         }
                         else{
-                            next_state.status = IDLE;
+                            next_state.status = status_t::IDLE;
                         }
                         
                     }
@@ -418,6 +419,7 @@ void MemoryTile::update_current(){
     Request::print_name(req.type).c_str()
     );
     #endif
+    states_cnt[(int)cur_state.status]++;
     cur_state = next_state;
 }
 

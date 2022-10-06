@@ -18,6 +18,7 @@ System::System(Config* config) : _config(config)
     rstFile = fopen(config->get_rstfile().c_str(), "w");
     std::string csv_filename = config->get_rstfile() + ".csv";
     csv_file.open(csv_filename.c_str(), ios::out);
+    states_csv_file.open("states_count.csv",ios::out);
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
@@ -54,6 +55,7 @@ System::~System()
 {
     fclose(rstFile);
     csv_file.close();
+    states_csv_file.close();
 }
 
 
@@ -646,157 +648,8 @@ void System::finish()
         }
     }
 
-    ///////////////////////////////
-    //Generating csv file
-    ///////////////////////////////
-
-    long unsigned int tot_row_add_cnt = 0;
-    long unsigned int tot_row_mul_cnt = 0;
-    long unsigned int tot_row_mul_cram_rf_cnt = 0;
-    long unsigned int tot_row_reset_cnt = 0;
-    long unsigned int tot_row_read_cnt = 0;
-    long unsigned int tot_row_read_rf_cnt = 0;
-    long unsigned int tot_tile_send_cnt = 0;
-    long unsigned int tot_tile_receive_cnt = 0;
-    long unsigned int tot_row_load_cnt = 0;
-    long unsigned int tot_row_load_rf_cnt = 0;
-    long unsigned int tot_row_store_cnt = 0;
-    long unsigned int tot_row_shift_cnt = 0;
-
-    for (int i = 0; i < _config->_nchips; i++) {
-        
-        //Find the tile that ticked the most
-        long unsigned int max_ticks = 0;
-        int max_ticks_tile = 0;
-        for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) {
-            if  (_chips[i]->_children[j]->_last_req_time > max_ticks) {
-                max_ticks = _chips[i]->_children[j]->_last_req_time;
-                max_ticks_tile = j;
-            }
-
-            MemoryComponent* cur_tile;
-            cur_tile = _chips[i]->_children[j];
-
-            //Add up req counts of each type across all tiles
-            tot_row_add_cnt += cur_tile->req_cnt[int(Request::Type::RowAdd)];
-            tot_row_mul_cnt += cur_tile->req_cnt[int(Request::Type::RowMul)];
-            tot_row_mul_cram_rf_cnt += cur_tile->req_cnt[int(Request::Type::RowMul_CRAM_RF)];
-            tot_row_reset_cnt += cur_tile->req_cnt[int(Request::Type::RowReset)];
-            tot_row_read_cnt += cur_tile->req_cnt[int(Request::Type::RowRead)];
-            tot_row_read_rf_cnt += cur_tile->req_cnt[int(Request::Type::RowRead_RF)];
-            tot_tile_send_cnt += cur_tile->req_cnt[int(Request::Type::TileSend)];
-            tot_tile_receive_cnt += cur_tile->req_cnt[int(Request::Type::TileReceive)];
-            tot_row_load_cnt += cur_tile->req_cnt[int(Request::Type::RowLoad)];
-            tot_row_load_rf_cnt += cur_tile->req_cnt[int(Request::Type::RowLoad_RF)];
-            tot_row_store_cnt += cur_tile->req_cnt[int(Request::Type::RowStore)];
-            tot_row_shift_cnt += cur_tile->req_cnt[int(Request::Type::RowShift)];
-
-        }
-        
-        //now we have the tile that ticked the most
-        MemoryComponent* tile;
-        tile = _chips[i]->_children[max_ticks_tile];
-        
-        //now print the csv
-        #define NUM_CSV_COLUMNS 39
-        //header first
-        std::array<std::string, NUM_CSV_COLUMNS> header_row = {
-                          "Max_Tick_Tile",
-                          "RowAdd_Count",
-                          "RowMul_Count",
-                          "RowMul_CRAM_RF_Count",
-                          "RowReset_Count",
-                          "RowRead_Count",
-                          "RowRead_RF_Count",
-                          "TileSend_Count",
-                          "TileReceive_Count",
-                          "RowLoad_Count",
-                          "RowLoad_RF_Count",
-                          "RowStore_Count",
-                          "RowShift_Count",
-                          "RowAdd_Cycles",
-                          "RowMul_Cycles",
-                          "TileSend_Cycles",
-                          "TileReceive_Cycles",
-                          "RowLoad_Cycles",
-                          "RowLoad_RF_Cycles",
-                          "RowStore_Cycles",
-                          "RowShift_Cycles",
-                          "TileSend_Wait_Cycles",
-                          "TileReceive_Wait_Cycles",
-                          "RowLoad_Wait_Cycles",
-                          "RowLoadRF_Wait_Cycles",
-                          "RowStore_Wait_Cycles",
-                          "Total_Cycles",
-                          "Total_RowAdd_Count",
-                          "Total_RowMul_Count",
-                          "Total_RowMul_CRAM_RF_Count",
-                          "Total_RowReset_Count",
-                          "Total_RowRead_Count",
-                          "Total_RowRead_RF_Count",
-                          "Total_TileSend_Count",
-                          "Total_TileReceive_Count",
-                          "Total_RowLoad_Count",
-                          "Total_RowLoad_RF_Count",
-                          "Total_RowStore_Count",
-                          "Total_RowShift_Count"
-        };
-
-        csv_file << "WorkloadName, Logfile,";
-        for (int i=0; i<header_row.size(); i++) {
-            csv_file << header_row[i] << "," ;
-        }
-        csv_file << std::endl;
-
-        //now the actual data
-        std::array<long unsigned int, NUM_CSV_COLUMNS> value_row = {
-                (long unsigned int) max_ticks_tile,
-                tile->req_cnt[int(Request::Type::RowAdd)],
-                tile->req_cnt[int(Request::Type::RowMul)],
-                tile->req_cnt[int(Request::Type::RowMul_CRAM_RF)],
-                tile->req_cnt[int(Request::Type::RowReset)],
-                tile->req_cnt[int(Request::Type::RowRead)],
-                tile->req_cnt[int(Request::Type::RowRead_RF)],
-                tile->req_cnt[int(Request::Type::TileSend)],
-                tile->req_cnt[int(Request::Type::TileReceive)],
-                tile->req_cnt[int(Request::Type::RowLoad)],
-                tile->req_cnt[int(Request::Type::RowLoad_RF)],
-                tile->req_cnt[int(Request::Type::RowStore)],
-                tile->req_cnt[int(Request::Type::RowShift)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::RowAdd)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::RowMul)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::TileSend)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::TileReceive)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::RowLoad)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::RowLoad_RF)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::RowStore)],
-                (long unsigned int) tile->req_proctime[int(Request::Type::RowShift)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::TileSend)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::TileReceive)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::RowLoad_RF)],
-                (long unsigned int) tile->req_waittime[int(Request::Type::RowStore)],
-                max_ticks,
-                tot_row_add_cnt,
-                tot_row_mul_cnt,
-                tot_row_mul_cram_rf_cnt,
-                tot_row_reset_cnt,
-                tot_row_read_cnt,
-                tot_row_read_rf_cnt,
-                tot_tile_send_cnt,
-                tot_tile_receive_cnt,
-                tot_row_load_cnt,
-                tot_row_load_rf_cnt,
-                tot_row_store_cnt,
-                tot_row_shift_cnt
-        };
-
-        csv_file << workload <<","<< this->_config->get_rstfile() <<",";
-        for (int i=0; i<value_row.size(); i++) {
-            csv_file << value_row[i] << "," ;
-        }
-        csv_file << std::endl;
-    }
+    generate_csv();
+    generate_states_csv();
 
 }
 
