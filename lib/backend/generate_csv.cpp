@@ -227,7 +227,7 @@ void System::generate_req_states_csv(){
 
     for (int i = 0; i < _config->_nchips; i++) {
         //header first
-        std::array<std::string, ENTRY_LENGTH> header_row = ReqStatsEntry::reqStatsHeader();
+        std::array<std::string, HEADER_LENGTH> header_row = ReqStatsEntry::reqStatsHeader();
         reqs_csv_file << "WorkloadName,";
         for (int i=0; i<header_row.size(); i++) {
             reqs_csv_file << header_row[i] << "," ;

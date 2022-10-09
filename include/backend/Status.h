@@ -21,6 +21,6 @@ namespace pimsim{
         MAX
     };
     
-    static std::string print_name(status_t type);
+    std::string print_state_name(status_t type);
 }
 #endif

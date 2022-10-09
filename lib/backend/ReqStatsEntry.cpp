@@ -12,8 +12,8 @@ ReqStatsEntry::ReqStatsEntry(Request req, int startTime){
     if(req.addr_list.size()>=3) this->op2 = req.addr_list[2];
 }
 
-std::array<std::string, ENTRY_LENGTH> ReqStatsEntry::reqStatsHeader(){
-        std::array<std::string, ENTRY_LENGTH> header_row = {
+std::array<std::string, HEADER_LENGTH> ReqStatsEntry::reqStatsHeader(){
+        std::array<std::string,HEADER_LENGTH> header_row = {
                         "Chip",
                         "Tile",
                         "ReqNo",

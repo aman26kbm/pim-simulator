@@ -9,11 +9,11 @@ int32_t gemm_outer(System* sys){
     Request *request;
     Config* cfg = sys->_config;
 
-    int matrixARowNum = 128*256;
-    int matrixAColNum = 256*8;
+    int matrixARowNum = 128*256;//128*256
+    int matrixAColNum = 256*8;//256*8
     //int matrixAColNum = 8;
-    int matrixBRowNum = matrixAColNum;
-    int matrixBColNum = cfg->_num_regs_per_rf;
+    int matrixBRowNum = matrixAColNum;//256*8
+    int matrixBColNum = cfg->_num_regs_per_rf;//32
 
     int use_tiles = cfg->_ntiles_used;
     int dram_tile = cfg->_dramTile; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
@@ -21,9 +21,9 @@ int32_t gemm_outer(System* sys){
     PrecisionT::Precision precision_multiply = PrecisionT::INT16;
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
 
-    int basicMatrixARowNum = cfg->_nblocks*cfg->_ncols;
-    int basicMatrixAColNum = matrixAColNum;
-    int basicMatrixBRowNum = matrixAColNum;
+    int basicMatrixARowNum = cfg->_nblocks*cfg->_ncols;//256*128
+    int basicMatrixAColNum = matrixAColNum;//256*8
+    int basicMatrixBRowNum = matrixAColNum;//256*8
     int basicMatrixBColNum = min(cfg->_num_regs_per_rf, (cfg->_nrows-precision_input.bits()-precision_accumulate.bits())/precision_accumulate.bits());//6
     
     int partial_result_matrix_start_row = precision_input.bits();
@@ -32,7 +32,7 @@ int32_t gemm_outer(System* sys){
         for(int j=0; j<(int)ceil(matrixBColNum/(float)basicMatrixBColNum); j++){//6
             for(int iter_tile=dram_tile; iter_tile<dram_tile+use_tiles; iter_tile++){//1
                 int tile = iter_tile % cfg->_ntiles;
-                for(int basicA_col_idx=0; basicA_col_idx<matrixAColNum; basicA_col_idx+=use_tiles){//striped basicA columns X basicB rows //256*8
+                for(int basicA_col_idx=0; basicA_col_idx<matrixAColNum; basicA_col_idx+=use_tiles){//striped basicA columns X basicB rows //16
                     request = new Request(Request::Type::RowLoad);
                     request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //cram addr
                     request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
@@ -83,12 +83,12 @@ int32_t gemm_outer(System* sys){
                     }
                 }
             }  
-            for(int resultColIndex=0; resultColIndex<basicMatrixBColNum; resultColIndex++){//6
-                request = new Request(Request::Type::RowStore);
-                request->addOperand(sys->getAddress(dram_tile,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_accumulate); //cram addr
-                request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
-                requests.push_back(*request);
-            }
+            // for(int resultColIndex=0; resultColIndex<basicMatrixBColNum; resultColIndex++){//6
+            //     request = new Request(Request::Type::RowStore);
+            //     request->addOperand(sys->getAddress(dram_tile,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_accumulate); //cram addr
+            //     request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
+            //     requests.push_back(*request);
+            // }
         }
         
     }

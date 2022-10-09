@@ -8,34 +8,35 @@ int32_t test_broadcast(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-                    
-    request = new Request(Request::Type::TileSend_BroadCast);
-    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
-    request = new Request(Request::Type::Signal, sys->m1);
-    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
+    for(int i=0; i<10; i++){         
+        request = new Request(Request::Type::TileSend_BroadCast);
+        request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
+        // request = new Request(Request::Type::Signal, sys->m1);
+        // request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+        // requests.push_back(*request);
 
-    request = new Request(Request::Type::Wait, sys->m1);
-    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
-    request = new Request(Request::Type::TileReceive_BroadCast);
-    request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
+        // request = new Request(Request::Type::Wait, sys->m1);
+        // request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+        // requests.push_back(*request);
+        request = new Request(Request::Type::TileReceive_BroadCast);
+        request->addOperand(sys->getAddress(1,0,0), 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
 
-    request = new Request(Request::Type::Wait, sys->m1);
-    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
-    request = new Request(Request::Type::TileReceive_BroadCast);
-    request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
+        // request = new Request(Request::Type::Wait, sys->m1);
+        // request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //src
+        // requests.push_back(*request);
+        request = new Request(Request::Type::TileReceive_BroadCast);
+        request->addOperand(sys->getAddress(2,0,0), 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
 
-    request = new Request(Request::Type::Wait, sys->m1);
-    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
-    request = new Request(Request::Type::TileReceive_BroadCast);
-    request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //src
-    requests.push_back(*request);
+        // request = new Request(Request::Type::Wait, sys->m1);
+        // request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //src
+        // requests.push_back(*request);
+        request = new Request(Request::Type::TileReceive_BroadCast);
+        request->addOperand(sys->getAddress(3,0,0), 0, PrecisionT::INT4); //src
+        requests.push_back(*request);
+    }
 
     request = new Request(Request::Type::BlockBroadCast);
     request->addOperand(sys->getAddress(0,0,0), 1, PrecisionT::INT4); //src

@@ -415,8 +415,8 @@ void MemoryTile::update_current(){
     #ifdef DEBUG_PRINT_STATES
     printf("Time=%d: Tile#%d current state is %s, next state is %s. Executing req %s. \n", 
    _time, _id, 
-    print_name(cur_state.status).c_str(),
-    print_name(next_state.status).c_str(),
+    print_state_name(cur_state.status).c_str(),
+    print_state_name(next_state.status).c_str(),
     Request::print_name(req.type).c_str()
     );
     #endif

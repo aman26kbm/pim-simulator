@@ -44,9 +44,10 @@ int32_t write_read_activations(System *sys) {
     for (int block = 0; block < blocks; ++block) {
       {
         Request request(Request::Type::TileReceive);
+        request.addOperand(sys->getAddress(tile, 0, block), 0, PrecisionT::Precision{0, 8, 0});
         request.addOperand(sys->getAddress(cores + tile % llc_cores, 0, block), 0,
                            PrecisionT::Precision{0, 8, 0});
-        request.addOperand(sys->getAddress(tile, 0, block), 0, PrecisionT::Precision{0, 8, 0});
+        
         sys->sendRequest(request);
       }
       {
