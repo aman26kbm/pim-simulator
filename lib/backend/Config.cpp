@@ -16,7 +16,7 @@ Config::Config(const string& cfg_file_name, const string& log_file_name) {
 }
 
 void Config::parse(const string& fname) {
-    ifstream file(fname);
+    ifstream file(fname.c_str());
     assert(file.good() && "Bad config file");
     string line;
     while (getline(file, line)) {

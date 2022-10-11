@@ -23,6 +23,7 @@ int32_t test_load_simple(System* sys){
         sys->sendRequest(requests[i]);
 }
 
+
 int32_t test_load_rf_simple(System* sys){
     std::vector<Request> requests;
     Request *request;
@@ -47,14 +48,17 @@ int32_t test_load_all(System* sys){
 
     PrecisionT::Precision precision = PrecisionT::INT8;
     int use_tiles = sys->_config->_ntiles_used;
+    int total_round = 4;
 
     for(int tile=0; tile < use_tiles; tile++){
         int myTile = (tile) % use_tiles;
         
-        request = new Request(Request::Type::RowLoad);
-        request->addOperand(sys->getAddress(myTile,0,0), 0, precision);//src
-        request->addOperand(sys->DRAM_ADDR, 0, precision);//DST
-        requests.push_back(*request);
+        for(int round =0; round<total_round; round++){
+            request = new Request(Request::Type::RowLoad);
+            request->addOperand(sys->getAddress(myTile,(round*precision.bits())%use_tiles,0), 0, precision);//src
+            request->addOperand(sys->DRAM_ADDR, 0, precision);//DST
+            requests.push_back(*request);
+        }
         
     }
 

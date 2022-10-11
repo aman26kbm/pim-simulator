@@ -9,7 +9,7 @@ int32_t gemm_outer(System* sys){
     Request *request;
     Config* cfg = sys->_config;
 
-    int matrixARowNum = 128*256;//128*256
+    int matrixARowNum = 256*256;//128*256
     int matrixAColNum = 256*8;//256*8
     //int matrixAColNum = 8;
     int matrixBRowNum = matrixAColNum;//256*8
@@ -43,8 +43,8 @@ int32_t gemm_outer(System* sys){
                     request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
                     requests.push_back(*request);
                     //multiply add to get partial sum matrix in 1 core
-                    for(int regIndex=0; regIndex<basicMatrixBColNum; regIndex++){
-                        
+                    for(int regIndex=0; (regIndex<basicMatrixBColNum) && (j*basicMatrixBColNum+regIndex<matrixBColNum); regIndex++){
+                    //for(int regIndex=0; regIndex<basicMatrixBColNum; regIndex++){   
                         request = new Request(Request::Type::RowMul_CRAM_RF);
                         request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
                         request->addOperand(cfg->_num_regs_per_rf * tile + regIndex, 4, precision_input);//rf
@@ -83,12 +83,12 @@ int32_t gemm_outer(System* sys){
                     }
                 }
             }  
-            // for(int resultColIndex=0; resultColIndex<basicMatrixBColNum; resultColIndex++){//6
-            //     request = new Request(Request::Type::RowStore);
-            //     request->addOperand(sys->getAddress(dram_tile,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_accumulate); //cram addr
-            //     request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
-            //     requests.push_back(*request);
-            // }
+            for(int resultColIndex=0; resultColIndex<basicMatrixBColNum; resultColIndex++){//6
+                request = new Request(Request::Type::RowStore);
+                request->addOperand(sys->getAddress(dram_tile,0,precision_input.bits()+resultColIndex*precision_accumulate.bits()), 0, precision_accumulate); //cram addr
+                request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
+                requests.push_back(*request);
+            }
         }
         
     }
