@@ -21,7 +21,7 @@ public:
 };
 
 //input directions: N=North, S=South, W=West, E=East, L=Local, D=Dram
-enum Direction {N,S,W,E,L,D,BOUND};
+enum Direction {D,L,N,S,W,E,BOUND};
 Direction operator ++ (Direction& d, int);
 std::string toString(Direction d);
 

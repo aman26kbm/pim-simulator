@@ -48,7 +48,7 @@ int32_t test_load_all(System* sys){
 
     PrecisionT::Precision precision = PrecisionT::INT8;
     int use_tiles = sys->_config->_ntiles_used;
-    int total_round = 4;
+    int total_round = 16;
 
     for(int tile=0; tile < use_tiles; tile++){
         int myTile = (tile) % use_tiles;

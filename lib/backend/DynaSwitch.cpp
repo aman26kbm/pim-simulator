@@ -17,14 +17,14 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
     //initialize remaining packet numbers
     // this->packetsRemaining = new int[Direction::BOUND];
 
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         this->receiveQueues.push_back(FixedQueue<Request>(2));
         this->connectStates.push_back(IDLE);
         this->packetsRemaining.push_back(0);
         this->connected.push_back(false);
     }
     //dram receive queue is infinitely large
-    this->receiveQueues[D] = FixedQueue<Request>(INT32_MAX);
+    //this->receiveQueues[D] = FixedQueue<Request>(INT32_MAX);
 
     // this->next = (DynaSwitch*)malloc(sizeof(DynaSwitch));
     // memcpy(next, this, sizeof(DynaSwitch));
@@ -76,12 +76,21 @@ bool DynaSwitch::inject(Request req){
 }
 //push 1 packet of data to receiveQueueD
 bool DynaSwitch::receive_from_dram(Request req){
-    assert(!receiveQueues[D].is_full());
-    next->receiveQueues[D].push(req);
+    if(!receiveQueues[D].is_full()){
+        next->receiveQueues[D].push(req);
+        #ifdef _ROUTER_DEBUG_OUTPUT_
+        printf("router (%d,%d) received from dram\n", myRow, myCol);
+        #endif
+        return true;
+    }
+    else{
+        #ifdef _ROUTER_DEBUG_OUTPUT_
+        printf("router (%d,%d) FULL, CANNOT received from dram\n", myRow, myCol);
+        #endif
+        return false;
+    }
 
-    #ifdef _ROUTER_DEBUG_OUTPUT_
-    printf("router (%d,%d) received from dram\n", myRow, myCol);
-    #endif
+    
 }
 
 //remove 1 matching entry from dramReceiveBuffer
@@ -137,8 +146,9 @@ void DynaSwitch::tick(){
     for(int i=0; i<dram->dramFinishedReqs.size(); i++){
         Request* thisReq = &dram->dramFinishedReqs[i];
         if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF) && thisReq->dram_ready == true){
-            receive_from_dram(*thisReq);
-            thisReq->packets2Mesh--;
+            if(receive_from_dram(*thisReq)){
+                thisReq->packets2Mesh--;
+            }
             break;
         }
         if((thisReq->type == Request::Type::RowStore || thisReq->type == Request::Type::RowStore_RF) && thisReq->dram_ready == true){
@@ -162,7 +172,7 @@ void DynaSwitch::tick(){
 
 
     //phase 1: decode, setup possible connection or pop to local receive buffer
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         if(connectStates[d]==IDLE && !receiveQueues[d].empty()){
             Request req = receiveQueues[d].front();
             Direction downstream = decode(req);
@@ -178,13 +188,13 @@ void DynaSwitch::tick(){
     }
 
     //phase 2: push to neighbors' receive queues
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         if(inputShouldSend(d)){
             inputSend(d);
         }
     }
     //phase 3: update my states variables
-    // for(Direction d=N; d<BOUND; d++){
+    // for(Direction d=(Direction)0; d<BOUND; d++){
     //     if(packetsRemaining[connectStates[d]]==0){
     //         next->connectStates[d]=IDLE;
     //         connected[connectStates[d]]=false;
@@ -226,19 +236,19 @@ void DynaSwitch::print_my_status(){
 
 void DynaSwitch::print_receive_Queues(){
     printf("receive queues: ");
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         printf("%d ", (int)receiveQueues[d].size());
     }
 }
 void DynaSwitch::print_connection(){
     printf("connection: ");
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         printf("(%s)%s ",toString(d).c_str(), toString(connectStates[d]).c_str());
     }
 }
 void DynaSwitch::print_remaining_packets(){
     printf("remaining packets: ");
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         printf("(%s)%d ",toString(d).c_str(), packetsRemaining[d]);
     }
 }
@@ -262,14 +272,14 @@ void DynaSwitch::update_current(){
 
 bool DynaSwitch::is_finished(){
     bool receiveQueueEmpty = true;
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         if(!receiveQueues[d].empty()){
             receiveQueueEmpty = false;
             break;
         }
     }
     bool noConnection = true;
-    for(Direction d=N; d<BOUND; d++){
+    for(Direction d=(Direction)0; d<BOUND; d++){
         if(packetsRemaining[d]!=0){
             noConnection = false;
             break;
