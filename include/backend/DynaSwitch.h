@@ -7,18 +7,9 @@
 #include "Request.h"
 #include "Config.h"
 #include "Dram_sendback.h"
+#include "DataStructs.h"
 
 namespace pimsim {
-
-template <typename T>
-class FixedQueue : public std::queue<T, std::deque<T>> {
-public:
-    int maxLen;
-    void push(const T& value);
-    bool is_full();
-    FixedQueue();
-    FixedQueue(int maxLen);
-};
 
 //input directions: N=North, S=South, W=West, E=East, L=Local, D=Dram
 enum Direction {D,L,N,S,W,E,BOUND};
@@ -26,12 +17,12 @@ Direction operator ++ (Direction& d, int);
 std::string toString(Direction d);
 
 enum ConnectState {
+    toD,
+    toL,
     toN,
     toS,
     toW,
     toE,
-    toL,
-    toD,
     IDLE
 };
 std::string toString(ConnectState d);
@@ -81,7 +72,7 @@ public:
     //assume each router has a receive buffer that is *infinitely large*
     std::vector<Request> localReceiveBuffer;
     //buffers all dram requests
-    std::vector<Request> dramReceiveBuffer;
+    FixedQueue<Request> dramReceiveBuffer;
 
     DynaSwitch* neighborN;
     DynaSwitch* neighborS;
@@ -94,7 +85,7 @@ public:
     
     bool inject(Request req);
     bool receive_from_dram(Request req);
-    bool store_to_dram(Request req);
+    //bool store_to_dram(Request req);
     void tick();
     //given a receive/load request, find if the requested data is present in local receive buffer
     bool data_exist(Request req);
@@ -126,6 +117,7 @@ private:
     bool inputShouldSend(Direction in);
     void inputSend(Direction in);
     bool isMatch(Request bufferedReq, Request ReceiveReq);
+    void tick_dram_phase();
     
 
 };

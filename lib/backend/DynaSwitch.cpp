@@ -26,6 +26,8 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
     //dram receive queue is infinitely large
     //this->receiveQueues[D] = FixedQueue<Request>(INT32_MAX);
 
+    this->dramReceiveBuffer = FixedQueue<Request>(2);
+
     // this->next = (DynaSwitch*)malloc(sizeof(DynaSwitch));
     // memcpy(next, this, sizeof(DynaSwitch));
     this->next = new DynaSwitch();
@@ -74,36 +76,7 @@ bool DynaSwitch::inject(Request req){
 
     return true;
 }
-//push 1 packet of data to receiveQueueD
-bool DynaSwitch::receive_from_dram(Request req){
-    if(!receiveQueues[D].is_full()){
-        next->receiveQueues[D].push(req);
-        #ifdef _ROUTER_DEBUG_OUTPUT_
-        printf("router (%d,%d) received from dram\n", myRow, myCol);
-        #endif
-        return true;
-    }
-    else{
-        #ifdef _ROUTER_DEBUG_OUTPUT_
-        printf("router (%d,%d) FULL, CANNOT received from dram\n", myRow, myCol);
-        #endif
-        return false;
-    }
 
-    
-}
-
-//remove 1 matching entry from dramReceiveBuffer
-bool DynaSwitch::store_to_dram(Request req){
-    for(int i=0; i<dramReceiveBuffer.size(); i++){
-        Request thisReq = dramReceiveBuffer[i];
-        if(isMatch(thisReq, req)){
-            dramReceiveBuffer.erase(dramReceiveBuffer.begin()+i--);
-            return true;
-        }
-    }
-    return false;
-}
 
 void DynaSwitch::tick(){
     //print before update
@@ -111,64 +84,8 @@ void DynaSwitch::tick(){
     print_my_status();
     #endif
 
-    //dram phase 1: send any dram load/store that are requestiong_load=true in LRB to dram, set packets2Mesh = bits
-    for(int i=0; i<dramReceiveBuffer.size(); i++){
-        Request* thisReq = &dramReceiveBuffer[i];
-        assert(thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF 
-        || thisReq->type == Request::Type::RowStore || thisReq->type == Request::Type::RowStore_RF);
-        
-        if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF)
-        && thisReq->requesting_load== true) {
-            thisReq->requesting_load = false;
-            thisReq->packets2Mesh = thisReq->bits * cfg->_ncols * cfg->_nblocks /cfg->_wordsize_tile2tile;
-            dram->receive_request(*thisReq);
-            dramReceiveBuffer.erase(dramReceiveBuffer.begin()+i--);
-            // i--;
-        }
-
-        if((thisReq->type == Request::Type::RowStore || thisReq->type == Request::Type::RowStore_RF)
-        && thisReq->requesting_store == true) {
-            if(remainingStore==0){
-                thisReq->requesting_store = false;
-                dram->receive_request(*thisReq);
-                //remainingStore = thisReq->bits-1;
-                remainingStore = thisReq->packets2Mesh-1;
-            }
-            else{
-                thisReq->requesting_store = false;
-                remainingStore--;
-            }
-        }
-    }
-    //dram phase 2: if any dram load request is dram_ready, try receive from dram. deduct packets2Mesh by 1
-    //if any dram store request is ready, remove 1 entry from dramReceiveBuffer
-    //only process the first dram_ready request in dramFinishedReqs
-    for(int i=0; i<dram->dramFinishedReqs.size(); i++){
-        Request* thisReq = &dram->dramFinishedReqs[i];
-        if((thisReq->type == Request::Type::RowLoad || thisReq->type == Request::Type::RowLoad_RF) && thisReq->dram_ready == true){
-            if(receive_from_dram(*thisReq)){
-                thisReq->packets2Mesh--;
-            }
-            break;
-        }
-        if((thisReq->type == Request::Type::RowStore || thisReq->type == Request::Type::RowStore_RF) && thisReq->dram_ready == true){
-            assert(store_to_dram(*thisReq));
-            thisReq->packets2Mesh--;
-            break;
-        }
-    }
-
-    //dram phase 3: if any dram load/store request has packets2Mesh==0, remove it from dramReceiveBuffer
-    for(int i=0; i<dram->dramFinishedReqs.size(); i++){
-        Request* thisReq = &dram->dramFinishedReqs[i];
-        if(thisReq->packets2Mesh == 0){
-            dram->dramFinishedReqs.erase(dram->dramFinishedReqs.begin()+i--);
-        }
-    }
-
-    //dram phase 4: tick my dram
-    this->dram->tick();
-
+    
+    tick_dram_phase();
 
 
     //phase 1: decode, setup possible connection or pop to local receive buffer
@@ -296,28 +213,9 @@ bool DynaSwitch::is_finished(){
 
 //////////////////////////////////Utils///////////////////////////////
 
-/////////////////FixedQueue/////////////////
-template <typename T>
-FixedQueue<T>::FixedQueue(int maxLen){
-    this->maxLen = maxLen;
-}
 
-template <typename T>
-FixedQueue<T>::FixedQueue(){
-    this->maxLen =2;
-}
 
-template <typename T>
-void FixedQueue<T>::push(const T& value) {
-    if (this->size() == maxLen) {
-        assert(false);
-    }
-    std::queue<T, std::deque<T>>::push(value);
-}
-template <typename T>
-bool FixedQueue<T>::is_full(){
-    return (this->size() >= maxLen);
-}
+
 
 /////////////////Direction//////////////////
 Direction pimsim::operator ++ (Direction& d, int)
@@ -428,12 +326,12 @@ bool DynaSwitch::neighborIsFull(Direction direction){
             return neighborE->receiveQueues[W].is_full();
             break;
         case L:
-            //return receiveQueues[L].is_full();
+            //return localReceiveBuffer.is_full();
             return false;//since local receive buffer is infinitely large
             break;
         case D:
-            //return receiveQueueDram.is_full();
-            return false;//since dram receive buffer is infinitely large
+            return dramReceiveBuffer.is_full();
+            //return false;//since dram receive buffer is infinitely large
             break;
         default:
             assert(false);
@@ -461,7 +359,7 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction){
             next->localReceiveBuffer.push_back(req);
             break;
         case D:
-            this->dramReceiveBuffer.push_back(req);
+            this->dramReceiveBuffer.push(req);
             break;
         default:
             assert(false);
