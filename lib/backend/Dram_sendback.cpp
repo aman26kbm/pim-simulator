@@ -2,6 +2,8 @@
 #include"backend/global.h"
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+//workaround
+#include "DataStructs.cpp"
 
 using namespace pimsim;
 
@@ -50,6 +52,7 @@ void Dram_sendback::tick(){
             reqQ[i].second--;
         }
     }
+    if(reqQ.empty()) return;
     //if front req is finished, try push it to dramFinishedReqs
     if(reqQ.front().second==0 && !dramFinishedReqs.is_full()){
         dramFinishedReqs.push(reqQ.front().first);
