@@ -276,7 +276,6 @@ public:
     static std::string print_name(Type type);
     int reqNo;
     
-    int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue
     TimeT start_time = 0; //The time at which the request is decoded and start waiting
     TimeT process_time = 0; //The time at which the request started to be processed (ie. actually executed by the tile)
@@ -290,12 +289,13 @@ public:
     //indicates if the htree is configured for this request. Value owned by htree.
     bool hTree_ready=false;
     bool mesh_ready=false;
-    int packets2Mesh = 0;
+    int dynaMeshHops = 0;  //num of hops in the mesh network
+    int packets2Mesh = 0;  //number of flits
     bool requesting_load = false;
     bool requesting_store = false;
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     int mesh_transfer_time=0;//only used for mesh. Indicates transfer time of a request
-    int DynaMesh_transfer_time=0;
+    int DynaMesh_transfer_time=0; //Not populated in the simulator
     bool send_receive_finished=false;
 
     bool dram_ready=false;

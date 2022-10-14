@@ -14,6 +14,13 @@ MemoryCharacteristics::MemoryCharacteristics(Configuration configuration,
                                              Config* config) {
     _configuration = configuration;
     this->config = config; 
+
+    int num_blocks_in_core = pow(4, ceil(log(config->_nblocks)/log(4)));
+    int level = 0;
+    for (int i=1; i<=config->_htreeTileDepth; i++) {
+        level = pow(4,i);
+        numHtreesInBlock += num_blocks_in_core / level;
+    }
 }
 
 
@@ -169,6 +176,8 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::ColBitwise: 
         case Request::Type::RowSearch: 
         case Request::Type::ColSearch: 
+            time = T_CLK * getPrecisionBits(req);;
+            break;
         case Request::Type::RowAdd_RF: 
         case Request::Type::RowSub_RF: 
         case Request::Type::RowRead_RF: 
@@ -255,4 +264,233 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
     }
     return time;
+}
+
+double MemoryCharacteristics::getDynamicEnergy(Request req) {
+    double energy = 0.0;
+    int cycles = 0;
+    int compute_cycles = 0;
+    int rows = 0;
+    switch (req.type) {
+        case Request::Type::RowRead: 
+            //Instruction controller + Array read
+            cycles = getPrecisionBits(req);
+            energy = E_InstrCtrl + E_ArrayRd * cycles * config->get_nblocks();
+            break;
+        case Request::Type::RowSet: 
+        case Request::Type::RowReset: 
+        case Request::Type::RowWrite: 
+            //Instruction controller + Array write
+            cycles = getPrecisionBits(req);
+            energy = E_InstrCtrl + E_ArrayWr * cycles * config->get_nblocks();
+            break;
+        case Request::Type::RowAdd: 
+            //Instruction controller + Array compute 
+            cycles = getClocksForReq(req.precision_list, "add");
+            energy = E_InstrCtrl + E_ArrayCompute * cycles * config->get_nblocks();
+            break;
+        case Request::Type::RowMul: 
+            //Instruction controller + Array compute 
+            cycles = getClocksForReq(req.precision_list, "mul");
+            energy = E_InstrCtrl + E_ArrayCompute * cycles * config->get_nblocks();
+            break;
+        case Request::Type::RowBitwise: 
+            //Instruction controller + Array compute 
+            cycles = getPrecisionBits(req);
+            energy = E_InstrCtrl + E_ArrayCompute * cycles  * config->get_nblocks(); 
+            break;
+        case Request::Type::RowReduce: 
+            //Instruction controller + Array compute across all arrays in a tile
+            compute_cycles = getClocksForReq(req.precision_list, "reduce", req.size_list[0]);
+            energy = E_InstrCtrl + compute_cycles * E_ArrayCompute;
+            break;
+        case Request::Type::RowReduce_WithinTile: { 
+            //Instruction controller + H-tree + Array compute across all arrays in a tile
+            int levels = req.size_list[0];
+            int bits_moved = 0;
+            int ops_done = 0;
+            int N = config->get_nblocks();
+            int P = req.precision_list[0].bits();
+            
+            for (int i=1; i<levels; i++) {
+                N = N/2;
+                bits_moved += N * P * config->get_ncols();
+                P = P+1;
+                ops_done += N * P;
+            }
+            //Assume we stop after having gotten all cols of a block populated
+            //If we want to further reduce, call RowReduce separately
+            energy = E_InstrCtrl + ops_done * E_ArrayCompute + bits_moved * E_HTree;
+            break;
+        }
+        case Request::Type::RowShift: 
+            //Instruction controller + Array compute across all arrays in a tile
+            cycles = getClocksForReq(req.precision_list, "read", req.size_list[0]);
+            energy = E_InstrCtrl + cycles * E_ArrayCompute * config->get_nblocks();
+            break;
+        case Request::Type::RowMul_CRAM_RF: 
+            //Instruction controller + RF read + Array compute 
+            cycles = getClocksForReq(req.precision_list, "mul_cram_rf");
+            energy = E_InstrCtrl + cycles * E_ArrayCompute * config->get_nblocks() + E_RfRd;
+            break;
+        case Request::Type::RowAdd_CRAM_RF: 
+            //Instruction controller + RF read + Array compute 
+            cycles = getClocksForReq(req.precision_list, "add_cram_rf");
+            energy = E_InstrCtrl + cycles * E_ArrayCompute * config->get_nblocks() + E_RfRd;
+            break;
+        case Request::Type::PopCountReduce_RF:
+            //Instruction controller + Array read + Popcount logic + RF write
+            cycles = req.precision_list[0].bits()+config->_popcount_pipeline_stages;
+            energy = E_InstrCtrl + cycles * E_ArrayRd + cycles * E_Popcount + E_RfWr;
+            break;
+        case Request::Type::RowRead_RF: 
+            //Instruction controller + RF read
+            energy = E_InstrCtrl + E_RfRd;
+            break;
+        case Request::Type::RowWrite_RF: 
+            //Instruction controller + RF write
+            energy = E_InstrCtrl + E_RfWr;
+            break;
+        case Request::Type::BlockBroadCast: 
+            //Send N rows from one block to all others within a tile
+            //Instruction controller + Array read + H-tree + multiple Array writes
+            //DRAM related stuff is not accounted for
+            //On average, each H-tree switch will send out the packet in 4 directions
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + \
+                    rows * E_ArrayRd + \
+                    rows * config->_ncols * numHtreesInBlock * E_HTree + \
+                    rows * E_ArrayWr * (config->get_nblocks()-1);
+            break;
+        case Request::Type::TileSend_BroadCast: 
+            //Instruction controller + Array read + H-tree + NoC + multiple H-trees (rest in TileReceive_Broadcast)
+            //DRAM related stuff is not accounted for
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + \
+                    rows * E_ArrayRd * config->get_nblocks() + \
+                    config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    config->_ntiles * (config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree);
+            break;
+        case Request::Type::TileReceive_BroadCast: 
+            //Instruction controller + multiple Array writes (rest in TileSend_Broadcast)
+            //DRAM related stuff is not accounted for
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + rows * E_ArrayWr * config->get_nblocks() * (config->_ntiles_used-1);
+            break;
+        case Request::Type::BlockSend_Receive: 
+            //Send N rows from one block to another within a tile
+            //Instruction controller + Array read + H-tree + Array write
+            //DRAM, network related stuff is counted elsewhere
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + \
+                    rows * E_ArrayRd + \
+                    rows * config->get_nblocks() * E_HTree + \
+                    rows * E_ArrayWr;
+            break;
+        case Request::Type::TileSend: 
+            //Instruction controller + Array Read + H-tree + NoC + H-tree 
+            //For htrees, calculate the number of bits going through each h-tree
+            //We get an expression that says: "Num of levels * Number of blocks in a core * Precision" is the #bits seen by all h-trees
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + \
+                    rows * E_ArrayRd * config->get_nblocks() + \
+                    config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree;
+            break;
+        case Request::Type::TileReceive: 
+            //Instruction controller + Array Write (rest of the stuff is counted in TileSend)
+            cycles = getPrecisionBits(req);
+            energy = E_InstrCtrl + cycles * E_ArrayWr * config->get_nblocks();
+            break;
+        case Request::Type::RowLoad: {
+            //Instruction controller + DRAM controller + DRAM read + NoC + H-tree + Array Write
+            //DRAM related stuff is not accounted for
+            int bitsToFromDram = req.bits * config->_ncols * config->_nblocks;
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + \
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
+                    rows * E_ArrayWr * config->get_nblocks();
+            break;
+        }
+        case Request::Type::RowStore: {
+            //Instruction controller + Array read + H-tree + NoC + DRAM controller + DRAM write
+            //DRAM related stuff is not accounted for
+            int bitsToFromDram = req.bits * config->_ncols * config->_nblocks;
+            rows = getPrecisionBits(req);
+            energy = E_InstrCtrl + \
+                    rows * E_ArrayRd * config->get_nblocks() + \
+                    config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC;
+            break;
+        }
+        case Request::Type::RowLoad_RF: 
+            //Instruction controller + DRAM controller + DRAM read + NoC + RF write
+            //We load the full RF together
+            //DRAM related stuff is not accounted for
+            //No htree here because RF is at the root of the RF 
+            energy = E_InstrCtrl + \
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    E_RfWr * config->_num_regs_per_rf;
+            break;
+        case Request::Type::RowStore_RF: 
+            //Instruction controller + RF read + NoC + DRAM controller + DRAM write
+            //We store the full RF together
+            //DRAM related stuff is not accounted for
+            energy = E_InstrCtrl + \
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    E_RfRd * config->_num_regs_per_rf;
+            break;
+
+        //Synchronization requests only generate sync packets, not data packets.
+        //So, their energy consumption is pretty low and not modeled.
+        case Request::Type::Signal: 
+        case Request::Type::Wait: 
+        case Request::Type::Barrier: 
+        case Request::Type::ResetSync: 
+        case Request::Type::NOP: 
+            energy = 0;
+            break;
+
+        default:
+            energy = 0;
+            cout<<"Error: Unsupported request received"<<std::endl;
+            assert(0);
+            break;
+    }
+    return energy;
+}
+
+double MemoryCharacteristics::getStaticEnergy(std::string component) {
+    double energy;
+    if (component=="noc") {
+        energy = 2.21e-10;
+    } 
+    else if (component=="htree_root") {
+        energy = 1.5e-13;
+    }
+    else if (component=="htree") {
+        energy = 3.64e-14;
+    }
+    else if (component=="instruction_controller") {
+        energy = 4.69e-14; 
+    }
+    else if (component=="transpose") {
+        energy = 3.39e-12; 
+    } 
+    else if (component=="popcount") {
+        energy = 2.19e-15; 
+    }
+    else if (component=="rf") {
+        energy = 2.17e-14; 
+    }
+    else if (component=="cram") {
+        energy = 0.015e-3; 
+    }
+    else {
+        energy = 0; std::cout<<"Unsupported component"; assert(0);
+    }
+    return energy;
 }

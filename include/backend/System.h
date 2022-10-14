@@ -47,9 +47,11 @@ class MemoryChip;
 class System {
 public:
     FILE* rstFile;
-    std::ofstream csv_file;
+    std::ofstream cycle_csv_file;
+    std::ofstream req_count_csv_file;
     std::ofstream states_csv_file;
     std::ofstream reqs_csv_file;
+    std::ofstream energy_csv_file;
     std::string workload;
     uint64_t tot_reqs = 0;
     //TimeT _time; // Global cycles for processing
@@ -112,10 +114,11 @@ public:
 
     void run(std::string workload);
     void finish();
-    void generate_csv();
+    void generate_req_count_csv();
+    void generate_cycle_csv();
     void generate_states_csv();
     void generate_req_states_csv();
-
+    void generate_energy_csv();
 
     //DRAM addresses don't matter. We just define 1 address
     //and use it everywhere.

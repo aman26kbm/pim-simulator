@@ -54,7 +54,6 @@ MemoryTile::issueReq(Request& req)
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             assert(false);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-
             req.finish_time = cur_time + getReqTiming(req) ;
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;

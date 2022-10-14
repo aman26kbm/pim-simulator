@@ -40,7 +40,6 @@ public:
 
     Request req;
 
-
     MemoryTile* dest;
     MemoryTile* source;
 

@@ -347,15 +347,19 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction){
     switch(direction){
         case N:
             neighborN->next->receiveQueues[S].push(req);
+            req.dynaMeshHops++;
             break;
         case S:
             neighborS->next->receiveQueues[N].push(req);
+            req.dynaMeshHops++;
             break;
         case W:
             neighborW->next->receiveQueues[E].push(req);
+            req.dynaMeshHops++;
             break;
         case E:
             neighborE->next->receiveQueues[W].push(req);
+            req.dynaMeshHops++;
             break;
         case L:
             next->localReceiveBuffer.push_back(req);
