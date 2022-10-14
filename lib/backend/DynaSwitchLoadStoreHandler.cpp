@@ -28,7 +28,7 @@ void DynaSwitch::tick_dram_phase(){
         //pop the front of dramReceiveBuffer and dram receives it
         if(dramReceiveBuffer.front().type == Request::Type::RowLoad || dramReceiveBuffer.front().type == Request::Type::RowLoad_RF) {
             dramReceiveBuffer.front().requesting_load = false;
-            dramReceiveBuffer.front().packets2Mesh = dramReceiveBuffer.front().bits * cfg->_ncols * cfg->_nblocks /cfg->_wordsize_tile2tile;
+            dramReceiveBuffer.front().packets2Mesh = ceil(dramReceiveBuffer.front().bits * cfg->_ncols * cfg->_nblocks /(float)cfg->_wordsize_tile2tile);
             if(dram->receive_request(dramReceiveBuffer.front())){
                 dramReceiveBuffer.pop();
             }
@@ -36,7 +36,7 @@ void DynaSwitch::tick_dram_phase(){
 
         
         //otherwise dram try to receive front(), if success, disable requesting_store so request is not sent to dram more than once
-        if((dramReceiveBuffer.front().type == Request::Type::RowStore || dramReceiveBuffer.front().type == Request::Type::RowStore_RF) && dramReceiveBuffer.front().requesting_store && remainingStore==0) {
+        else if((dramReceiveBuffer.front().type == Request::Type::RowStore || dramReceiveBuffer.front().type == Request::Type::RowStore_RF) && dramReceiveBuffer.front().requesting_store && remainingStore==0) {
             if(dram->receive_request(dramReceiveBuffer.front())){
                 dramReceiveBuffer.front().requesting_store = false;
             }

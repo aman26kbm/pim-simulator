@@ -420,6 +420,7 @@ void DynaSwitch::inputSend(Direction in){
     next->receiveQueues[in].pop();
     next->packetsRemaining[(Direction)connectStates[in]]--;
     if(next->packetsRemaining[connectStates[in]]==0){
+    //if(packetsRemaining[connectStates[in]]==0){
         next->connectStates[in]=IDLE;
         connected[connectStates[in]]=false;
     }
