@@ -132,7 +132,7 @@ int32_t gemv(System* sys)
 
             //Store results into DRAM
             request = new Request(Request::Type::RowStore);
-            request->addOperand(sys->getAddress(dram_tile, 0, cols_per_tile*4 + round*16), 0, accumulate_precision); //src
+            request->addOperand(sys->getAddress(dram_tile, 0, (cols_per_tile*4 + round*16)%sys->_config->_nrows), 0, accumulate_precision); //src
             request->addOperand(sys->DRAM_ADDR, 0, accumulate_precision); //dst
             requests.push_back(*request);
         }
