@@ -1,6 +1,5 @@
 #include "System.h"
 #include "Status.h"
-#include "backend/global.h"
 
 void System::generate_req_count_csv(){
     ///////////////////////////////
@@ -362,24 +361,7 @@ void System::generate_energy_csv(){
             }
         }
 
-        //Add 4% energy for DRAM controller
-        tot_dynamic_energy *= 1.04;
-
-        //Evaluate static energy
-        TimeT final_sim_time = _time;
-        //cout<<"Last time is:"<<final_sim_time<<endl;
-        tot_static_energy +=  _values->getStaticEnergy("noc") * _config->get_ntiles_used() * final_sim_time + \
-                              _values->getStaticEnergy("htree_root") * _config->get_ntiles_used() * final_sim_time + \
-                              _values->getStaticEnergy("htree") * (_values->numHtreesInBlock-1) * _config->get_nblocks() * _config->get_ntiles_used() * final_sim_time + \
-                              _values->getStaticEnergy("instruction_controller") * _config->get_ntiles_used() * final_sim_time + \
-                              _values->getStaticEnergy("transpose") * _config->_meshWidth * final_sim_time + \
-                              _values->getStaticEnergy("popcount") * _config->get_ntiles_used() * final_sim_time + \
-                              _values->getStaticEnergy("rf") * _config->get_ntiles_used() * final_sim_time + \
-                              _values->getStaticEnergy("cram") * _config->get_ntiles_used() * _config->get_nblocks() * final_sim_time;
-
-        //Add 4% energy for DRAM controller
-        tot_static_energy *= 1.04;
-
+        tot_static_energy = _chips[i]->_values->getStaticEnergy();
         
         //now print the csv
         const int NUM_CSV_COLUMNS = 14;

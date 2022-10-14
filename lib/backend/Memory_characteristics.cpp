@@ -1,9 +1,6 @@
-//
-// Created by caspar on 12/19/20.
-//
-
 #include "Memory_characteristics.h"
 #include "backend/Config.h"
+#include "backend/global.h"
 #include <iostream>
 #include <cmath>
 
@@ -460,37 +457,27 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             assert(0);
             break;
     }
+
+    //Add 4% energy for DRAM controller
+    energy *= 1.04;
     return energy;
 }
 
-double MemoryCharacteristics::getStaticEnergy(std::string component) {
-    double energy;
-    if (component=="noc") {
-        energy = 2.21e-10;
-    } 
-    else if (component=="htree_root") {
-        energy = 1.5e-13;
-    }
-    else if (component=="htree") {
-        energy = 3.64e-14;
-    }
-    else if (component=="instruction_controller") {
-        energy = 4.69e-14; 
-    }
-    else if (component=="transpose") {
-        energy = 3.39e-12; 
-    } 
-    else if (component=="popcount") {
-        energy = 2.19e-15; 
-    }
-    else if (component=="rf") {
-        energy = 2.17e-14; 
-    }
-    else if (component=="cram") {
-        energy = 0.015e-3; 
-    }
-    else {
-        energy = 0; std::cout<<"Unsupported component"; assert(0);
-    }
-    return energy;
-}
+double MemoryCharacteristics::getStaticEnergy() {
+    double static_energy;
+    TimeT final_sim_time = _time;
+    //cout<<"Last time is:"<<final_sim_time<<endl;
+    static_energy +=  SE_NoC * config->get_ntiles_used() * final_sim_time + \
+                      SE_HTreeRoot * config->get_ntiles_used() * final_sim_time + \
+                      SE_HTree * (numHtreesInBlock-1) * config->get_nblocks() * config->get_ntiles_used() * final_sim_time + \
+                      SE_InstrCtrl * config->get_ntiles_used() * final_sim_time + \
+                      SE_Transpose * config->_meshWidth * final_sim_time + \
+                      SE_Popcount * config->get_ntiles_used() * final_sim_time + \
+                      SE_RF * config->get_ntiles_used() * final_sim_time + \
+                      SE_Array * config->get_ntiles_used() * config->get_nblocks() * final_sim_time;
+
+    //Add 4% energy for DRAM controller
+    static_energy *= 1.04;
+    
+    return static_energy;
+}                              

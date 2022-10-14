@@ -62,9 +62,19 @@ public:
     //add 12% to it .
     const double E_DramCtrl = 0;
 
+    //Static/Leakage energy (per clock)
+    const double SE_NoC = 2.21e-10;
+    const double SE_HTreeRoot = 1.5e-13;
+    const double SE_HTree = 3.64e-14;
+    const double SE_InstrCtrl = 4.69e-14; 
+    const double SE_Transpose = 3.39e-12; 
+    const double SE_Popcount = 2.19e-15; 
+    const double SE_RF = 2.17e-14; 
+    const double SE_Array = 2.21e-12;  //between rf and noc
+
 	double getTiming(Request req);
 	double getDynamicEnergy(Request req);
-	double getStaticEnergy(std::string component);
+	double getStaticEnergy();
     int getPrecisionBits(Request req);
 
 };
