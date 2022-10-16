@@ -41,7 +41,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
         else {
-            clocks = mantissa; //Not using +1 because the precision supplied already includes the carry bit
+            clocks = mantissa+1; 
         }
     }
     else if (op=="add_cram_rf") {
@@ -56,7 +56,33 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
         else {
-            clocks = mantissa / 2; //Not using +1 because the precision supplied already includes the carry bit
+            clocks = (mantissa / 2)+1; 
+        }
+    }
+    else if (op=="compare") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+        PrecisionT::Precision p = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger src
+        p = p.bits()>precision_list[2].bits()?precision_list[2] : p;//take smaller of p, dest
+        mantissa = p.mantissa;
+        exponent = p.exponent;
+        bits = p.bits();
+        if (dtype=="float") {
+            clocks = 0;
+            //Not supported currently
+            cout<<"Need to update code for cycles to compare 2 float numbers"<<std::endl;
+            assert(0);
+        }
+        else {
+            //two numbers are present in a column
+            //3 steps involved:
+            //1: copy second number to the result rows 
+            //2: invert the second number
+            //3: add the two numbers
+            //4: using msb of the result as mask bit, overwrite the result rows
+            
+            //       copy         invert        add      mask overwrite
+            clocks = mantissa + mantissa +  mantissa+1 + mantissa;
         }
     }
     else if (op=="mul") {
@@ -200,6 +226,9 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowSub: 
             time = getClocksForReq(req.precision_list, "add") * T_CLK;
             break;
+        case Request::Type::RowCompare:
+            time = getClocksForReq(req.precision_list, "compare") * T_CLK;
+            break;
         case Request::Type::RowMul: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
@@ -284,6 +313,11 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
         case Request::Type::RowAdd: 
             //Instruction controller + Array compute 
             cycles = getClocksForReq(req.precision_list, "add");
+            energy = E_InstrCtrl + E_ArrayCompute * cycles * config->get_nblocks();
+            break;
+        case Request::Type::RowCompare: 
+            //Instruction controller + Array compute 
+            cycles = getClocksForReq(req.precision_list, "compare");
             energy = E_InstrCtrl + E_ArrayCompute * cycles * config->get_nblocks();
             break;
         case Request::Type::RowMul: 

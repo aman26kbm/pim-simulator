@@ -46,6 +46,14 @@ public:
                   //     requests.push_back(*request);
         RowSub,   //Same as above, but for Sub instead of Add
 
+        RowCompare, //Compare a multi-bit number stored over multiple rows with another multi-bit number stored over multiple rows.
+                    //This request should really have been 2 separate requests - Max and Min, but since they require the same
+                    //number of cycles, I've just provided one.
+                    //The operands have the same meaning as the RowAdd request.
+                    //addr, precision
+                    //The time taken by this request is specified in the MemoryCharacteristics.
+                    //Happens across all columns in a cram
+
         RowMul,   //Multiply multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
                   //The time taken is specified to be X cycles in MemoryCharacteristics

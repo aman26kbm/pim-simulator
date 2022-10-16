@@ -9,6 +9,8 @@ std::string Request::print_name(Type type) {
             case Type::RowRead: return        "RowRead";
             case Type::RowWrite: return        "RowWrite";
             case Type::RowAdd: return        "RowAdd";
+            case Type::RowSub: return        "RowSub";
+            case Type::RowCompare: return        "RowCompare";
             case Type::RowMul: return        "RowMul";
             case Type::RowBitwise: return        "RowBitwise";
             case Type::ColBitwise: return        "ColBitwise";
@@ -172,6 +174,7 @@ std::string Request::print_name(Type type) {
             case Type::RowAdd:
             case Type::RowAdd_CRAM_RF:
             case Type::RowSub:
+            case Type::RowCompare:
             case Type::RowMul:
             case Type::RowMul_CRAM_RF:
             case Type::RowBitwise:

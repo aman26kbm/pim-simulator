@@ -132,6 +132,7 @@ MemoryTile::commitReq(Request& req)
         n_stores++;
     } else if ((req.type == Request::Type::RowAdd) 
               || (req.type == Request::Type::RowSub)
+              || (req.type == Request::Type::RowCompare)
               || (req.type == Request::Type::RowMul)
               || (req.type == Request::Type::RowBitwise)
               || (req.type == Request::Type::RowReduce)

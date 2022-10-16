@@ -436,6 +436,7 @@ int System::sendPimReq(Request& req)
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
         case Request::Type::RowSub:
+        case Request::Type::RowCompare:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
         case Request::Type::RowBitwise:
@@ -529,6 +530,7 @@ int System::sendRequest(Request& req)
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
         case Request::Type::RowSub:
+        case Request::Type::RowCompare:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
         case Request::Type::RowBitwise:
