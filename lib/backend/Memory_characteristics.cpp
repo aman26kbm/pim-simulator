@@ -351,7 +351,6 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
         case Request::Type::BlockBroadCast: 
             //Send N rows from one block to all others within a tile
             //Instruction controller + Array read + H-tree + multiple Array writes
-            //DRAM related stuff is not accounted for
             //On average, each H-tree switch will send out the packet in 4 directions
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + \
@@ -361,7 +360,6 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::TileSend_BroadCast: 
             //Instruction controller + Array read + H-tree + NoC + multiple H-trees (rest in TileReceive_Broadcast)
-            //DRAM related stuff is not accounted for
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + \
                     rows * E_ArrayRd * config->get_nblocks() + \
@@ -371,14 +369,12 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::TileReceive_BroadCast: 
             //Instruction controller + multiple Array writes (rest in TileSend_Broadcast)
-            //DRAM related stuff is not accounted for
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + rows * E_ArrayWr * config->get_nblocks() * (config->_ntiles_used-1);
             break;
         case Request::Type::BlockSend_Receive: 
             //Send N rows from one block to another within a tile
             //Instruction controller + Array read + H-tree + Array write
-            //DRAM, network related stuff is counted elsewhere
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + \
                     rows * E_ArrayRd + \
@@ -402,42 +398,46 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             energy = E_InstrCtrl + cycles * E_ArrayWr * config->get_nblocks();
             break;
         case Request::Type::RowLoad: {
-            //Instruction controller + DRAM controller + DRAM read + NoC + H-tree + Array Write
+            //Instruction controller + DRAM controller + Transpose Logic + DRAM read + NoC + H-tree + Array Write
             //DRAM related stuff is not accounted for
             int bitsToFromDram = req.bits * config->_ncols * config->_nblocks;
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
                     config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
+                    E_Transpose * rows * config->get_nblocks() + \
                     rows * E_ArrayWr * config->get_nblocks();
             break;
         }
         case Request::Type::RowStore: {
-            //Instruction controller + Array read + H-tree + NoC + DRAM controller + DRAM write
+            //Instruction controller + Array read + H-tree + NoC + DRAM controller + Transpose Logic + DRAM write
             //DRAM related stuff is not accounted for
             int bitsToFromDram = req.bits * config->_ncols * config->_nblocks;
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + \
                     rows * E_ArrayRd * config->get_nblocks() + \
                     config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
-                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC;
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    E_Transpose * rows * config->get_nblocks();
             break;
         }
         case Request::Type::RowLoad_RF: 
-            //Instruction controller + DRAM controller + DRAM read + NoC + RF write
+            //Instruction controller + DRAM controller + Transpose logic + DRAM read + NoC + RF write
             //We load the full RF together
             //DRAM related stuff is not accounted for
             //No htree here because RF is at the root of the RF 
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    E_Transpose * config->_num_regs_per_rf + \
                     E_RfWr * config->_num_regs_per_rf;
             break;
         case Request::Type::RowStore_RF: 
-            //Instruction controller + RF read + NoC + DRAM controller + DRAM write
+            //Instruction controller + RF read + NoC + DRAM controller + Transpose logic + DRAM write
             //We store the full RF together
             //DRAM related stuff is not accounted for
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
+                    E_Transpose * config->_num_regs_per_rf + \
                     E_RfRd * config->_num_regs_per_rf;
             break;
 
@@ -471,7 +471,8 @@ double MemoryCharacteristics::getStaticEnergy() {
                       SE_HTreeRoot * config->get_ntiles_used() * final_sim_time + \
                       SE_HTree * (numHtreesInBlock-1) * config->get_nblocks() * config->get_ntiles_used() * final_sim_time + \
                       SE_InstrCtrl * config->get_ntiles_used() * final_sim_time + \
-                      SE_Transpose * config->_meshWidth * final_sim_time + \
+                      //multiplying by wordsize_dram/256 because the SE_Transpose is for one 256 wide transpose unit
+                      SE_Transpose * config->_meshWidth * final_sim_time * (config->_wordsize_dram/256) + \
                       SE_Popcount * config->get_ntiles_used() * final_sim_time + \
                       SE_RF * config->get_ntiles_used() * final_sim_time + \
                       SE_Array * config->get_ntiles_used() * config->get_nblocks() * final_sim_time;
