@@ -406,7 +406,6 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             if (req.enableTransposeUnit) {
                 transpose_energy = E_Transpose * rows * config->get_nblocks();
             }
-            cout<<"Transpose bit is "<<req.enableTransposeUnit<<std::endl;
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
                     config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
