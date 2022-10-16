@@ -322,6 +322,7 @@ public:
     void swapSrcDst();
     void setLocation(int chip, int tile, int block, int row, int col);
     void disableTranspose(); //disable transpose unit for this request
+    void enableTranspose(); //enable transpose unit for this request
     //a request is load or store
     bool isChipDram();
     //a request is transferation between tiles

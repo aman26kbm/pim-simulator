@@ -198,6 +198,10 @@ std::string Request::print_name(Type type) {
         enableTransposeUnit = false;
     }
 
+    void Request::enableTranspose() {
+        enableTransposeUnit = true;
+    }
+
 ////////////////////REQQUEUE//////////////////////////////////////////////
     unsigned int ReqQueue::size() {return q->size();}
 
