@@ -70,7 +70,8 @@ public:
     std::vector<bool> connected;
 
     //assume each router has a receive buffer that is *infinitely large*
-    std::vector<Request> localReceiveBuffer;
+    //std::vector<Request> localReceiveBuffer;
+    int localReceiveBufferSize=0;
     //buffers all dram requests
     FixedQueue<Request> dramReceiveBuffer;
 

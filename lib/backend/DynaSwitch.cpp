@@ -55,7 +55,7 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
     tgt->receiveQueues = std::vector< FixedQueue<Request> >(src->receiveQueues);
     tgt->connectStates = std::vector< ConnectState >(src->connectStates);
     tgt->packetsRemaining = std::vector<int>(src->packetsRemaining);
-    tgt->localReceiveBuffer = std::vector<Request>(src->localReceiveBuffer);
+    tgt->localReceiveBufferSize = src->localReceiveBufferSize;
     //tgt->dramReceiveBuffer = std::vector<Request>(src->dramReceiveBuffer);
     tgt->neighborN = src->neighborN;
     tgt->neighborS = src->neighborS;
@@ -123,21 +123,34 @@ void DynaSwitch::tick(){
     
 }
 
+// bool DynaSwitch::data_exist(Request req){
+//     for(int i=0; i<localReceiveBuffer.size(); i++){
+//         Request thisReq = localReceiveBuffer[i];
+//         if(isMatch(thisReq, req)) return true;
+//     }
+//     return false;
+// }
+
 bool DynaSwitch::data_exist(Request req){
-    for(int i=0; i<localReceiveBuffer.size(); i++){
-        Request thisReq = localReceiveBuffer[i];
-        if(isMatch(thisReq, req)) return true;
-    }
+    if(localReceiveBufferSize>0) return true;
     return false;
 }
 
+// Request DynaSwitch::pop_data(Request req){
+//     for(int i=0; i<localReceiveBuffer.size(); i++){
+//         Request thisReq = localReceiveBuffer[i];
+//         if(isMatch(thisReq, req)) {
+//             next->localReceiveBuffer.erase(next->localReceiveBuffer.begin()+i);
+//             return thisReq;
+//         }
+//     }
+//     return Request(Request::Type::NOP);
+// }
 Request DynaSwitch::pop_data(Request req){
-    for(int i=0; i<localReceiveBuffer.size(); i++){
-        Request thisReq = localReceiveBuffer[i];
-        if(isMatch(thisReq, req)) {
-            next->localReceiveBuffer.erase(next->localReceiveBuffer.begin()+i);
-            return thisReq;
-        }
+    if(localReceiveBufferSize>0){
+        Request req = Request(Request::Type::RowAdd);
+        next->localReceiveBufferSize--;
+        return req;
     }
     return Request(Request::Type::NOP);
 }
@@ -173,7 +186,7 @@ void DynaSwitch::print_remaining_packets(){
 }
 void DynaSwitch::print_local_receive_buffer(){
     printf("local receive buffer: ");
-    printf("%d ", (int)localReceiveBuffer.size());
+    printf("%d ", (int)localReceiveBufferSize);
 }
 void DynaSwitch::print_dram_receive_buffer(){
     printf("dram receive buffer: ");
@@ -206,7 +219,7 @@ bool DynaSwitch::is_finished(){
     }
     bool finished = receiveQueueEmpty 
     && noConnection
-    && localReceiveBuffer.empty()
+    && localReceiveBufferSize==0
     && dramReceiveBuffer.empty()
     && dram->is_finished();
     return finished;
@@ -362,7 +375,7 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction){
             req.dynaMeshHops++;
             break;
         case L:
-            next->localReceiveBuffer.push_back(req);
+            next->localReceiveBufferSize++;
             break;
         case D:
             this->dramReceiveBuffer.push(req);
