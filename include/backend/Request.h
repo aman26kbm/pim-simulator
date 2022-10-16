@@ -297,6 +297,10 @@ public:
     int mesh_transfer_time=0;//only used for mesh. Indicates transfer time of a request
     int DynaMesh_transfer_time=0; //Not populated in the simulator
     bool send_receive_finished=false;
+    bool enableTransposeUnit = true; //this bit can be used to control whether we want the transpose unit in the DRAM controller to be enabled or not.
+                                     //it is enabled by default, but can be disabled when data doesn't need to be transposed on the way. For example,
+                                     //when you're sending contents that spilled from CRAMs or RF to the DRAM, or when you are loading weights from the DRAM.
+                                     //this is only relevant for dram related instructions. also, this is enabled by default.
 
     bool dram_ready=false;
 
@@ -317,6 +321,7 @@ public:
     void addOperand(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8);
     void swapSrcDst();
     void setLocation(int chip, int tile, int block, int row, int col);
+    void disableTranspose(); //disable transpose unit for this request
     //a request is load or store
     bool isChipDram();
     //a request is transferation between tiles

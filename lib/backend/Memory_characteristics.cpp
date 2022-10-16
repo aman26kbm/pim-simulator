@@ -401,11 +401,16 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + DRAM controller + Transpose Logic + DRAM read + NoC + H-tree + Array Write
             //DRAM related stuff is not accounted for
             int bitsToFromDram = req.bits * config->_ncols * config->_nblocks;
+            double transpose_energy=0;
             rows = getPrecisionBits(req);
+            if (req.enableTransposeUnit) {
+                transpose_energy = E_Transpose * rows * config->get_nblocks();
+            }
+            cout<<"Transpose bit is "<<req.enableTransposeUnit<<std::endl;
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
                     config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
-                    E_Transpose * rows * config->get_nblocks() + \
+                    transpose_energy + \
                     rows * E_ArrayWr * config->get_nblocks();
             break;
         }
@@ -413,34 +418,39 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array read + H-tree + NoC + DRAM controller + Transpose Logic + DRAM write
             //DRAM related stuff is not accounted for
             int bitsToFromDram = req.bits * config->_ncols * config->_nblocks;
+            double transpose_energy=0;
             rows = getPrecisionBits(req);
+            if (req.enableTransposeUnit) {
+                transpose_energy = E_Transpose * rows * config->get_nblocks();
+            }
             energy = E_InstrCtrl + \
                     rows * E_ArrayRd * config->get_nblocks() + \
                     config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
-                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
-                    E_Transpose * rows * config->get_nblocks();
+                    req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + 
+                    transpose_energy;
             break;
         }
-        case Request::Type::RowLoad_RF: 
-            //Instruction controller + DRAM controller + Transpose logic + DRAM read + NoC + RF write
+        case Request::Type::RowLoad_RF: {
+            //Instruction controller + DRAM controller + DRAM read + NoC + RF write
             //We load the full RF together
             //DRAM related stuff is not accounted for
             //No htree here because RF is at the root of the RF 
+            //No transpose here because the data for RF is never transposed
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
-                    E_Transpose * config->_num_regs_per_rf + \
                     E_RfWr * config->_num_regs_per_rf;
             break;
-        case Request::Type::RowStore_RF: 
-            //Instruction controller + RF read + NoC + DRAM controller + Transpose logic + DRAM write
+        }
+        case Request::Type::RowStore_RF: {
+            //Instruction controller + RF read + NoC + DRAM controller + DRAM write
             //We store the full RF together
             //DRAM related stuff is not accounted for
+            //No transpose here because the data for RF is never transposed
             energy = E_InstrCtrl + \
                     req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + \
-                    E_Transpose * config->_num_regs_per_rf + \
                     E_RfRd * config->_num_regs_per_rf;
             break;
-
+        }
         //Synchronization requests only generate sync packets, not data packets.
         //So, their energy consumption is pretty low and not modeled.
         case Request::Type::Signal: 
