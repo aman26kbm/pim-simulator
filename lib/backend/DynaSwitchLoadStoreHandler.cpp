@@ -2,8 +2,8 @@
 using namespace pimsim;
 //push 1 packet of data to receiveQueueD
 bool DynaSwitch::receive_from_dram(Request req){
-    if(!receiveQueues[D].is_full()){
-        next->receiveQueues[D].push(req);
+    if(!receiveQueues[D][0].is_full()){
+        next->receiveQueues[D][0].push(req);
         #ifdef _ROUTER_DEBUG_OUTPUT_
         printf("router (%d,%d) received from dram\n", myRow, myCol);
         #endif
@@ -58,7 +58,7 @@ void DynaSwitch::tick_dram_phase(){
             if(remainingStore==0){
                 remainingStore = dramReceiveBuffer.front().packets2Mesh;     
             }
-            else{
+            else if(!dramReceiveBuffer.empty()){
                 dramReceiveBuffer.pop();
                 remainingStore--;
                 dram->dramFinishedReqs.front().packets2Mesh--;

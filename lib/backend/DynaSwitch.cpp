@@ -12,6 +12,8 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
     this->bitwidth = cfg->_wordsize_tile2tile;
 
     this->cfg = cfg;
+    this->channelNumber = cfg->_router_channel_number;
+    this->isSent =  std::vector<bool>(channelNumber,false);
     //initialize receive queues
     // this->receiveQueues = new FixedQueue<Request>[Direction::BOUND];
     //initialize states
@@ -20,10 +22,20 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
     // this->packetsRemaining = new int[Direction::BOUND];
 
     for(Direction d=(Direction)0; d<BOUND; d++){
-        this->receiveQueues.push_back(FixedQueue<Request>(2));
-        this->connectStates.push_back(IDLE);
-        this->packetsRemaining.push_back(0);
-        this->connected.push_back(false);
+        std::vector<FixedQueue<Request>> myReceiveQueues;
+        std::vector< ConnectState > myConnectStates;
+        std::vector< int > myPacketsRemaining;
+        std::vector<bool> myConnected;
+        for(int c=0; c<channelNumber; c++){
+            myReceiveQueues.push_back(FixedQueue<Request>(2));
+            myConnectStates.push_back(ConnectState(IDLE,0));
+            myPacketsRemaining.push_back(0);
+            myConnected.push_back(false);
+        }
+        this->receiveQueues.push_back(myReceiveQueues);
+        this->connectStates.push_back(myConnectStates);
+        this->packetsRemaining.push_back(myPacketsRemaining);
+        this->connected.push_back(myConnected);
     }
     //dram receive queue is infinitely large
     //this->receiveQueues[D] = FixedQueue<Request>(INT32_MAX);
@@ -52,10 +64,10 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
     tgt->myCol = src->myCol;
     tgt->cfg = src->cfg;
     tgt->bitwidth = src->bitwidth;
-    tgt->receiveQueues = std::vector< FixedQueue<Request> >(src->receiveQueues);
-    tgt->connectStates = std::vector< ConnectState >(src->connectStates);
-    tgt->packetsRemaining = std::vector<int>(src->packetsRemaining);
-    tgt->localReceiveBuffer = std::vector<Request>(src->localReceiveBuffer);
+    tgt->receiveQueues = src->receiveQueues;
+    tgt->connectStates = src->connectStates;
+    tgt->packetsRemaining = src->packetsRemaining;
+    //tgt->localReceiveBuffer = src->localReceiveBuffer;
     //tgt->dramReceiveBuffer = std::vector<Request>(src->dramReceiveBuffer);
     tgt->neighborN = src->neighborN;
     tgt->neighborS = src->neighborS;
@@ -64,13 +76,18 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
 }
 
 bool DynaSwitch::inject(Request req){
-    if(receiveQueues[L].is_full()) {
+    int availChannel = 0;
+    for(int c=0; c<channelNumber; c++){
+        if(!receiveQueues[L][c].is_full()) {
+            availChannel = c;
+            break;
+        }
         #ifdef _ROUTER_DEBUG_OUTPUT_
         printf("router (%d,%d) inject fail\n", myRow, myCol);
         #endif
         return false;
     }
-    next->receiveQueues[L].push(req);
+    next->receiveQueues[L][availChannel].push(req);
 
     #ifdef _ROUTER_DEBUG_OUTPUT_
     printf("router (%d,%d) inject success\n", myRow, myCol);
@@ -92,25 +109,34 @@ void DynaSwitch::tick(){
 
     //phase 1: decode, setup possible connection or pop to local receive buffer
     for(Direction d=(Direction)0; d<BOUND; d++){
-        if(connectStates[d]==IDLE && !receiveQueues[d].empty()){
-            Request req = receiveQueues[d].front();
-            Direction downstream = decode(req);
-            if(!connected[downstream]){
-                setupConnection(d,downstream, req.packets2Mesh);
-                // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
-                // && req.requesting_load == true)
-                //     setupConnection(d,downstream, 1);
-                // else
-                //     setupConnection(d,downstream, req.bits);
+        for(int c_in=0; c_in<channelNumber; c_in++){
+            if(connectStates[d][c_in].first==IDLE && !receiveQueues[d][c_in].empty()){
+                Request req = receiveQueues[d][c_in].front();
+                Direction downstream = decode(req);
+                if(downstream==D){
+                    if(!connected[D][0]){
+                        setupConnection(d,c_in,D,0, req.packets2Mesh);
+                    }
+                }
+                if(downstream!=L){
+                    for(int c_out=0; c_out<channelNumber; c_out++){
+                        if(!connected[downstream][c_out]){
+                            setupConnection(d,c_in,downstream,c_out, req.packets2Mesh);
+                            // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
+                            // && req.requesting_load == true)
+                            //     setupConnection(d,downstream, 1);
+                            // else
+                            //     setupConnection(d,downstream, req.bits);
+                        }
+                    }
+                }
             }
         }
     }
 
     //phase 2: push to neighbors' receive queues
     for(Direction d=(Direction)0; d<BOUND; d++){
-        if(inputShouldSend(d)){
-            inputSend(d);
-        }
+        inputSendFromDirection(d);
     }
     //phase 3: update my states variables
     // for(Direction d=(Direction)0; d<BOUND; d++){
@@ -122,24 +148,39 @@ void DynaSwitch::tick(){
 
     
 }
+bool DynaSwitch::data_exist_in_d(Request req, Direction d){
+    for(int c=0; c<channelNumber; c++){
+        Request thisReq = receiveQueues[d][c].front();
+        if(isMatch(thisReq, req)) return true;
+    } 
+    return false;
+}
 
 bool DynaSwitch::data_exist(Request req){
-    for(int i=0; i<localReceiveBuffer.size(); i++){
-        Request thisReq = localReceiveBuffer[i];
-        if(isMatch(thisReq, req)) return true;
+    for(Direction d:{N,S,W,E,D}){
+        if(data_exist_in_d(req, d)){
+            return true;
+        }
     }
     return false;
 }
 
-Request DynaSwitch::pop_data(Request req){
-    for(int i=0; i<localReceiveBuffer.size(); i++){
-        Request thisReq = localReceiveBuffer[i];
+bool DynaSwitch::pop_data_in_d(Request req, Direction d){
+    for(int c=0; c<channelNumber; c++){
+        Request thisReq = receiveQueues[d][c].front();
         if(isMatch(thisReq, req)) {
-            next->localReceiveBuffer.erase(next->localReceiveBuffer.begin()+i);
-            return thisReq;
+            this->receiveQueues[d][c].pop();
+            next->receiveQueues[d][c].pop();
+            return true;
         }
     }
-    return Request(Request::Type::NOP);
+    return false;
+}
+bool DynaSwitch::pop_data(Request req){
+    for(Direction d:{N,S,W,E,D}){
+        if(pop_data_in_d(req,d)) return true;
+    }
+    return false;
 }
 
 void DynaSwitch::print_my_status(){
@@ -147,7 +188,7 @@ void DynaSwitch::print_my_status(){
     print_receive_Queues();
     print_connection();
     print_remaining_packets();
-    print_local_receive_buffer();
+    //print_local_receive_buffer();
     print_dram_receive_buffer();
     dram->print_dram_finished_reqs();
     printf("\n");
@@ -156,25 +197,33 @@ void DynaSwitch::print_my_status(){
 void DynaSwitch::print_receive_Queues(){
     printf("receive queues: ");
     for(Direction d=(Direction)0; d<BOUND; d++){
-        printf("%d ", (int)receiveQueues[d].size());
+        printf("%s: ",toString(d).c_str());
+        for(int c=0; c<channelNumber; c++){
+            printf("%d ", (int)receiveQueues[d][c].size());
+        }
     }
+    printf("\n");
 }
 void DynaSwitch::print_connection(){
     printf("connection: ");
     for(Direction d=(Direction)0; d<BOUND; d++){
-        printf("(%s)%s ",toString(d).c_str(), toString(connectStates[d]).c_str());
+        for(int c=0; c<channelNumber; c++){
+            printf("(%s,%d)%s ",toString(d).c_str(), c, toString(connectStates[d][c]).c_str());
+        }
     }
 }
 void DynaSwitch::print_remaining_packets(){
     printf("remaining packets: ");
     for(Direction d=(Direction)0; d<BOUND; d++){
-        printf("(%s)%d ",toString(d).c_str(), packetsRemaining[d]);
+        for(int c=0; c<channelNumber; c++){
+            printf("(%s,%d)%d ",toString(d).c_str(), c, packetsRemaining[d][c]);
+        }
     }
 }
-void DynaSwitch::print_local_receive_buffer(){
-    printf("local receive buffer: ");
-    printf("%d ", (int)localReceiveBuffer.size());
-}
+// void DynaSwitch::print_local_receive_buffer(){
+//     printf("local receive buffer: ");
+//     printf("%d ", (int)localReceiveBuffer.size());
+// }
 void DynaSwitch::print_dram_receive_buffer(){
     printf("dram receive buffer: ");
     printf("%d ", (int)dramReceiveBuffer.size());
@@ -192,21 +241,25 @@ void DynaSwitch::update_current(){
 bool DynaSwitch::is_finished(){
     bool receiveQueueEmpty = true;
     for(Direction d=(Direction)0; d<BOUND; d++){
-        if(!receiveQueues[d].empty()){
-            receiveQueueEmpty = false;
-            break;
+        for(int c=0; c<channelNumber; c++){
+            if(!receiveQueues[d][c].empty()){
+                receiveQueueEmpty = false;
+                break;
+            }
         }
     }
     bool noConnection = true;
     for(Direction d=(Direction)0; d<BOUND; d++){
-        if(packetsRemaining[d]!=0){
-            noConnection = false;
-            break;
+        for(int c=0; c<channelNumber; c++){
+            if(packetsRemaining[d][c]!=0){
+                noConnection = false;
+                break;
+            }
         }
     }
     bool finished = receiveQueueEmpty 
     && noConnection
-    && localReceiveBuffer.empty()
+    //&& localReceiveBuffer.empty()
     && dramReceiveBuffer.empty()
     && dram->is_finished();
     return finished;
@@ -245,13 +298,13 @@ std::string pimsim::toString(Direction d){
     }
 }
 std::string pimsim::toString(ConnectState s){
-    switch(s){
-        case toN: return "toN";
-        case toS: return "toS";
-        case toW: return "toW";
-        case toE: return "toE";
-        case toL: return "toL";
-        case toD: return "toD";
+    switch(s.first){
+        case toN: return "toN"+std::to_string(s.second);
+        case toS: return "toS"+std::to_string(s.second);
+        case toW: return "toW"+std::to_string(s.second);
+        case toE: return "toE"+std::to_string(s.second);
+        case toL: return "toL"+std::to_string(s.second);
+        case toD: return "toD"+std::to_string(s.second);
         case IDLE: return "IDLE";
         default: {
             assert(false);
@@ -313,19 +366,19 @@ int DynaSwitch::get_dest_index(Request req){
     } 
 }
 
-bool DynaSwitch::neighborIsFull(Direction direction){
+bool DynaSwitch::neighborIsFull(Direction direction, int channel){
     switch(direction){
         case N:
-            return neighborN->receiveQueues[S].is_full();
+            return neighborN->receiveQueues[S][channel].is_full();
             break;
         case S:
-            return neighborS->receiveQueues[N].is_full();
+            return neighborS->receiveQueues[N][channel].is_full();
             break;
         case W:
-            return neighborW->receiveQueues[E].is_full();
+            return neighborW->receiveQueues[E][channel].is_full();
             break;
         case E:
-            return neighborE->receiveQueues[W].is_full();
+            return neighborE->receiveQueues[W][channel].is_full();
             break;
         case L:
             //return localReceiveBuffer.is_full();
@@ -342,23 +395,24 @@ bool DynaSwitch::neighborIsFull(Direction direction){
 }
 
 
-void DynaSwitch::push2Neighbor(Request req, Direction direction){
-    assert(!neighborIsFull(direction));
+void DynaSwitch::push2Neighbor(Request req, Direction direction, int channel){
+    assert(!neighborIsFull(direction, channel));
     switch(direction){
         case N:
-            neighborN->next->receiveQueues[S].push(req);
+            neighborN->next->receiveQueues[S][channel].push(req);
             break;
         case S:
-            neighborS->next->receiveQueues[N].push(req);
+            neighborS->next->receiveQueues[N][channel].push(req);
             break;
         case W:
-            neighborW->next->receiveQueues[E].push(req);
+            neighborW->next->receiveQueues[E][channel].push(req);
             break;
         case E:
-            neighborE->next->receiveQueues[W].push(req);
+            neighborE->next->receiveQueues[W][channel].push(req);
             break;
         case L:
-            next->localReceiveBuffer.push_back(req);
+            assert(false);
+            //next->localReceiveBuffer.push_back(req);
             break;
         case D:
             this->dramReceiveBuffer.push(req);
@@ -384,45 +438,60 @@ Direction DynaSwitch::decode(Request req){
     else return Direction::L;
 }
 
-void DynaSwitch::setupConnection(Direction in, Direction out, int packets){
-    //assert(out!=Direction::L);
-    assert(!receiveQueues[in].empty());
-    assert(packetsRemaining[out]==0);
+void DynaSwitch::setupConnection(Direction in,int channelIn, Direction out, int channelOut, int packets){
+    assert(out!=Direction::L);
+    if(out==Direction::D) assert(channelOut==0);
+    assert(!receiveQueues[in][channelIn].empty());
+    assert(packetsRemaining[out][channelOut]==0);
     // this to avoid 2 input set up connection to same output
     //this->packetsRemaining[out]=packets;
-    connected[out] = true;
-    next->packetsRemaining[out]=packets;
-    next->connectStates[in] = (ConnectState)out;
+    connected[out][channelOut] = true;
+    next->packetsRemaining[out][channelOut]=packets;
+    next->connectStates[in][channelIn] = ConnectState((OutDirection)out,channelOut);
 }
 
 
-bool DynaSwitch::inputShouldSend(Direction in){
+bool DynaSwitch::inputShouldSend(Direction in, int c_in){
     bool shouldSend = false;
     //check connection
-    if(connectStates[in]!=IDLE && !receiveQueues[in].empty()){
+    Direction d_out = (Direction)connectStates[in][c_in].first;
+    int  c_out = connectStates[in][c_in].second;
+    if(connectStates[in][c_in].first!=IDLE && !receiveQueues[in][c_in].empty() && !isSent[d_out]){
         //check there are something left to send
-        if(packetsRemaining[(Direction)connectStates[in]]>0){
+        if(packetsRemaining[d_out][c_out]>0){
             //check target neighbor's rceive queue is not full
-            if(!neighborIsFull((Direction)connectStates[in])){
+            if(!neighborIsFull(d_out, c_out)){
                 shouldSend = true;
             }
         }
     }
     return shouldSend;
 }
+
+void DynaSwitch::inputSendFromDirection(Direction d_in){
+    for(int c_in=0; c_in<channelNumber; c_in++){
+        if(inputShouldSend(d_in, c_in)){
+            inputSend(d_in, c_in);
+            return;
+        }
+    }
+}
 //push front of input to the neighbor it is routed to
-void DynaSwitch::inputSend(Direction in){
-    assert(!receiveQueues[in].empty());
-    assert(connectStates[in]!=IDLE);
-    assert(packetsRemaining[(Direction)connectStates[in]]>0);
-    assert(!neighborIsFull((Direction)connectStates[in]));
-    push2Neighbor(receiveQueues[in].front(), (Direction)connectStates[in]);
-    next->receiveQueues[in].pop();
-    next->packetsRemaining[(Direction)connectStates[in]]--;
-    if(next->packetsRemaining[connectStates[in]]==0){
+void DynaSwitch::inputSend(Direction in, int c_in){
+    assert(!receiveQueues[in][c_in].empty());
+    assert(connectStates[in][c_in].first!=IDLE);
+    Direction d_out = (Direction)connectStates[in][c_in].first;
+    int  c_out = connectStates[in][c_in].second;
+    assert(packetsRemaining[d_out][c_out]>0);
+    assert(!neighborIsFull(d_out, c_out));
+    push2Neighbor(receiveQueues[in][c_in].front(), d_out, c_out);
+    next->receiveQueues[in][c_in].pop();
+    next->packetsRemaining[d_out][c_out]--;
+    isSent[d_out]=true;
+    if(next->packetsRemaining[d_out][c_out]==0){
     //if(packetsRemaining[connectStates[in]]==0){
-        next->connectStates[in]=IDLE;
-        connected[connectStates[in]]=false;
+        next->connectStates[in][c_in].first=IDLE;
+        connected[d_out][c_out]=false;
     }
 }
 

@@ -371,9 +371,10 @@ void MemoryTile::update_next(){
                     break;
                 case status_t::POPPING:
                     if(req.packets2Mesh>0){
-                        Request popped = ((MemoryChip*)_parent)->_DynaMesh->pop_data(req);
-                        assert(popped.type!=Request::Type::NOP);
-                        req.packets2Mesh--;
+                        int popped = ((MemoryChip*)_parent)->_DynaMesh->pop_data(req);
+                        if(popped){
+                            req.packets2Mesh--;
+                        }
                         next_state.status = status_t::POPPING;
                     }
                     else{
