@@ -9,21 +9,25 @@ int32_t gemm_outer(System* sys){
     Request *request;
     Config* cfg = sys->_config;
 
-    int matrixARowNum = 128*256;//128*256
-    int matrixAColNum = 256*8;//256*8
-    //int matrixAColNum = 8;
-    int matrixBRowNum = matrixAColNum;//256*8
-    int matrixBColNum = cfg->_num_regs_per_rf;//32
+    //int matrixARowNum = 128*256;//128*256
+    //int matrixAColNum = 256*8;//256*8
+    //int matrixBRowNum = matrixAColNum;//256*8
+    //int matrixBColNum = cfg->_num_regs_per_rf;//32
+
+    int matrixARowNum = 120*512;
+    int matrixAColNum = 256*8;
+    int matrixBRowNum = matrixAColNum;
+    int matrixBColNum = 32;
 
     int use_tiles = cfg->_ntiles_used;
     int dram_tile = cfg->_dramTile; //This specifies the location of the DRAM controller (0 implies core 0 is connected to DRAM controller)
-    PrecisionT::Precision precision_input = PrecisionT::INT8;
-    PrecisionT::Precision precision_multiply = PrecisionT::INT16;
-    PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
+    PrecisionT::Precision precision_input = PrecisionT::INT4;
+    PrecisionT::Precision precision_multiply = PrecisionT::INT8;
+    PrecisionT::Precision precision_accumulate = PrecisionT::INT16;
 
-    int basicMatrixARowNum = cfg->_nblocks*cfg->_ncols;//256*128
-    int basicMatrixAColNum = matrixAColNum;//256*8
-    int basicMatrixBRowNum = matrixAColNum;//256*8
+    int basicMatrixARowNum = cfg->_nblocks*cfg->_ncols;
+    int basicMatrixAColNum = matrixAColNum;
+    int basicMatrixBRowNum = matrixAColNum;
     int basicMatrixBColNum = min(cfg->_num_regs_per_rf, (cfg->_nrows-precision_input.bits()-precision_accumulate.bits())/precision_accumulate.bits());//6
     
     int partial_result_matrix_start_row = precision_input.bits();
