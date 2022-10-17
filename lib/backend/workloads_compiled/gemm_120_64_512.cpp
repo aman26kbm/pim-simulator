@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t gemm_compiled(System *sys) {
+int32_t gemm_120_64_512(System *sys) {
   void* _1 = nullptr;
   // int32_t compute_global_rf[2048], 0
   // int8_t a_global[512], 2048
@@ -86,5 +86,5 @@ int32_t gemm_compiled(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &_gemm_compiled__ = pimsim::registerFunc("gemm_compiled", gemm_compiled);
+static __attribute__((unused)) Registry::Entry &_gemm_120_64_512__ = pimsim::registerFunc("gemm_120_64_512", gemm_120_64_512);
 

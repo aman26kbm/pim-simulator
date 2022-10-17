@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t mv_compiled(System *sys) {
+int32_t mv_120_1024_128(System *sys) {
   void* _1 = nullptr;
   // int32_t c_global_rf[512], 0
   // int8_t a_global[128], 512
@@ -84,5 +84,5 @@ int32_t mv_compiled(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &_mv_compiled__ = pimsim::registerFunc("mv_compiled", mv_compiled);
+static __attribute__((unused)) Registry::Entry &_mv_120_1024_128__ = pimsim::registerFunc("mv_120_1024_128", mv_120_1024_128);
 
