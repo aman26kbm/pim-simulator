@@ -59,7 +59,8 @@ public:
     //...
     std::vector< std::vector< int >> packetsRemaining;
     std::vector< std::vector<bool>> connected;
-    std::vector<bool> isSent;
+    std::vector<bool> isSent;//an out direction is sent in this cycle
+    std::vector<int> currentChannel;//current channel to send from an in direction. Used for round-robin of inputSendFromDirection
 
     //assume each router has a receive buffer that is *infinitely large*
     // std::vector<Request> localReceiveBuffer;
@@ -106,10 +107,11 @@ private:
     int get_dest_index(Request req);
     Direction decode(Request req);
     void setupConnection(Direction in,int channelIn, Direction out, int channelOut, int packets);
+    void setupConnectionForInputChannel(Direction in,int channelIn, Direction out, int packets);
     bool neighborIsFull(Direction direction, int channel);
     void push2Neighbor(Request req, Direction direction, int channel);
     bool inputShouldSend(Direction in, int c_in);
-    void inputSendFromDirection(Direction in);
+    void inputSendFromDirection(Direction in);//round-robin in each cycle
     void inputSend(Direction in, int c_in);
     bool isMatch(Request bufferedReq, Request ReceiveReq);
     void tick_dram_phase();

@@ -13,7 +13,8 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
 
     this->cfg = cfg;
     this->channelNumber = cfg->_router_channel_number;
-    this->isSent =  std::vector<bool>(channelNumber,false);
+    this->isSent =  std::vector<bool>(IDLE,false);
+    this->currentChannel = std::vector<int>(BOUND, 0);
     //initialize receive queues
     // this->receiveQueues = new FixedQueue<Request>[Direction::BOUND];
     //initialize states
@@ -73,27 +74,52 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
     tgt->neighborS = src->neighborS;
     tgt->neighborW = src->neighborW;
     tgt->neighborE = src->neighborE;
+    tgt->isSent = src->isSent;
 }
 
 bool DynaSwitch::inject(Request req){
-    int availChannel = 0;
-    for(int c=0; c<channelNumber; c++){
-        if(!receiveQueues[L][c].is_full()) {
-            availChannel = c;
-            break;
-        }
+    // int availChannel = 0;
+    // bool found=false;
+    // for(int c=0; c<channelNumber; c++){
+    //     if(!receiveQueues[L][c].is_full()) {
+    //         availChannel = c;
+    //         found=true;
+    //         break;
+    //     }
+       
+    // } 
+    // if(!found){
+    //     #ifdef _ROUTER_DEBUG_OUTPUT_
+    //     printf("router (%d,%d) inject fail\n", myRow, myCol);
+    //     #endif
+
+    //     return false;
+    // }
+    // else{
+    //     next->receiveQueues[L][availChannel].push(req);
+
+    //     #ifdef _ROUTER_DEBUG_OUTPUT_
+    //     printf("router (%d,%d) inject success\n", myRow, myCol);
+    //     #endif
+
+    //     return true;
+    // }
+    if(!receiveQueues[L][0].is_full()){
+        next->receiveQueues[L][0].push(req);
+
+        #ifdef _ROUTER_DEBUG_OUTPUT_
+        printf("router (%d,%d) inject success\n", myRow, myCol);
+        #endif
+
+        return true;
+    }
+    else{
         #ifdef _ROUTER_DEBUG_OUTPUT_
         printf("router (%d,%d) inject fail\n", myRow, myCol);
         #endif
-        return false;
+
+        return false;        
     }
-    next->receiveQueues[L][availChannel].push(req);
-
-    #ifdef _ROUTER_DEBUG_OUTPUT_
-    printf("router (%d,%d) inject success\n", myRow, myCol);
-    #endif
-
-    return true;
 }
 
 
@@ -118,17 +144,8 @@ void DynaSwitch::tick(){
                         setupConnection(d,c_in,D,0, req.packets2Mesh);
                     }
                 }
-                if(downstream!=L){
-                    for(int c_out=0; c_out<channelNumber; c_out++){
-                        if(!connected[downstream][c_out]){
-                            setupConnection(d,c_in,downstream,c_out, req.packets2Mesh);
-                            // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
-                            // && req.requesting_load == true)
-                            //     setupConnection(d,downstream, 1);
-                            // else
-                            //     setupConnection(d,downstream, req.bits);
-                        }
-                    }
+                else if(downstream!=L){
+                    setupConnectionForInputChannel(d,c_in,downstream,req.packets2Mesh);
                 }
             }
         }
@@ -150,6 +167,7 @@ void DynaSwitch::tick(){
 }
 bool DynaSwitch::data_exist_in_d(Request req, Direction d){
     for(int c=0; c<channelNumber; c++){
+        if(receiveQueues[d][c].empty()) continue;
         Request thisReq = receiveQueues[d][c].front();
         if(isMatch(thisReq, req)) return true;
     } 
@@ -167,6 +185,7 @@ bool DynaSwitch::data_exist(Request req){
 
 bool DynaSwitch::pop_data_in_d(Request req, Direction d){
     for(int c=0; c<channelNumber; c++){
+        if(receiveQueues[d][c].empty()) continue;
         Request thisReq = receiveQueues[d][c].front();
         if(isMatch(thisReq, req)) {
             this->receiveQueues[d][c].pop();
@@ -438,6 +457,7 @@ Direction DynaSwitch::decode(Request req){
     else return Direction::L;
 }
 
+
 void DynaSwitch::setupConnection(Direction in,int channelIn, Direction out, int channelOut, int packets){
     assert(out!=Direction::L);
     if(out==Direction::D) assert(channelOut==0);
@@ -450,6 +470,19 @@ void DynaSwitch::setupConnection(Direction in,int channelIn, Direction out, int 
     next->connectStates[in][channelIn] = ConnectState((OutDirection)out,channelOut);
 }
 
+void DynaSwitch::setupConnectionForInputChannel(Direction in,int channelIn, Direction out, int packets){
+    for(int c_out=0; c_out<channelNumber; c_out++){
+        if(!connected[out][c_out]){
+            setupConnection(in,channelIn,out,c_out, packets);
+            return;
+            // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
+            // && req.requesting_load == true)
+            //     setupConnection(d,downstream, 1);
+            // else
+            //     setupConnection(d,downstream, req.bits);
+        }
+    }
+}
 
 bool DynaSwitch::inputShouldSend(Direction in, int c_in){
     bool shouldSend = false;
@@ -469,12 +502,33 @@ bool DynaSwitch::inputShouldSend(Direction in, int c_in){
 }
 
 void DynaSwitch::inputSendFromDirection(Direction d_in){
-    for(int c_in=0; c_in<channelNumber; c_in++){
-        if(inputShouldSend(d_in, c_in)){
-            inputSend(d_in, c_in);
-            return;
+    // for(int c_in=0; c_in<channelNumber; c_in++){
+    //     if(inputShouldSend(d_in, c_in)){
+    //         inputSend(d_in, c_in);
+    //         return;
+    //     }
+    // }
+    int c_in=currentChannel[d_in];
+    int iter = 0;
+    while(!inputShouldSend(d_in, c_in) && iter<channelNumber){
+        c_in++;
+        iter++;
+        if(c_in==channelNumber){
+            c_in = 0;
         }
     }
+    if(inputShouldSend(d_in, c_in)){
+        inputSend(d_in, c_in);
+        c_in++;
+        if(c_in==channelNumber){
+            c_in = 0;
+        }
+        currentChannel[d_in]=c_in;
+    }
+    else{
+        currentChannel[d_in]=c_in;
+    }
+    return;
 }
 //push front of input to the neighbor it is routed to
 void DynaSwitch::inputSend(Direction in, int c_in){

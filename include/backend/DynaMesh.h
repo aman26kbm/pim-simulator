@@ -17,7 +17,7 @@ public:
     DynaMesh(Config* cfg);
     bool receive_request(Request req);
     bool data_exist(Request req);
-    Request pop_data(Request req);
+    bool pop_data(Request req);
     void tick();
     bool is_finished();
 
