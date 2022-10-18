@@ -10,8 +10,10 @@
 
 int32_t gemv(System* sys)
 {
-    int matrix_row = 32768*1;//32768 * X
-    int matrix_col = 4096 *1;// 4096 * Y
+    //int matrix_row = 32768*1;//32768 * X
+    //int matrix_col = 4096 *1;// 4096 * Y
+    int matrix_row = 120*512;
+    int matrix_col = 256*8;
     Config* cfg = sys->_config;
     int use_tiles = cfg->_ntiles_used;
     int dram_tile = cfg->_dramTile;

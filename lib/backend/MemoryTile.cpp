@@ -54,7 +54,6 @@ MemoryTile::issueReq(Request& req)
         if (_values->_configuration == MemoryCharacteristics::Configuration::Bus) {
             assert(false);
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::HTree) {
-
             req.finish_time = cur_time + getReqTiming(req) ;
         } else if (_values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
@@ -133,6 +132,7 @@ MemoryTile::commitReq(Request& req)
         n_stores++;
     } else if ((req.type == Request::Type::RowAdd) 
               || (req.type == Request::Type::RowSub)
+              || (req.type == Request::Type::RowCompare)
               || (req.type == Request::Type::RowMul)
               || (req.type == Request::Type::RowBitwise)
               || (req.type == Request::Type::RowReduce)

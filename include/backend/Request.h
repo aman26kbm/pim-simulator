@@ -46,6 +46,14 @@ public:
                   //     requests.push_back(*request);
         RowSub,   //Same as above, but for Sub instead of Add
 
+        RowCompare, //Compare a multi-bit number stored over multiple rows with another multi-bit number stored over multiple rows.
+                    //This request should really have been 2 separate requests - Max and Min, but since they require the same
+                    //number of cycles, I've just provided one.
+                    //The operands have the same meaning as the RowAdd request.
+                    //addr, precision
+                    //The time taken by this request is specified in the MemoryCharacteristics.
+                    //Happens across all columns in a cram
+
         RowMul,   //Multiply multi-bit numbers stored over multiple rows. Bit 0 in row A, bit 1 in row A+1, ...
                   //The "addr" argument specifies the ID of the first row (contains bit 0 of the number)
                   //The time taken is specified to be X cycles in MemoryCharacteristics
@@ -276,7 +284,6 @@ public:
     static std::string print_name(Type type);
     int reqNo;
     
-    //int dram_words; //The number of dram interface sized words being loaded/stored in this request
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue
     TimeT start_time = 0; //The time at which the request is decoded and start waiting
     TimeT process_time = 0; //The time at which the request started to be processed (ie. actually executed by the tile)
@@ -290,13 +297,18 @@ public:
     //indicates if the htree is configured for this request. Value owned by htree.
     bool hTree_ready=false;
     bool mesh_ready=false;
-    int packets2Mesh = 0;
+    int dynaMeshHops = 0;  //num of hops in the mesh network
+    int packets2Mesh = 0;  //number of flits
     bool requesting_load = false;
     bool requesting_store = false;
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     int mesh_transfer_time=0;//only used for mesh. Indicates transfer time of a request
-    int DynaMesh_transfer_time=0;
+    int DynaMesh_transfer_time=0; //Not populated in the simulator
     bool send_receive_finished=false;
+    bool enableTransposeUnit = true; //this bit can be used to control whether we want the transpose unit in the DRAM controller to be enabled or not.
+                                     //it is enabled by default, but can be disabled when data doesn't need to be transposed on the way. For example,
+                                     //when you're sending contents that spilled from CRAMs or RF to the DRAM, or when you are loading weights from the DRAM.
+                                     //this is only relevant for dram related instructions. also, this is enabled by default.
 
     bool dram_ready=false;
 
@@ -317,6 +329,8 @@ public:
     void addOperand(AddrT addr, int size, PrecisionT::Precision precision=PrecisionT::INT8);
     void swapSrcDst();
     void setLocation(int chip, int tile, int block, int row, int col);
+    void disableTranspose(); //disable transpose unit for this request
+    void enableTranspose(); //enable transpose unit for this request
     //a request is load or store
     bool isChipDram();
     //a request is transferation between tiles

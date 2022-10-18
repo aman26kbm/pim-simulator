@@ -63,7 +63,9 @@ public:
     std::vector<int> currentChannel;//current channel to send from an in direction. Used for round-robin of inputSendFromDirection
 
     //assume each router has a receive buffer that is *infinitely large*
+
     // std::vector<Request> localReceiveBuffer;
+
     //buffers all dram requests
     FixedQueue<Request> dramReceiveBuffer;
 

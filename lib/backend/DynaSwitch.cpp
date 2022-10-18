@@ -174,6 +174,14 @@ bool DynaSwitch::data_exist_in_d(Request req, Direction d){
     return false;
 }
 
+// bool DynaSwitch::data_exist(Request req){
+//     for(int i=0; i<localReceiveBuffer.size(); i++){
+//         Request thisReq = localReceiveBuffer[i];
+//         if(isMatch(thisReq, req)) return true;
+//     }
+//     return false;
+// }
+
 bool DynaSwitch::data_exist(Request req){
     for(Direction d:{N,S,W,E,D}){
         if(data_exist_in_d(req, d)){
@@ -239,10 +247,7 @@ void DynaSwitch::print_remaining_packets(){
         }
     }
 }
-// void DynaSwitch::print_local_receive_buffer(){
-//     printf("local receive buffer: ");
-//     printf("%d ", (int)localReceiveBuffer.size());
-// }
+
 void DynaSwitch::print_dram_receive_buffer(){
     printf("dram receive buffer: ");
     printf("%d ", (int)dramReceiveBuffer.size());
@@ -278,7 +283,6 @@ bool DynaSwitch::is_finished(){
     }
     bool finished = receiveQueueEmpty 
     && noConnection
-    //&& localReceiveBuffer.empty()
     && dramReceiveBuffer.empty()
     && dram->is_finished();
     return finished;
@@ -419,15 +423,19 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction, int channel){
     switch(direction){
         case N:
             neighborN->next->receiveQueues[S][channel].push(req);
+            req.dynaMeshHops++;
             break;
         case S:
             neighborS->next->receiveQueues[N][channel].push(req);
+            req.dynaMeshHops++;
             break;
         case W:
             neighborW->next->receiveQueues[E][channel].push(req);
+            req.dynaMeshHops++;
             break;
         case E:
             neighborE->next->receiveQueues[W][channel].push(req);
+            req.dynaMeshHops++;
             break;
         case L:
             assert(false);

@@ -9,6 +9,8 @@ std::string Request::print_name(Type type) {
             case Type::RowRead: return        "RowRead";
             case Type::RowWrite: return        "RowWrite";
             case Type::RowAdd: return        "RowAdd";
+            case Type::RowSub: return        "RowSub";
+            case Type::RowCompare: return        "RowCompare";
             case Type::RowMul: return        "RowMul";
             case Type::RowBitwise: return        "RowBitwise";
             case Type::ColBitwise: return        "ColBitwise";
@@ -80,7 +82,6 @@ std::string Request::print_name(Type type) {
     Request::Request(const Request& req){
         reqNo = req.reqNo;
         type = req.type;
-        //dram_words = req.dram_words;
         arrive_time = req.arrive_time;
         start_time = req.start_time;
         process_time = req.process_time;
@@ -97,12 +98,14 @@ std::string Request::print_name(Type type) {
         mail = req.mail;
         hTree_ready = req.hTree_ready;
         mesh_ready = req.mesh_ready;
+        dynaMeshHops = req.dynaMeshHops;
         packets2Mesh = req.packets2Mesh;
         requesting_load = req.requesting_load;
         requesting_store = req.requesting_store;
         mesh_transfer_time = req.mesh_transfer_time;
         DynaMesh_transfer_time = req.DynaMesh_transfer_time;
         send_receive_finished = req.send_receive_finished;
+        enableTransposeUnit = req.enableTransposeUnit;
         dram_ready =req.dram_ready;
         broadcast = req.broadcast;
     }
@@ -171,6 +174,7 @@ std::string Request::print_name(Type type) {
             case Type::RowAdd:
             case Type::RowAdd_CRAM_RF:
             case Type::RowSub:
+            case Type::RowCompare:
             case Type::RowMul:
             case Type::RowMul_CRAM_RF:
             case Type::RowBitwise:
@@ -191,6 +195,14 @@ std::string Request::print_name(Type type) {
             return true;
         else
             return false;
+    }
+
+    void Request::disableTranspose() {
+        enableTransposeUnit = false;
+    }
+
+    void Request::enableTranspose() {
+        enableTransposeUnit = true;
     }
 
 ////////////////////REQQUEUE//////////////////////////////////////////////

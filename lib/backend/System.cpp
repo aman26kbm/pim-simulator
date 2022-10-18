@@ -15,11 +15,18 @@ using namespace std;
 System::System(Config* config) : _config(config)
 {
 
+    std::string csv_filename;
     rstFile = fopen(config->get_rstfile().c_str(), "w");
-    std::string csv_filename = config->get_rstfile() + ".csv";
-    csv_file.open(csv_filename.c_str(), ios::out);
-    states_csv_file.open("states_count.csv",ios::out);
-    reqs_csv_file.open("reqs_stats.csv",ios::out);
+    csv_filename = config->get_rstfile() + ".req_count.csv";
+    req_count_csv_file.open(csv_filename.c_str(), ios::out);
+    csv_filename = config->get_rstfile() + ".cycle.csv";
+    cycle_csv_file.open(csv_filename.c_str(), ios::out);
+    csv_filename = config->get_rstfile() + ".states_count.csv";
+    states_csv_file.open(csv_filename.c_str(),ios::out);
+    csv_filename = config->get_rstfile() + ".reqs_stats.csv";
+    reqs_csv_file.open(csv_filename.c_str(),ios::out);
+    csv_filename = config->get_rstfile() + ".energy.csv";
+    energy_csv_file.open(csv_filename.c_str(),ios::out);
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
@@ -55,9 +62,11 @@ System::System(Config* config) : _config(config)
 System::~System()
 {
     fclose(rstFile);
-    csv_file.close();
+    cycle_csv_file.close();
+    req_count_csv_file.close();
     states_csv_file.close();
     reqs_csv_file.close();
+    energy_csv_file.close();
 }
 
 
@@ -427,6 +436,7 @@ int System::sendPimReq(Request& req)
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
         case Request::Type::RowSub:
+        case Request::Type::RowCompare:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
         case Request::Type::RowBitwise:
@@ -520,6 +530,7 @@ int System::sendRequest(Request& req)
         case Request::Type::RowAdd:
         case Request::Type::RowAdd_CRAM_RF:
         case Request::Type::RowSub:
+        case Request::Type::RowCompare:
         case Request::Type::RowMul:
         case Request::Type::RowMul_CRAM_RF:
         case Request::Type::RowBitwise:
@@ -651,9 +662,11 @@ void System::finish()
         }
     }
 
-    generate_csv();
+    generate_req_count_csv();
+    generate_cycle_csv();
     generate_states_csv();
     generate_req_states_csv();
+    generate_energy_csv();
 
 }
 

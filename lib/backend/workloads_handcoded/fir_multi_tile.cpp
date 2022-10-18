@@ -1,6 +1,7 @@
 // tvm target: c -keys=cpu -link-params=0
 #define TVM_EXPORTS
 #include <cstdint>
+#include <cmath>
 
 #include "backend/System.h"
 /////////////////////////////////////////////////////////////
@@ -13,45 +14,47 @@ int32_t fir_multi_tile(System* sys)
     Request *request;
     Config* cfg = sys->_config;
 
-    int size_input = 256*128*128;
-    int size_filter = 257;
+    //int size_input = 256*128*128;
+    //int size_filter = 257;
+
+    int size_input = 120*256*512;
+    int size_filter = 256;
 
     PrecisionT::Precision precision_input = PrecisionT::INT16;
-    PrecisionT::Precision precision_multiply = PrecisionT::INT32;
-    PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
+    PrecisionT::Precision precision_multiply = PrecisionT::INT16;
+    PrecisionT::Precision precision_accumulate = PrecisionT::INT16;
 
     int use_tiles = cfg->_ntiles_used;
     int dram_tile = 0; //This specifies the location of the DRAM controller (0 implies tile 0 is connected to DRAM controller)
 
-    
-    //We have 256*128*128 elements in the input
-    //We have a 128*128 mesh. Each array will store 256 elements. So, each core will store 256*128 elements.
+    //Hardware config: 120 cores, each core has 256 crams, each cram has 256x256 geometry
+
+    //We have 120*256*512 elements in the input
+    //Each core will store 256*256 elements first.
     //But we have to waste the last `size_filter` worth of elements in the right most array in each tile.
-    //Core 0 will load elements 0 to 256*128-1. It will evaluate answers 0 to 1*256*128-1-257 (where 257 is the filter_size)
-    //Core 1 will load elements 1*256*128-257 to 2*256*128-1-257. It will evaluate answers 1*256*128-257 to 2*256*128-1-2*257
-    //Core 2 will load elements  2*256*128-2*257 to 3*256*128-1-2*257. It will evaluate answers 2*256*128-2*257 to 3*256*128-1-3*257
+    //Core 0 will load elements 0 to 256*256-1. It will evaluate answers 0 to 1*256*256-1-256 (where 256 is the filter_size)
+    //Core 1 will load elements 1*256*256-256 to 2*256*256-1-256. It will evaluate answers 1*256*256-256 to 2*256*256-1-2*256
+    //Core 2 will load elements  2*256*256-2*256 to 3*256*256-1-2*256. It will evaluate answers 2*256*256-2*256 to 3*256*256-1-3*256
 
-    //Core N will load elements  (N)*256*128-(N)*257 to (N+1)*256*128-1-(N)*257. It will evaluate answers (N)*256*128-(N)*257 to (N+1)*256*128-1-(N+1)*257
+    //Core N will load elements  (N)*256*256-(N)*256 to (N+1)*256*256-1-(N)*256. It will evaluate answers (N)*256*256-(N)*256 to (N+1)*256*256-1-(N+1)*256
 
-    //When N=127:
-    //Core 127 will load elements  (127)*256*128-(127)*257 to (127+1)*256*128-1-(127)*257. It will evaluate answers (127)*256*128-(127)*257 to (127+1)*256*128-1-(127+1)*257
+    //When N=119:
+    //Core 119 will load elements  (119)*256*256-(119)*256 to (119+1)*256*256-1-(119)*256. It will evaluate answers (119)*256*256-(119)*256 to (119+1)*256*256-1-(119+1)*256
 
-    //Total elements were 256*128*128. We have loaded upto 128*256*128-1-127*257.
-    //Elements left to load = 127*257+1 = 32640
-    //Space in one core = 128*256 = 32768
-    //So, all the elements we have can fit in one core.
+    //Total elements were 120*256*512. We have loaded upto 120*256*256-1-119*256 = 7833855
+    //Elements left to load = 15728640 - 7833855 = 7894785
+    //We can do the same around again...
+    //Then we will be left with 7894785 - 7833855 = 60930
+    //One tile can take 256*256 = 65536 elements
+    //So, the leftover 60930 elements can be loaded into one tile.
 
-    //But this one core (core "128") will load elements  (128)*256*128-(128)*257 to (128+1)*256*128-1-(128)*257. It will evaluate answers (128)*256*128-(128)*257 to (128+1)*256*128-1-(128+1)*257
-    //Now, 32768-32640 = 128
-    //This core will load the last 32760 elements (and 128 zeroes, assuming the data is padded in DRAM)
-    //It will calculate the answers for 32768-257 = 32511 elements.
+    int elements_in_1_tile = 256 * 256;
+    int elements_loaded_in_all_tiles = cfg->_ntiles_used * cfg->_nblocks * cfg->_ncols - cfg->_ntiles_used * size_filter;
+    int num_iterations = size_input / elements_loaded_in_all_tiles;
+    int elements_left = size_input % elements_loaded_in_all_tiles;
 
-    //So, we still have 32640-32511 = 129 answers left. We will have to load last 129 values (and zeroes) in core 129.
-    //Core 129 will finish it all.
-
-    //Core 128 and Core 129 are basically core 0 and core 1, but in the second time slot.
-
-    //Let's express spatial calculation in cores 0 through 127 first
+    //Let's express spatial calculation in cores 0 through 119 first
+    for(int iterations=0; iterations<=num_iterations; iterations++) {
     for(int tile=0; tile<use_tiles; tile++) {
         //Now we load inputs from DRAM
         //Currently, we're assuming just one load is enough.
@@ -138,9 +141,13 @@ int32_t fir_multi_tile(System* sys)
 
         requests.push_back(*request);
     }
+    }
+
+    //How many more tiles do we need
+    int num_tiles_needed = ceil(elements_left / elements_in_1_tile);
 
     //Now for core 128 and 129, which are basically core 0 and core 1
-    for(int tile=0; tile<2; tile++) {
+    for(int tile=0; tile<num_tiles_needed; tile++) {
         //Now we load inputs from DRAM
         //Currently, we're assuming just one load is enough.
         //Only one input in each column across all tiles.

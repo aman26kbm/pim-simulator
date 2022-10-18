@@ -111,4 +111,5 @@ MemoryComponent::finishReq(Request& req)
     req_cnt[int(req.type)]++;    
     req_proctime[int(req.type)] += req.finish_time - req.process_time;
     req_waittime[int(req.type)] += req.process_time - req.start_time;
+    req_energy[int(req.type)] += _values->getDynamicEnergy(req);
 }
