@@ -67,20 +67,7 @@ int32_t conv2d(System* sys)
     // When we do this sequentially for oc, we don't need to load and shift activations again.. we have enough rows to keep them around for subsequent values of oc
 
     //Parameters:
-    /*
-    int n = 32;
-    int ih = 7;
-    int iw = 7;
-    int ic = 512;
-    int stride = 1; //not used below; so if you want a different stride, change the code below first.
-    int rh = 3;
-    int rw = 3;
-    int rc = 512;
-    int oc = 512;
-    int oh = 7;
-    int ow = 7;
-    */
-    int n = 1;
+    int n = 2;
     int ih = 7;
     int iw = 7;
     int ic = 256;
