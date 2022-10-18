@@ -68,8 +68,8 @@ int32_t conv2d(System* sys)
 
     //Parameters:
     int n = 2;
-    int ih = 7;
-    int iw = 7;
+    int ih = 9;
+    int iw = 9;
     int ic = 256;
     int stride = 1; //not used below; so if you want a different stride, change the code below first.
     int rh = 3;
@@ -94,7 +94,7 @@ int32_t conv2d(System* sys)
         for(int m = 0; m < ceil((float)rc/(float)cfg->_nblocks); m++) {
             for(int j=0; j < rh; j++) {
                 
-                if (oc==0) {
+                if (l==0) {
                 //Now we load inputs from DRAM
                 //Currently, we're assuming just one load is enough.
                 //Only one input in each column across all tiles.
@@ -140,7 +140,7 @@ int32_t conv2d(System* sys)
                     requests.push_back(*request);
                     }
 
-                    if (oc==0) {
+                    if (l==0) {
                     //Shift the inputs by 1 column to the left.
                     //No need to loop for each bit. That is a part of the RowShift instruction's semantics.
                     request = new Request(Request::Type::RowShift);
