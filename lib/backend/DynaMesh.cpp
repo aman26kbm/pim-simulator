@@ -63,7 +63,7 @@ bool DynaMesh::data_exist(Request req){
     return switch_list[dest].data_exist(req);
 }
     
-Request DynaMesh::pop_data(Request req){
+bool DynaMesh::pop_data(Request req){
     int dest = get_dest_index(req);
     return switch_list[dest].pop_data(req);
 }

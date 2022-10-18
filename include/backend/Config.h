@@ -31,6 +31,7 @@ public:
     //not used by hTree
     int _wordsize_tile2tile;
     //not used
+    int _router_channel_number;
     int _wordsize_dram;
     int _dram_row_open_latency;
     int _dram_bank_number;

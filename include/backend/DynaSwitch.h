@@ -16,7 +16,7 @@ enum Direction {D,L,N,S,W,E,BOUND};
 Direction operator ++ (Direction& d, int);
 std::string toString(Direction d);
 
-enum ConnectState {
+enum OutDirection {
     toD,
     toL,
     toN,
@@ -25,6 +25,8 @@ enum ConnectState {
     toE,
     IDLE
 };
+typedef std::pair<OutDirection, int> ConnectState ;
+
 std::string toString(ConnectState d);
 
 class DynaSwitch{
@@ -38,40 +40,32 @@ public:
     Config* cfg;
 
     int bitwidth;
+    int channelNumber;
 
     int remainingStore=0;
     //receive queues
-    // receiveQueues[0]: FixedQueue<Request*,2> queueN;
-    // receiveQueues[1]: FixedQueue<Request*,2> queueS;
-    // receiveQueues[2]: FixedQueue<Request*,2> queueW;
-    // receiveQueues[3]: FixedQueue<Request*,2> queueE;
-    // receiveQueues[4]: FixedQueue<Request*,2> queueL;
-    // receiveQueues[5]: FixedQueue<Request*,INT32_MAX> queueD;
-    std::vector< FixedQueue<Request> > receiveQueues;
+    // receiveQueues[N][0]~ receiveQueues[N][7]
+    // receiveQueues[S][0]~ receiveQueues[S][7]...
+    std::vector< std::vector< FixedQueue<Request> > > receiveQueues;
 
 
     //output port that an input port is connected to by crossbar
-    // ConnectStates[0]: connectStateN;
-    // ConnectStates[1]: connectStateS;
-    // ConnectStates[2]: connectStateW;
-    // ConnectStates[3]: connectStateE;
-    // ConnectStates[4]: connectStateL;
-    // ConnectStates[5]: connectStateDram;
-    std::vector< ConnectState > connectStates;
+    // ConnectStates[N][0]~ConnectStates[N][7]
+    // ConnectStates[S][0]~ConnectStates[S][7]...
+    std::vector< std::vector< ConnectState > > connectStates;
 
     //number of packets left to send to output port in the current request
-    // packetsRemaining[0]: int packets2N;
-    // packetsRemaining[1]: int packets2S;
-    // packetsRemaining[2]: int packets2W;
-    // packetsRemaining[3]: int packets2E;
-    // packetsRemaining[4]: int packets2L;
-    // packetsRemaining[5]: int packets2D;
-    std::vector< int > packetsRemaining;
-    std::vector<bool> connected;
+    // packetsRemaining[N][0]: int packets2N_0;
+    //...
+    std::vector< std::vector< int >> packetsRemaining;
+    std::vector< std::vector<bool>> connected;
+    std::vector<bool> isSent;//an out direction is sent in this cycle
+    std::vector<int> currentChannel;//current channel to send from an in direction. Used for round-robin of inputSendFromDirection
 
     //assume each router has a receive buffer that is *infinitely large*
-    //std::vector<Request> localReceiveBuffer;
-    int localReceiveBufferSize=0;
+
+    // std::vector<Request> localReceiveBuffer;
+
     //buffers all dram requests
     FixedQueue<Request> dramReceiveBuffer;
 
@@ -90,13 +84,15 @@ public:
     void tick();
     //given a receive/load request, find if the requested data is present in local receive buffer
     bool data_exist(Request req);
-    Request pop_data(Request req);
+    bool data_exist_in_d(Request req, Direction d);
+    bool pop_data(Request req);
+    bool pop_data_in_d(Request req, Direction d);
 
     void print_my_status();
     void print_receive_Queues();
     void print_connection();
     void print_remaining_packets();
-    void print_local_receive_buffer();
+    //void print_local_receive_buffer();
     void print_dram_receive_buffer();
 
     //the next state of this switch
@@ -112,11 +108,13 @@ private:
     int get_source_index(Request req);
     int get_dest_index(Request req);
     Direction decode(Request req);
-    void setupConnection(Direction in, Direction out, int packets);
-    bool neighborIsFull(Direction direction);
-    void push2Neighbor(Request req, Direction direction);
-    bool inputShouldSend(Direction in);
-    void inputSend(Direction in);
+    void setupConnection(Direction in,int channelIn, Direction out, int channelOut, int packets);
+    void setupConnectionForInputChannel(Direction in,int channelIn, Direction out, int packets);
+    bool neighborIsFull(Direction direction, int channel);
+    void push2Neighbor(Request req, Direction direction, int channel);
+    bool inputShouldSend(Direction in, int c_in);
+    void inputSendFromDirection(Direction in);//round-robin in each cycle
+    void inputSend(Direction in, int c_in);
     bool isMatch(Request bufferedReq, Request ReceiveReq);
     void tick_dram_phase();
     
