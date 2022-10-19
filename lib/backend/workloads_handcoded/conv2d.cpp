@@ -32,9 +32,9 @@ int32_t conv2d(System* sys)
     //Number of outputs of a convolution are: n * oh * ow * oc * rh * rw * rc
 
     //The data layout and data parallelization strategy is:
-    // n * oh * ow are handled by different cores (spatial across cores)
+    // n * oc are handled by different cores (spatial across cores)
     // rh * rw is handled sequentially within a core (see below for the sequence)
-    // oc is handled sequentially (loop around rh*rw)
+    // oh * ow is within an array
     //
     // rc is spread across arrays in each core
     // So, we load one rc in each array (assume that rc=256 for now, 256 arrays in a core)
@@ -88,13 +88,13 @@ int32_t conv2d(System* sys)
     }
 
     //We assume that DRAM has the data present in the layout we expect
-    for (int i = 0; i < ceil((float)(n * oh * ow)/(float)use_tiles); i++) {
+    for (int i = 0; i < ceil((float)(n * oc)/(float)use_tiles); i++) {
         for(int tile=0; tile<use_tiles; tile++) {
-        for(int l=0; l < oc; l++) {
+        //for(int l=0; l < oc; l++) {
         for(int m = 0; m < ceil((float)rc/(float)cfg->_nblocks); m++) {
             for(int j=0; j < rh; j++) {
                 
-                if (l==0) {
+                //if (l==0) {
                 //Now we load inputs from DRAM
                 //Currently, we're assuming just one load is enough.
                 //Only one input in each column across all tiles.
@@ -102,7 +102,7 @@ int32_t conv2d(System* sys)
                 request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //dst
                 request->addOperand(sys->DRAM_ADDR, 0, precision_input); //src
                 requests.push_back(*request);
-                }
+                //}
 
                 if (iw*ih > cfg->_ncols) {
                     cout<<"If we have more elements than number of bitlines, more rowloads are needed"<<std::endl;
@@ -140,14 +140,14 @@ int32_t conv2d(System* sys)
                     requests.push_back(*request);
                     }
 
-                    if (l==0) {
+                    //if (l==0) {
                     //Shift the inputs by 1 column to the left.
                     //No need to loop for each bit. That is a part of the RowShift instruction's semantics.
                     request = new Request(Request::Type::RowShift);
                     request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
                     request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //dst
                     requests.push_back(*request);
-                    }
+                    //}
                 }
             }
 
@@ -166,12 +166,12 @@ int32_t conv2d(System* sys)
         request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dst
 
         }
+        //}
         }
-        }
-    }
     
-    for (unsigned int i = 0; i < requests.size(); i++)
-        sys->sendRequest(requests[i]);
+        for (unsigned int i = 0; i < requests.size(); i++)
+            sys->sendRequest(requests[i]);
+    }
 }
 
 /////////////////////////////////////////////////////////////
