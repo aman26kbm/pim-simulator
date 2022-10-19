@@ -342,6 +342,7 @@ void System::generate_energy_csv(){
     double tot_row_load_rf_energy = 0;
     double tot_row_store_energy = 0;
     double tot_row_shift_energy = 0;
+    double tot_noc_dynamic_energy = 0;
     double tot_dynamic_energy = 0;
     double tot_static_energy = 0;
 
@@ -372,10 +373,19 @@ void System::generate_energy_csv(){
             }
         }
 
+        //NoC energy is not included in requests
+        for (int j = 0; j < _chips[i]->_DynaMesh->switch_list.size(); j++) {
+            DynaSwitch* cur_switch;
+            cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
+            cout<<"Number of hops = "<<cur_switch->numHops<<std::endl;
+            tot_noc_dynamic_energy += cur_switch->numHops * _chips[i]->_values->config->_wordsize_tile2tile * _chips[i]->_values->E_NoC;
+        }
+
+        tot_dynamic_energy += tot_noc_dynamic_energy;
         tot_static_energy = _chips[i]->_values->getStaticEnergy();
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 15;
+        const int NUM_CSV_COLUMNS = 16;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "Total_RowAdd_Energy",
@@ -391,6 +401,7 @@ void System::generate_energy_csv(){
                           "Total_RowLoad_RF_Energy",
                           "Total_RowStore_Energy",
                           "Total_RowShift_Energy",
+                          "Total_NoC_Dynamic_Energy",
                           "Total_Dynamic_Energy",
                           "Total_Static_Energy"
         };
@@ -416,6 +427,7 @@ void System::generate_energy_csv(){
                 tot_row_load_rf_energy,
                 tot_row_store_energy,
                 tot_row_shift_energy,
+                tot_noc_dynamic_energy,
                 tot_dynamic_energy,
                 tot_static_energy
         };
