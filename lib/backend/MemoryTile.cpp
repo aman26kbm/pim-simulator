@@ -324,7 +324,12 @@ void MemoryTile::update_next(){
                     req.start_time = _time;
              
                     if(req.type == Request::Type::TileReceive) {
-                        req.packets2Mesh =  ceil(req.bits * _values->config->_ncols * _values->config->_nblocks / (float)_values->config->_wordsize_tile2tile);
+                        if(req.size_list[0]==0){
+                            req.packets2Mesh =  ceil(req.bits * _values->config->_ncols * _values->config->_nblocks / (float)_values->config->_wordsize_tile2tile);
+                        }
+                        else{
+                            req.packets2Mesh =  ceil(req.bits * req.size_list[0] / (float)_values->config->_wordsize_tile2tile);
+                        }
                         next_state.status = status_t::RECEIVE_WAIT; 
                     }
                     else {
@@ -355,7 +360,12 @@ void MemoryTile::update_next(){
                         next_state.status = status_t::IDLE;
                     }
                     else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF){
-                        req.packets2Mesh =  ceil(req.bits * _values->config->_ncols * _values->config->_nblocks /(float) _values->config->_wordsize_tile2tile);
+                        if(req.size_list[0]==0){
+                            req.packets2Mesh =  ceil(req.bits * _values->config->_ncols * _values->config->_nblocks / (float)_values->config->_wordsize_tile2tile);
+                        }
+                        else{
+                            req.packets2Mesh =  ceil(req.bits * req.size_list[0] / (float)_values->config->_wordsize_tile2tile);
+                        }
                         next_state.status = status_t::RECEIVE_WAIT;
                     }
                     
@@ -390,9 +400,19 @@ void MemoryTile::update_next(){
                         if (req.type == Request::Type::TileSend
                         || req.type == Request::Type::RowStore
                         || req.type == Request::Type::RowStore_RF){
-                            req.packets2Mesh = ceil(req.bits * _values->config->_ncols * _values->config->_nblocks / (float)_values->config->_wordsize_tile2tile);
+                            if(req.size_list[0]==0){
+                                req.packets2Mesh =  ceil(req.bits * _values->config->_ncols * _values->config->_nblocks / (float)_values->config->_wordsize_tile2tile);
+                            }
+                            else{
+                                req.packets2Mesh =  ceil(req.bits * req.size_list[0] / (float)_values->config->_wordsize_tile2tile);
+                            }
                             req.requesting_store = true;
                             next_state.status = status_t::SEND_WAIT;   
+                        }
+                        else if(req.type == Request::Type::RowStore_RF){
+                            req.packets2Mesh = 1;
+                            req.requesting_store = true;
+                            next_state.status = status_t::SEND_WAIT; 
                         }
                         //req.requesting_load == false means it is the first time load request enters REQ_MODE
                         else if((req.type == Request::Type::RowLoad

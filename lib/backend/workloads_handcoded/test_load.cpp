@@ -11,12 +11,12 @@ int32_t test_load_simple(System* sys){
 
     PrecisionT::Precision precision = PrecisionT::INT8;
     int use_tiles = sys->_config->_ntiles_used;
-
+    int size = 128*4;
     
     int myTile = use_tiles-1;
     request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->getAddress(myTile,0,0), 0, precision);//src
-    request->addOperand(sys->DRAM_ADDR, 0, precision);//DST
+    request->addOperand(sys->getAddress(myTile,0,0), size, precision);//src
+    request->addOperand(sys->DRAM_ADDR, size, precision);//DST
     requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)

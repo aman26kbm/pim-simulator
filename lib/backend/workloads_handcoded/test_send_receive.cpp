@@ -11,18 +11,19 @@ int32_t test_send_receive_simple(System* sys){
 
     PrecisionT::Precision precision = PrecisionT::INT8;
     int use_tiles = sys->_config->_ntiles_used;
+    int size = 128*4;
 
     for(int tile=0; tile < use_tiles; tile+=2){
         int myTile = (tile) % use_tiles;
         
         request = new Request(Request::Type::TileSend);
-        request->addOperand(sys->getAddress(myTile,0,0), 0, precision);//src
-        request->addOperand(sys->getAddress(myTile+1,0,0), 0, precision);//DST
+        request->addOperand(sys->getAddress(myTile,0,0), size, precision);//src
+        request->addOperand(sys->getAddress(myTile+1,0,0),size, precision);//DST
         requests.push_back(*request);
 
         request = new Request(Request::Type::TileReceive);
-        request->addOperand(sys->getAddress(myTile,0,0), 0, precision);//src
-        request->addOperand(sys->getAddress(myTile+1,0,0), 0, precision);//DST
+        request->addOperand(sys->getAddress(myTile,0,0), size, precision);//src
+        request->addOperand(sys->getAddress(myTile+1,0,0), size, precision);//DST
         requests.push_back(*request);
         
     }

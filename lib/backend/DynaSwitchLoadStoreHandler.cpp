@@ -28,7 +28,14 @@ void DynaSwitch::tick_dram_phase(){
         //pop the front of dramReceiveBuffer and dram receives it
         if(dramReceiveBuffer.front().type == Request::Type::RowLoad || dramReceiveBuffer.front().type == Request::Type::RowLoad_RF) {
             dramReceiveBuffer.front().requesting_load = false;
-            dramReceiveBuffer.front().packets2Mesh = ceil(dramReceiveBuffer.front().bits * cfg->_ncols * cfg->_nblocks /(float)cfg->_wordsize_tile2tile);
+            //dramReceiveBuffer.front().packets2Mesh = ceil(dramReceiveBuffer.front().bits * cfg->_ncols * cfg->_nblocks /(float)cfg->_wordsize_tile2tile);
+            if(dramReceiveBuffer.front().size_list[0]==0){
+                dramReceiveBuffer.front().packets2Mesh = ceil(dramReceiveBuffer.front().bits * cfg->_ncols * cfg->_nblocks /(float)cfg->_wordsize_tile2tile);
+            }
+            else{
+                dramReceiveBuffer.front().packets2Mesh =  ceil(dramReceiveBuffer.front().bits * dramReceiveBuffer.front().size_list[0] / (float)cfg->_wordsize_tile2tile);
+            }
+            
             if(dram->receive_request(dramReceiveBuffer.front())){
                 dramReceiveBuffer.pop();
             }

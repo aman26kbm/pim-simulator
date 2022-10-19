@@ -32,11 +32,20 @@ int32_t gemm_outer(System* sys){
     
     int partial_result_matrix_start_row = precision_input.bits();
     int accumulate_row = precision_input.bits()+basicMatrixBColNum*precision_accumulate.bits();
+    std::cout<<(int)ceil(matrixARowNum/(float)basicMatrixARowNum)<<endl;
+    std::cout<<(int)ceil(matrixBColNum/(float)basicMatrixBColNum)<<endl;
+    std::cout<<use_tiles<<endl;
+    std::cout<<matrixAColNum/use_tiles<<endl;
+    std::cout<<basicMatrixBColNum<<endl;
     for(int i=0; i<(int)ceil(matrixARowNum/(float)basicMatrixARowNum); i++){//1
+        
         for(int j=0; j<(int)ceil(matrixBColNum/(float)basicMatrixBColNum); j++){//6
+            
             for(int iter_tile=dram_tile; iter_tile<dram_tile+use_tiles; iter_tile++){//1
+                
                 int tile = iter_tile % cfg->_ntiles;
                 for(int basicA_col_idx=0; basicA_col_idx<matrixAColNum; basicA_col_idx+=use_tiles){//striped basicA columns X basicB rows //16
+                    
                     request = new Request(Request::Type::RowLoad);
                     request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //cram addr
                     request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
