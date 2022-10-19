@@ -111,5 +111,7 @@ MemoryComponent::finishReq(Request& req)
     req_cnt[int(req.type)]++;    
     req_proctime[int(req.type)] += req.finish_time - req.process_time;
     req_waittime[int(req.type)] += req.process_time - req.start_time;
-    req_energy[int(req.type)] += _values->getDynamicEnergy(req);
+    //Can't do energy evaluation here because finishReq may not be called at the right time.
+    //Also, finishReq may be called multiple times for a request.
+    //req_energy[int(req.type)] += _values->getDynamicEnergy(req);
 }

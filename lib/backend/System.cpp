@@ -619,6 +619,7 @@ void System::run(std::string workload)
         _time++;
         #ifdef PRINT_TICK
         //printf("current time: %d\n", _time);
+        //if((_time%10000==0) || (_time==1) || (finishedReqNo==totalReqNo))
         cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
         #endif
         //check if all chips finished
@@ -662,8 +663,9 @@ void System::finish()
         }
     }
 
-    generate_req_count_csv();
-    generate_cycle_csv();
+    //Remove the two functions below because the variables they use to collect stats are not maintained any more
+    //generate_req_count_csv();
+    //generate_cycle_csv();
     generate_states_csv();
     generate_req_states_csv();
     generate_energy_csv();

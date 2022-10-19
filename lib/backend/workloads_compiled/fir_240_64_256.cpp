@@ -12,7 +12,7 @@ int32_t fir_240_64_256(System *sys) {
   // int16_t c_global_rf[512], 512
   // int16_t a_global[512], 1024
   for (int32_t x_outer = 0; x_outer < 240; ++x_outer) {
-    for (int32_t x_inner_outer_inner = 0; x_inner_outer_inner < 2; ++x_inner_outer_inner) {
+    for (int32_t x_inner_outer_inner = 0; x_inner_outer_inner < 256; ++x_inner_outer_inner) {
       void* _2 = (void*) "c.global[ramp(0, 1, 256)] = x256((int16)0)/*skip-init*/";
       for (int32_t rv_v_outer = 0; rv_v_outer < 4; ++rv_v_outer) {
         // cram-array axis
@@ -20,8 +20,8 @@ int32_t fir_240_64_256(System *sys) {
           int32_t rv = 0;
           {
             Request request(Request::Type::RowLoad);
-            request.addOperand(sys->getAddress(x_outer, 0, 32), 0, PrecisionT::Precision{0, 16, 0} /*CRAM*/);
-            request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /*DRAM*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 32), 256, PrecisionT::Precision{0, 16, 0} /*CRAM*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 0), 256, PrecisionT::Precision{0, 16, 0} /*DRAM*/);
             sys->sendRequest(request);
           }
           int32_t _3 = rv_v_outer * 64;
@@ -31,16 +31,16 @@ int32_t fir_240_64_256(System *sys) {
           if (_6) {
             {
               Request request(Request::Type::RowLoad_RF);
-              request.addOperand(x_outer * 32, 0, PrecisionT::Precision{0, 16, 0} /*RegisterFile*/);
-              request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /*DRAM*/);
+              request.addOperand(x_outer * 32, 64, PrecisionT::Precision{0, 16, 0} /*RegisterFile*/);
+              request.addOperand(sys->getAddress(x_outer, 0, 0), 256, PrecisionT::Precision{0, 16, 0} /*DRAM*/);
               sys->sendRequest(request);
             }
           }
           {
             Request request(Request::Type::RowMul_CRAM_RF);
-            request.addOperand(sys->getAddress(x_outer, 0, 16), 0, PrecisionT::Precision{0, 16, 0} /**/);
-            request.addOperand(sys->getAddress(x_outer, 0, 32), 0, PrecisionT::Precision{0, 16, 0} /*a.global[ramp(0, 1, 256)]*/);
-            request.addOperand(x_outer * 32, 0, PrecisionT::Precision{0, 16, 0} /*b[((rv.v.outer*64) + rv)]*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 16), 256, PrecisionT::Precision{0, 16, 0} /**/);
+            request.addOperand(sys->getAddress(x_outer, 0, 32), 256, PrecisionT::Precision{0, 16, 0} /*a.global[ramp(0, 1, 256)]*/);
+            request.addOperand(x_outer * 32, 64, PrecisionT::Precision{0, 16, 0} /*b[((rv.v.outer*64) + rv)]*/);
             sys->sendRequest(request);
           }
         }
@@ -49,23 +49,23 @@ int32_t fir_240_64_256(System *sys) {
         #undef max
           {
             Request request(Request::Type::BlockSend_Receive);
-            request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /*c.global[ramp(0, 1, 256)]*/);
-            request.addOperand(sys->getAddress(x_outer, 0, 16), 0, PrecisionT::Precision{0, 16, 0} /*c.global.rf[ramp((rv.v.inner*256), 1, 256)]*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 0), 4, PrecisionT::Precision{0, 16, 0} /*c.global[ramp(0, 1, 256)]*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 16), 4, PrecisionT::Precision{0, 16, 0} /*c.global.rf[ramp((rv.v.inner*256), 1, 256)]*/);
             sys->sendRequest(request);
           }
           {
             Request request(Request::Type::RowAdd);
-            request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /**/);
-            request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /*c.global[ramp(0, 1, 256)]*/);
-            request.addOperand(sys->getAddress(x_outer, 0, 16), 0, PrecisionT::Precision{0, 16, 0} /*c.global.rf[ramp((rv.v.inner*256), 1, 256)]*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 0), 4, PrecisionT::Precision{0, 16, 0} /**/);
+            request.addOperand(sys->getAddress(x_outer, 0, 0), 4, PrecisionT::Precision{0, 16, 0} /*c.global[ramp(0, 1, 256)]*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 16), 4, PrecisionT::Precision{0, 16, 0} /*c.global.rf[ramp((rv.v.inner*256), 1, 256)]*/);
             sys->sendRequest(request);
           }
         }
       }
       {
         Request request(Request::Type::RowStore);
-        request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /*DRAM*/);
-        request.addOperand(sys->getAddress(x_outer, 0, 0), 0, PrecisionT::Precision{0, 16, 0} /*CRAM*/);
+        request.addOperand(sys->getAddress(x_outer, 0, 0), 4, PrecisionT::Precision{0, 16, 0} /*DRAM*/);
+        request.addOperand(sys->getAddress(x_outer, 0, 0), 4, PrecisionT::Precision{0, 16, 0} /*CRAM*/);
         sys->sendRequest(request);
       }
     }
