@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t conv_120_256_256(System *sys) {
+int32_t conv_60_512_256(System *sys) {
   void* _1 = nullptr;
   // int32_t Conv2dOutput_rf[1024], 0
   // int32_t Conv2dOutput_repl_global[1024], 1024
@@ -17,26 +17,29 @@ int32_t conv_120_256_256(System *sys) {
       void* _2 = (void*) "Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)] = x256(0)/*skip-init*/";
       for (int32_t ry = 0; ry < 3; ++ry) {
         for (int32_t rx = 0; rx < 3; ++rx) {
-          {
-            Request request(Request::Type::RowMul_CRAM_RF);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 16, 0} /**/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*w[ramp((((ry*196608) + (rx*65536)) + (rc.outer*256)), 1, 256)]*/);
-            request.addOperand(ax0_ax1_fused_ax2_fused * 32, 256, PrecisionT::Precision{0, 8, 0} /*x[(((((((ax0.ax1.fused.ax2.fused/49)*20736) + (((ax0.ax1.fused.ax2.fused % 49)/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax0.ax1.fused.ax2.fused % 7)*256)) + rc.outer)]*/);
-            sys->sendRequest(request);
-          }
-          {
-            Request request(Request::Type::RowAdd);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 32, 0} /**/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 32, 0} /**/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)]*/);
-            sys->sendRequest(request);
+          bool _3 = rc_outer < 256;
+          if (_3) {
+            {
+              Request request(Request::Type::RowMul_CRAM_RF);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 16, 0} /**/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*w[ramp((((ry*196608) + (rx*65536)) + (rc.outer*256)), 1, 256)]*/);
+              request.addOperand(ax0_ax1_fused_ax2_fused * 32, 512, PrecisionT::Precision{0, 8, 0} /*x[(((((((ax0.ax1.fused.ax2.fused/49)*20736) + (((ax0.ax1.fused.ax2.fused % 49)/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax0.ax1.fused.ax2.fused % 7)*256)) + rc.outer)]*/);
+              sys->sendRequest(request);
+            }
+            {
+              Request request(Request::Type::RowAdd);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 32, 0} /**/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 32, 0} /**/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)]*/);
+              sys->sendRequest(request);
+            }
           }
         }
       }
     }
-    void* _3 = (void*) "Conv2dOutput.repl.global[ramp(0, 1, 256)] = x256(0)/*skip-init*/";
+    void* _4 = (void*) "Conv2dOutput.repl.global[ramp(0, 1, 256)] = x256(0)/*skip-init*/";
     #define max(a,b) ((a)>(b)?(a):(b))
-    for (int32_t rc_outer_v = 256, rc_outer_v_cnt = 1; rc_outer_v >= 1; rc_outer_v -= max(rc_outer_v / 2, 1), ++rc_outer_v_cnt) {
+    for (int32_t rc_outer_v = 512, rc_outer_v_cnt = 1; rc_outer_v >= 1; rc_outer_v -= max(rc_outer_v / 2, 1), ++rc_outer_v_cnt) {
     #undef max
       {
         Request request(Request::Type::BlockSend_Receive);
@@ -64,5 +67,5 @@ int32_t conv_120_256_256(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &_conv_120_256_256__ = pimsim::registerFunc("conv_120_256_256", conv_120_256_256);
+static __attribute__((unused)) Registry::Entry &_conv_60_512_256__ = pimsim::registerFunc("conv_60_512_256", conv_60_512_256);
 
