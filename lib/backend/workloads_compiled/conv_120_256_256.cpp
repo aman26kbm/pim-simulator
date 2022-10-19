@@ -17,6 +17,36 @@ int32_t conv_120_256_256(System *sys) {
       void* _2 = (void*) "Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)] = x256(0)/*skip-init*/";
       for (int32_t ry = 0; ry < 3; ++ry) {
         for (int32_t rx = 0; rx < 3; ++rx) {
+          int32_t _3 = ax0_ax1_fused_ax2_fused / 49;
+          int32_t _4 = _3 * 20736;
+          int32_t _5 = ax0_ax1_fused_ax2_fused % 49;
+          int32_t _6 = _5 / 7;
+          int32_t _7 = _6 * 2304;
+          int32_t _8 = _4 + _7;
+          int32_t _9 = ry * 2304;
+          int32_t _10 = _8 + _9;
+          int32_t _11 = rx * 256;
+          int32_t _12 = _10 + _11;
+          int32_t _13 = ax0_ax1_fused_ax2_fused % 7;
+          int32_t _14 = _13 * 256;
+          int32_t _15 = _12 + _14;
+          int32_t _16 = _15 + rc_outer;
+          int32_t _17 = _16 % 128;
+          bool _18 = _17 == 0;
+          if (_18) {
+            {
+              Request request(Request::Type::RowLoad_RF);
+              request.addOperand(ax0_ax1_fused_ax2_fused * 32, 256, PrecisionT::Precision{0, 8, 0} /*RegisterFile*/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*DRAM*/);
+              sys->sendRequest(request);
+            }
+          }
+          {
+            Request request(Request::Type::RowLoad);
+            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*DRAM*/);
+            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*w[ramp((((ry*196608) + (rx*65536)) + (rc.outer*256)), 1, 256)]*/);
+            sys->sendRequest(request);
+          }
           {
             Request request(Request::Type::RowMul_CRAM_RF);
             request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 16, 0} /**/);
@@ -34,7 +64,7 @@ int32_t conv_120_256_256(System *sys) {
         }
       }
     }
-    void* _3 = (void*) "Conv2dOutput.repl.global[ramp(0, 1, 256)] = x256(0)/*skip-init*/";
+    void* _19 = (void*) "Conv2dOutput.repl.global[ramp(0, 1, 256)] = x256(0)/*skip-init*/";
     #define max(a,b) ((a)>(b)?(a):(b))
     for (int32_t rc_outer_v = 256, rc_outer_v_cnt = 1; rc_outer_v >= 1; rc_outer_v -= max(rc_outer_v / 2, 1), ++rc_outer_v_cnt) {
     #undef max

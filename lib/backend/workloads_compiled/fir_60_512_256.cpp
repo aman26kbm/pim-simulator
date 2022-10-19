@@ -15,7 +15,7 @@ int32_t fir_60_512_256(System *sys) {
     // cram-array axis
     {
       int32_t x_inner_outer_outer = 0;
-      for (int32_t x_inner_outer_inner = 0; x_inner_outer_inner < 4; ++x_inner_outer_inner) {
+      for (int32_t x_inner_outer_inner = 0; x_inner_outer_inner < 512; ++x_inner_outer_inner) {
         void* _2 = (void*) "c.global[ramp(0, 1, 256)] = x256((int16)0)/*skip-init*/";
         // cram-array axis
         {

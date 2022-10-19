@@ -12,7 +12,7 @@ int32_t fir_240_64_256(System *sys) {
   // int16_t c_global_rf[512], 512
   // int16_t a_global[512], 1024
   for (int32_t x_outer = 0; x_outer < 240; ++x_outer) {
-    for (int32_t x_inner_outer_inner = 0; x_inner_outer_inner < 2; ++x_inner_outer_inner) {
+    for (int32_t x_inner_outer_inner = 0; x_inner_outer_inner < 256; ++x_inner_outer_inner) {
       void* _2 = (void*) "c.global[ramp(0, 1, 256)] = x256((int16)0)/*skip-init*/";
       for (int32_t rv_v_outer = 0; rv_v_outer < 4; ++rv_v_outer) {
         // cram-array axis
