@@ -161,7 +161,6 @@ MemoryTile::outputStats(FILE* rstFile)
 
 //state machine
 void MemoryTile::update_next(){
-        next_state = cur_state;
         if(_values->_configuration == MemoryCharacteristics::Configuration::HTree 
         || _values->_configuration == MemoryCharacteristics::Configuration::Mesh){
             switch(cur_state.status){
@@ -309,7 +308,6 @@ void MemoryTile::update_next(){
             //             || req.type == Request::Type::RowStore
             //             || req.type == Request::Type::RowLoad_RF
             //             || req.type == Request::Type::RowStore_RF);
-             next_state = cur_state;
 
             switch(cur_state.status){
                 case status_t::IDLE:
@@ -449,6 +447,9 @@ void MemoryTile::update_current(){
         }
     }
     cur_state = next_state;
+    if (next_state.status == status_t::IDLE) {
+        req_energy[int(req.type)] += _values->getDynamicEnergy(req);
+    }
 }
 
 bool MemoryTile::isFinished(){

@@ -75,6 +75,7 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
     tgt->neighborW = src->neighborW;
     tgt->neighborE = src->neighborE;
     tgt->isSent = src->isSent;
+    tgt->numHops = src->numHops;
 }
 
 bool DynaSwitch::inject(Request req){
@@ -423,19 +424,23 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction, int channel){
     switch(direction){
         case N:
             neighborN->next->receiveQueues[S][channel].push(req);
-            req.dynaMeshHops++;
+            this->numHops++;
+            //req.dynaMeshHops++;
             break;
         case S:
             neighborS->next->receiveQueues[N][channel].push(req);
-            req.dynaMeshHops++;
+            this->numHops++;
+            //req.dynaMeshHops++;
             break;
         case W:
             neighborW->next->receiveQueues[E][channel].push(req);
-            req.dynaMeshHops++;
+            this->numHops++;
+            //req.dynaMeshHops++;
             break;
         case E:
             neighborE->next->receiveQueues[W][channel].push(req);
-            req.dynaMeshHops++;
+            this->numHops++;
+            //req.dynaMeshHops++;
             break;
         case L:
             assert(false);
