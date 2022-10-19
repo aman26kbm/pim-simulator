@@ -298,6 +298,9 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
     int compute_cycles = 0;
     int rows = 0;
     int cols = 0;
+
+    if (req.type == Request::Type::NOP) return 0;
+
     if (req.size_list[0]==0) { 
         cols = config->get_nblocks() * config->get_ncols();
     }

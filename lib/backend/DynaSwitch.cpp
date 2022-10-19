@@ -424,22 +424,22 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction, int channel){
     switch(direction){
         case N:
             neighborN->next->receiveQueues[S][channel].push(req);
-            this->numHops++;
+            neighborN->next->numHops++;
             //req.dynaMeshHops++;
             break;
         case S:
             neighborS->next->receiveQueues[N][channel].push(req);
-            this->numHops++;
+            neighborS->next->numHops++;
             //req.dynaMeshHops++;
             break;
         case W:
             neighborW->next->receiveQueues[E][channel].push(req);
-            this->numHops++;
+            neighborW->next->numHops++;
             //req.dynaMeshHops++;
             break;
         case E:
             neighborE->next->receiveQueues[W][channel].push(req);
-            this->numHops++;
+            neighborE->next->numHops++;
             //req.dynaMeshHops++;
             break;
         case L:
