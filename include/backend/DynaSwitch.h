@@ -66,6 +66,9 @@ public:
 
     // std::vector<Request> localReceiveBuffer;
 
+    //Number of hops through this switch
+    int numHops = 0;
+
     //buffers all dram requests
     FixedQueue<Request> dramReceiveBuffer;
 

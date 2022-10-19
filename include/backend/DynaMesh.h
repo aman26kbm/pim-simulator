@@ -8,10 +8,6 @@
 namespace pimsim {
 
 class DynaMesh{
-private:
-    Config* cfg;
-    std::vector<DynaSwitch> switch_list;
-
 
 public:
     DynaMesh(Config* cfg);
@@ -20,6 +16,8 @@ public:
     bool pop_data(Request req);
     void tick();
     bool is_finished();
+    Config* cfg;
+    std::vector<DynaSwitch> switch_list;
 
 //Utils
 private:
