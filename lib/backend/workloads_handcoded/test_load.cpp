@@ -46,7 +46,7 @@ int32_t test_load_all(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    PrecisionT::Precision precision = PrecisionT::INT8;
+    PrecisionT::Precision precision = PrecisionT::INT4;
     int use_tiles = sys->_config->_ntiles_used;
     int total_round = 4;
 
