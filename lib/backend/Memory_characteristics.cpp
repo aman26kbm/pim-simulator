@@ -408,9 +408,9 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + \
                     rows * E_ArrayRd * config->get_nblocks() + \
-                    config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree + \
+                    config->_htreeTileDepth * rows * cols * E_HTree + \
                     //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC +
-                    config->_ntiles * (config->_htreeTileDepth * rows * config->get_nblocks() * E_HTree);
+                    (config->_ntiles-1) * (config->_htreeTileDepth * rows * cols * E_HTree);
             break;
         case Request::Type::TileReceive_BroadCast: 
             //Instruction controller + multiple Array writes (rest in TileSend_Broadcast)
