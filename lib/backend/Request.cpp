@@ -21,9 +21,9 @@ std::string Request::print_name(Type type) {
             case Type::RowShift: return        "RowShift";
 
             case Type::BlockSend_Receive: return        "BlockSend_Receive";
+            case Type::BlockBroadCast: return "BlockBroadCast";
             case Type::TileSend: return        "TileSend";
             case Type::TileReceive: return        "TileReceive";
-            case Type::BlockBroadCast: return  "BlockBroadCast";
             case Type::TileSend_BroadCast: return "TileSend_BroadCast";
             case Type::TileReceive_BroadCast: return "TileReceive_BroadCast";
             case Type::ChipSend_Receive: return        "ChipSend_Receive";

@@ -14,6 +14,7 @@ ReqStatsEntry::ReqStatsEntry(Request req, int startTime){
 
 std::array<std::string, HEADER_LENGTH> ReqStatsEntry::reqStatsHeader(){
         std::array<std::string,HEADER_LENGTH> header_row = {
+                        "ReqName",
                         "Chip",
                         "Tile",
                         "ReqNo",
