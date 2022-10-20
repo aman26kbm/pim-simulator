@@ -378,7 +378,7 @@ void System::generate_energy_csv(){
             DynaSwitch* cur_switch;
             cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
             
-            cout<<"Number of hops = "<<cur_switch->numHops<<std::endl;
+            //cout<<"Number of hops = "<<cur_switch->numHops<<std::endl;
             tot_noc_dynamic_energy += cur_switch->numHops * _chips[i]->_values->config->_wordsize_tile2tile * _chips[i]->_values->E_NoC;
         }
 
