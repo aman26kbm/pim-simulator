@@ -45,12 +45,12 @@ public:
     const double E_RfRd = 4.22e-12;
     //Energy in J spent per RF write
     const double E_RfWr = 4.22e-12;
-    //Energy in J spent in transfer a flit (1024 bits) from one router to another (1 hop)
-    const double E_NoC = 2.85e-12;
+    //Energy in J spent in transfer a bit from one router to another (1 hop)
+    const double E_NoC = 2.85e-12 / 1024;
     //Energy in J spent in tranfering a bit from one port of switch to another
     const double E_HTree = 5.1e-15;
     //Energy in J spent in tranfering a bit from one port of switch to another
-    const double E_HTreeRoot = 5.04e-15;
+    const double E_HTreeRoot = 5.04e-15; //Same as HTree so not used in calculations
     //Energy in J spent in transposing data per bit (average)
     const double E_Transpose = 2.45e-12;
     //Energy in J spent in DRAM controller
