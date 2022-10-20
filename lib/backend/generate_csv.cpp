@@ -372,11 +372,12 @@ void System::generate_energy_csv(){
                 tot_dynamic_energy += cur_tile->req_energy[i];
             }
         }
-
+        cout<<std::endl;
         //NoC energy is not included in requests
         for (int j = 0; j < _chips[i]->_DynaMesh->switch_list.size(); j++) {
             DynaSwitch* cur_switch;
             cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
+            
             cout<<"Number of hops = "<<cur_switch->numHops<<std::endl;
             tot_noc_dynamic_energy += cur_switch->numHops * _chips[i]->_values->config->_wordsize_tile2tile * _chips[i]->_values->E_NoC;
         }
