@@ -170,6 +170,7 @@ int32_t conv2d_ocvec(System* sys)
             request = new Request(Request::Type::RowStore);
             request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), cfg->_ncols, precision_accumulate); //src
             request->addOperand(sys->DRAM_ADDR, cfg->_ncols, precision_accumulate); //dst
+            requests.push_back(*request);
         }
     }
 
