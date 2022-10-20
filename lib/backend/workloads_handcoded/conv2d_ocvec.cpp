@@ -5,8 +5,40 @@
 
 #include "backend/System.h"
 /////////////////////////////////////////////////////////////
-// FIR filter micro benchmark
+// Conv2d microbenchmark
 /////////////////////////////////////////////////////////////
+
+void broadcast_conv2d(System* sys, Config* cfg, PrecisionT::Precision precision_input){
+    std::vector<Request> requests;
+    Request *request;
+    for(int col=1; col<cfg->_meshWidth; col++){
+        request = new Request(Request::Type::TileSend);
+        request->addOperand(sys->getAddress(0,0,0), 256*32, precision_input); //src
+        request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //dst
+        requests.push_back(*request);
+
+        request = new Request(Request::Type::TileReceive);
+        request->addOperand(sys->getAddress(0,0,0), 256*32, precision_input); //src
+        request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //dst
+        requests.push_back(*request);
+    }
+
+    for(int col=0; col<cfg->_meshWidth; col++){
+        for(int row=1; row<cfg->_meshHeight; row++){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //src
+            request->addOperand(sys->getAddress(row * cfg->_meshWidth + col,0,0), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //src
+            request->addOperand(sys->getAddress(row * cfg->_meshWidth + col,0,0), 256*32, precision_input); //dst
+            requests.push_back(*request);        
+        }
+    }
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sys->sendRequest(requests[i]);
+}
 
 int32_t conv2d_ocvec(System* sys)
 {
@@ -79,22 +111,35 @@ int32_t conv2d_ocvec(System* sys)
     int oh = 7;
     int ow = 7;
 
+    //We need to load filters only once and then we can broadcast them to other cores
+    for(int i=0; i<rh*rw; i++){
+        for (int j=0; j<(ceil((float)(oc*rc)/(float)(cfg->_ncols*cfg->_nblocks))); j++) {
+            request = new Request(Request::Type::RowLoad);
+            request->addOperand(sys->getAddress(0,0,i*precision_input.bits()),0, precision_input); //cram addr
+            request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
+            requests.push_back(*request);
+        
+            broadcast_conv2d(sys,cfg,precision_input);
+        }
+    }
+
     //We assume that DRAM has the data present in the layout we expect
     for (int i = 0; i < ceil((float)(n * oh * ow)/(float)use_tiles); i++) {
         for (int tile=0; tile<use_tiles; tile++) {
             for( int j=0; j < rw * rh; j++) {
 
-            //Load input values from DRAM into RAMs
+            //Load input values from DRAM into RAMs. Only load 256 values and then multicast them
             request = new Request(Request::Type::RowLoad);
-            request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //dst
-            request->addOperand(sys->DRAM_ADDR, 0, precision_input); //src
+            request->addOperand(sys->getAddress(tile,0,0), cfg->_ncols, precision_input); //dst
+            request->addOperand(sys->DRAM_ADDR, cfg->_ncols, precision_input); //src
             requests.push_back(*request);
 
+            //Already loaded filters above
             //Now we load filters from DRAM
-            request = new Request(Request::Type::RowLoad);
-            request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //dst
-            request->addOperand(sys->DRAM_ADDR, 0, precision_input); //src
-            requests.push_back(*request);
+            //request = new Request(Request::Type::RowLoad);
+            //request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //dst
+            //request->addOperand(sys->DRAM_ADDR, 0, precision_input); //src
+            //requests.push_back(*request);
 
             //Now, multiply input with filter
             request = new Request(Request::Type::RowMul);
@@ -125,6 +170,7 @@ int32_t conv2d_ocvec(System* sys)
             request = new Request(Request::Type::RowStore);
             request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), cfg->_ncols, precision_accumulate); //src
             request->addOperand(sys->DRAM_ADDR, cfg->_ncols, precision_accumulate); //dst
+            requests.push_back(*request);
         }
     }
 
