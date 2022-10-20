@@ -486,6 +486,11 @@ void DynaSwitch::setupConnection(Direction in,int channelIn, Direction out, int 
 void DynaSwitch::setupConnectionForInputChannel(Direction in,int channelIn, Direction out, int packets){
     for(int c_out=0; c_out<channelNumber; c_out++){
         if(!connected[out][c_out]){
+            //find an empty queue
+            if(out==N && !neighborN->receiveQueues[S][c_out].empty()) continue;
+            if(out==S && !neighborS->receiveQueues[N][c_out].empty()) continue;
+            if(out==W && !neighborW->receiveQueues[E][c_out].empty()) continue;
+            if(out==E && !neighborE->receiveQueues[W][c_out].empty()) continue;
             setupConnection(in,channelIn,out,c_out, packets);
             return;
             // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)
