@@ -218,9 +218,12 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::BlockBroadCast:  
         case Request::Type::BlockSend_Receive: 
         case Request::Type::ChipSend_Receive: 
+            time = T_CLK * getPrecisionBits(req);
+            break;
         case Request::Type::TileSend_BroadCast:
         case Request::Type::TileReceive_BroadCast: 
-            time = T_CLK * getPrecisionBits(req);
+            std::cout<<"TileSend_BroadCast and TileReceive_BroadCast are not supported."<<std::endl;
+            assert(0);
             break;
         case Request::Type::RowAdd:  
         case Request::Type::RowSub: 
@@ -284,6 +287,10 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::PopCountReduce_RF:
         //TODO: how to calculate cycles?
             time = T_CLK*(req.precision_list[0].bits()+config->_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
+            break;
+        case Request::Type::Barrier: 
+            std::cout<<"Barrier is not supported."<<std::endl;
+            assert(0);
             break;
         default:
             time = T_CLK;
@@ -403,6 +410,8 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
                     rows * E_ArrayWr * (config->get_nblocks()-1);
             break;
         case Request::Type::TileSend_BroadCast: 
+            std::cout<<"TileSend_BroadCast and TileReceive_BroadCast are not supported."<<std::endl;
+            assert(0);
             //Instruction controller + Array read + H-tree + NoC + multiple H-trees (rest in TileReceive_Broadcast)
             //NoC energy is not accounted for here
             rows = getPrecisionBits(req);
@@ -413,6 +422,8 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
                     (config->_ntiles-1) * (config->_htreeTileDepth * rows * cols * E_HTree);
             break;
         case Request::Type::TileReceive_BroadCast: 
+            std::cout<<"TileSend_BroadCast and TileReceive_BroadCast are not supported."<<std::endl;
+            assert(0);
             //Instruction controller + multiple Array writes (rest in TileSend_Broadcast)
             rows = getPrecisionBits(req);
             energy = E_InstrCtrl + rows * E_ArrayWr * config->get_nblocks() * (config->_ntiles_used-1);
@@ -502,14 +513,16 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
         }
         //Synchronization requests only generate sync packets, not data packets.
         //So, their energy consumption is pretty low and not modeled.
+        case Request::Type::Barrier: 
+            std::cout<<"Barrier is not supported."<<std::endl;
+            assert(0);
+            break;
         case Request::Type::Signal: 
         case Request::Type::Wait: 
-        case Request::Type::Barrier: 
         case Request::Type::ResetSync: 
         case Request::Type::NOP: 
             energy = 0;
             break;
-
         default:
             energy = 0;
             cout<<"Error: Unsupported request received"<<std::endl;
