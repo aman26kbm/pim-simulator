@@ -2,6 +2,7 @@
 #include "Status.h"
 #include "Request.h"
 
+/*
 void System::generate_req_count_csv(){
     ///////////////////////////////
     //Generating csv file
@@ -225,9 +226,10 @@ void System::generate_cycle_csv(){
         cycle_csv_file << std::endl;
     }
 }
+*/
 
 void System::generate_states_csv(){
-///////////////////////////////
+    ///////////////////////////////
     //Generating csv file
     ///////////////////////////////
 
@@ -290,63 +292,9 @@ void System::generate_states_csv(){
         }
     }
 }
-std::string print_req_name(Request::Type type) {
-        switch(type) {
-            case Request::Type::RowSet: return        "RowSet";
-            case Request::Type::RowReset: return        "RowReset";
-            case Request::Type::RowRead: return        "RowRead";
-            case Request::Type::RowWrite: return        "RowWrite";
-            case Request::Type::RowAdd: return        "RowAdd";
-            case Request::Type::RowSub: return        "RowSub";
-            case Request::Type::RowCompare: return        "RowCompare";
-            case Request::Type::RowMul: return        "RowMul";
-            case Request::Type::RowBitwise: return        "RowBitwise";
-            case Request::Type::ColBitwise: return        "ColBitwise";
-            case Request::Type::RowSearch: return        "RowSearch";
-            case Request::Type::ColSearch: return        "ColSearch";
-            case Request::Type::RowReduce: return        "RowReduce";
-            case Request::Type::RowReduce_WithinTile: return        "RowReduce_WithinTile";
-            case Request::Type::RowShift: return        "RowShift";
 
-            case Request::Type::BlockSend_Receive: return        "BlockSend_Receive";
-            case Request::Type::TileSend: return        "TileSend";
-            case Request::Type::TileReceive: return        "TileReceive";
-            case Request::Type::BlockBroadCast: return  "BlockBroadCast";
-            case Request::Type::TileSend_BroadCast: return "TileSend_BroadCast";
-            case Request::Type::TileReceive_BroadCast: return "TileReceive_BroadCast";
-            case Request::Type::ChipSend_Receive: return        "ChipSend_Receive";
-            case Request::Type::SystemRow2Row: return        "SystemRow2Row";
-            case Request::Type::SystemRow2Col: return        "SystemRow2Col";
-            case Request::Type::SystemCol2Row: return        "SystemCol2Row";
-            case Request::Type::SystemCol2Col: return        "SystemCol2Col";
-            case Request::Type::SystemLookUpTable: return        "SystemLookUpTable";
-            case Request::Type::SystemRowStore: return        "SystemRowStore";
-            case Request::Type::SystemColRead: return        "SystemColRead";
-            case Request::Type::SystemRowLoad: return        "SystemRowLoad";
-            case Request::Type::SystemColWrite: return        "SystemColWrite";
-
-            case Request::Type::RowLoad: return        "RowLoad";
-            case Request::Type::RowStore: return        "RowStore";
-            case Request::Type::Signal: return        "Signal";
-            case Request::Type::Wait: return        "Wait";
-            case Request::Type::Barrier: return        "Barrier";
-            case Request::Type::ResetSync: return        "ResetSync";
-            case Request::Type::NOP: return        "NOP";
-
-            case Request::Type::RowLoad_RF: return        "RowLoad_RF";
-            case Request::Type::RowStore_RF: return        "RowStore_RF";
-            case Request::Type::RowMul_CRAM_RF: return        "RowMul_CRAM_RF";
-            case Request::Type::RowAdd_CRAM_RF: return        "RowAdd_CRAM_RF";
-            case Request::Type::RowRead_RF: return        "RowRead_RF";
-            case Request::Type::RowWrite_RF: return        "RowWrite_RF";
-            case Request::Type::RowAdd_RF: return        "RowAdd_RF";
-            case Request::Type::RowSub_RF: return        "RowSub_RF";
-            case Request::Type::PopCountReduce_RF: return  "PopCountReduce_RF";
-            default: return        "None";
-        };
-    }
 void System::generate_req_states_csv(){
-///////////////////////////////
+    ///////////////////////////////
     //Generating csv file
     ///////////////////////////////
 
@@ -369,7 +317,9 @@ void System::generate_req_states_csv(){
                 //now the actual data
                 std::array<long unsigned int, ENTRY_LENGTH> value_row = tile->reqStats[k].reqStatsValue();
 
-                reqs_csv_file << workload <<","<< "reqName"<<","<<i<<","<<j<<",";
+                std::string reqName = Request::print_name((Request::Type)value_row[1]);
+
+                reqs_csv_file << workload <<","<<reqName<<","<<i<<","<<j<<",";
                 for (int i=0; i<value_row.size(); i++) {
                     reqs_csv_file << value_row[i] << "," ;
                 }
@@ -494,5 +444,53 @@ void System::generate_energy_csv(){
             energy_csv_file << value_row[i] << "," ;
         }
         energy_csv_file << std::endl;
+    }
+}
+
+void System::generate_router_hops_csv(){
+    ///////////////////////////////
+    //Generating csv file
+    ///////////////////////////////
+
+    const int NUM_CSV_COLUMNS = 7;
+    //header first
+    std::array<std::string, NUM_CSV_COLUMNS> header_row = {
+                      "Router_Row",
+                      "Router_Col",
+                      "Hops_North",
+                      "Hops_South",
+                      "Hops_West",
+                      "Hops_East",
+                      "Hops_Total"
+    };
+
+    router_hops_csv_file << "WorkloadName, Logfile,";
+    for (int i=0; i<header_row.size(); i++) {
+        router_hops_csv_file << header_row[i] << "," ;
+    }
+    router_hops_csv_file << std::endl;
+
+    //now the actual data
+    for (int i = 0; i < _config->_nchips; i++) {
+        for (int j = 0; j < _chips[i]->_DynaMesh->switch_list.size(); j++) {
+            DynaSwitch* cur_switch;
+            cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
+
+            std::array<int, NUM_CSV_COLUMNS> value_row = {
+                cur_switch->myRow,
+                cur_switch->myCol,
+                cur_switch->numHopsNorth,
+                cur_switch->numHopsSouth,
+                cur_switch->numHopsWest,
+                cur_switch->numHopsEast,
+                cur_switch->numHops
+            };
+
+            router_hops_csv_file << workload <<","<< this->_config->get_rstfile() <<",";
+            for (int i=0; i<value_row.size(); i++) {
+                router_hops_csv_file << value_row[i] << "," ;
+            }
+            router_hops_csv_file << std::endl;
+        }
     }
 }
