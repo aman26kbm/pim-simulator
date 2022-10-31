@@ -490,6 +490,11 @@ void System::decode(Request& req, int& chip, int& tile){
             req.setLocation(chip, tile, block, row, col);
             req.bits = req.precision_list[0].bits();
             break;
+        case Request::Type::Wait:
+            getLocation(req.addr_list[1], chip, tile, block, row, col);
+            req.setLocation(chip, tile, block, row, col);
+            req.bits =1;
+            break;
         default:
             getLocation(req.addr_list[0], chip, tile, block, row, col);
             req.setLocation(chip, tile, block, row, col);
@@ -695,4 +700,119 @@ Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(Syste
   return Registry::registeredSimulation()[ky];
 }
 
+}
+
+void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers){
+    std::vector<Request> requests;
+    Request *request;
+    int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
+    assert(tile<_config->_meshWidth);
+    int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
+    assert(block==0);
+    int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
+    for(int col=0; col<_config->_meshWidth; col++){
+        if(col==tile) continue;
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(tile,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(tile,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+        }
+    }
+
+    for(int col=0; col<_config->_meshWidth; col++){
+        for(int row=1; row<_config->_meshHeight; row++){
+            bool isReceiver = false;
+            for(int i:receivers){
+                if (row*_config->_meshWidth+col==i) isReceiver = true;
+            }
+            if(isReceiver){
+                request = new Request(Request::Type::TileSend);
+                request->addOperand(getAddress(col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);
+
+                request = new Request(Request::Type::TileReceive);
+                request->addOperand(getAddress(col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);      
+            }  
+        }
+    }
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+void System::broadcast_p2p(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers){
+    std::vector<Request> requests;
+    Request *request;
+    int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
+    assert(tile<_config->_meshWidth);
+    int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
+    assert(block==0);
+    int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
+    for(int col=tile+1; col<_config->_meshWidth; col++){
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(col-1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(col-1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+        }
+    }
+    for(int col=tile-1; col>=0; col--){
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(col+1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(col+1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+        }
+    }
+
+    for(int col=0; col<_config->_meshWidth; col++){
+        for(int row=1; row<_config->_meshHeight; row++){
+            bool isReceiver = false;
+            for(int i:receivers){
+                if (row*_config->_meshWidth+col==i) isReceiver = true;
+            }
+            if(isReceiver){
+                request = new Request(Request::Type::TileSend);
+                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);
+
+                request = new Request(Request::Type::TileReceive);
+                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);   
+            }     
+        }
+    }
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
 }

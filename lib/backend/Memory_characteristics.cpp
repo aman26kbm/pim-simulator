@@ -208,11 +208,14 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::TileSend: 
         case Request::Type::TileReceive: 
+        case  Request::Type::Signal:
+        case  Request::Type::Wait:
             if(config->_tile_interconnect == "htree")
                 time = hTreeTile::getCycles(req, config);
             else
                 time = T_CLK * getPrecisionBits(req);
             break;
+        
         case Request::Type::RowRead: 
         case Request::Type::RowWrite: 
         case Request::Type::BlockBroadCast:  

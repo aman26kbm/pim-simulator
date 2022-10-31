@@ -1,6 +1,7 @@
 // tvm target: c -keys=cpu -link-params=0
 #define TVM_EXPORTS
 #include <cstdint>
+#include <numeric>
 
 #include "backend/System.h"
 
@@ -61,6 +62,27 @@ int32_t test_broadcast(System* sys){
         sys->sendRequest(requests[i]);
 }
 
+int32_t test_broadcast_dmesh(System* sys){
+    PrecisionT::Precision p = PrecisionT::INT8;
+    for(int i=0; i<10; i++){
+        std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
+        std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
+        sys->broadcast(sys->getAddress(1,0,i),PrecisionT::INT8, v);
+    }
+}
+
+int32_t test_broadcast_dmesh_p2p(System* sys){
+    PrecisionT::Precision p = PrecisionT::INT8;
+    for(int i=0; i<10; i++){
+        std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
+        std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
+        sys->broadcast_p2p(sys->getAddress(1,0,i),PrecisionT::INT8, v);
+    }
+}
+
+
 
 
 static __attribute__((unused)) Registry::Entry &__test_broadcast__ = pimsim::registerFunc("test_broadcast", test_broadcast);
+static __attribute__((unused)) Registry::Entry &__test_broadcast_dmesh__ = pimsim::registerFunc("test_broadcast_dmesh", test_broadcast_dmesh);
+static __attribute__((unused)) Registry::Entry &__test_broadcast_dmesh_p2p__ = pimsim::registerFunc("test_broadcast_dmesh_p2p", test_broadcast_dmesh_p2p);

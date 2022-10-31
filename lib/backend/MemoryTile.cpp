@@ -119,7 +119,7 @@ MemoryTile::commitReq(Request& req)
 {
     if (req.type == Request::Type::BlockSend_Receive || req.type==Request::Type::BlockBroadCast) {
         n_intra_block_transfers++;
-    } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive) 
+    } else if ((req.type == Request::Type::TileSend) || (req.type == Request::Type::TileReceive || (req.type == Request::Type::Signal)|| (req.type == Request::Type::Wait)) 
     || (req.type == Request::Type::TileSend_BroadCast) || (req.type == Request::Type::TileReceive_BroadCast)) {
         n_inter_block_transfers++;
     } else if (req.type == Request::Type::RowRead || req.type == Request::Type::RowRead_RF) {
@@ -175,7 +175,7 @@ void MemoryTile::update_next(){
                     dest = (MemoryTile*)_parent->getDestTile(req);
                     source = (MemoryTile*)_parent->getSourceTile(req);
                     // if this request is tilesend/receive or blocksend/receive, give request to hTree/mesh and enter HTREE_WAIT / MESH_WAIT
-                    if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                    if (req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive || req.type == Request::Type::Signal || req.type == Request::Type::Wait
                     || req.type == Request::Type::BlockSend_Receive
                     || req.type == Request::Type::TileSend_BroadCast || req.type == Request::Type::TileReceive_BroadCast
                     || req.type == Request::Type::BlockBroadCast){
@@ -223,7 +223,7 @@ void MemoryTile::update_next(){
                     if(!req.hTree_ready){
                         next_state.status = status_t::HTREE_WAIT;
                     }
-                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive 
                         || req.type == Request::Type::BlockSend_Receive 
                         || req.type == Request::Type::RowLoad
                         || req.type == Request::Type::RowStore
@@ -241,7 +241,7 @@ void MemoryTile::update_next(){
                     if(!req.mesh_ready){
                         next_state.status = status_t::MESH_WAIT;
                     }
-                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive || req.type == Request::Type::Signal || req.type == Request::Type::Wait
                         || req.type == Request::Type::BlockSend_Receive 
                         || req.type == Request::Type::RowLoad
                         || req.type == Request::Type::RowStore
@@ -330,6 +330,10 @@ void MemoryTile::update_next(){
                         }
                         next_state.status = status_t::RECEIVE_WAIT; 
                     }
+                    else if(req.type == Request::Type::Wait){
+                        req.packets2Mesh = 1;
+                        next_state.status = status_t::RECEIVE_WAIT; 
+                    }
                     else {
                         next_state.status = status_t::REQ_MODE;
                         issueReq(req);
@@ -354,7 +358,7 @@ void MemoryTile::update_next(){
                         } 
                     }
                     //packets = 0
-                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::RowStore || req.type == Request::Type::RowStore_RF){
+                    else if(req.type == Request::Type::TileSend || req.type == Request::Type::Signal || req.type == Request::Type::RowStore || req.type == Request::Type::RowStore_RF){
                         next_state.status = status_t::IDLE;
                     }
                     else if(req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF){
@@ -406,6 +410,11 @@ void MemoryTile::update_next(){
                             }
                             req.requesting_store = true;
                             next_state.status = status_t::SEND_WAIT;   
+                        }
+                        else if(req.type == Request::Type::Signal){
+                            req.packets2Mesh = 1;
+                            req.requesting_store = true;
+                            next_state.status = status_t::SEND_WAIT; 
                         }
                         else if(req.type == Request::Type::RowStore_RF){
                             req.packets2Mesh = 1;

@@ -212,7 +212,17 @@ public:
         //Synchronization related instructions
         //////////////////////////////////
         Signal,
+        //example:
+                    // request = new Request(Request::Type::Signal);
+                    // request->addOperand(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
+                    // request->addOperand(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
+                    // requests.push_back(*request);
         Wait,
+        //example:
+                    // request = new Request(Request::Type::Wait);
+                    // request->addOperand(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
+                    // request->addOperand(sys->getAddress(dest_tile,0,dest_row), 0, PrecisionT::INT16); //dst
+                    // requests.push_back(*request);
         Barrier,
         ResetSync,
         NOP,

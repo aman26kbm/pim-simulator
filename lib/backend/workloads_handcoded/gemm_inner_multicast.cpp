@@ -1,40 +1,41 @@
 // tvm target: c -keys=cpu -link-params=0
 #define TVM_EXPORTS
 #include <cstdint>
+#include <numeric>
 
 #include "backend/System.h"
 
-void broadcast(System* sys, Config* cfg, PrecisionT::Precision precision_input){
-    std::vector<Request> requests;
-    Request *request;
-    for(int col=1; col<cfg->_meshWidth; col++){
-        request = new Request(Request::Type::TileSend);
-        request->addOperand(sys->getAddress(0,0,0), 256*32, precision_input); //src
-        request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //dst
-        requests.push_back(*request);
+// void broadcast(System* sys, Config* cfg, PrecisionT::Precision precision_input){
+//     std::vector<Request> requests;
+//     Request *request;
+//     for(int col=1; col<cfg->_meshWidth; col++){
+//         request = new Request(Request::Type::TileSend);
+//         request->addOperand(sys->getAddress(0,0,0), 256*32, precision_input); //src
+//         request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //dst
+//         requests.push_back(*request);
 
-        request = new Request(Request::Type::TileReceive);
-        request->addOperand(sys->getAddress(0,0,0), 256*32, precision_input); //src
-        request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //dst
-        requests.push_back(*request);
-    }
+//         request = new Request(Request::Type::TileReceive);
+//         request->addOperand(sys->getAddress(0,0,0), 256*32, precision_input); //src
+//         request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //dst
+//         requests.push_back(*request);
+//     }
 
-    for(int col=0; col<cfg->_meshWidth; col++){
-        for(int row=1; row<cfg->_meshHeight; row++){
-            request = new Request(Request::Type::TileSend);
-            request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //src
-            request->addOperand(sys->getAddress(row * cfg->_meshWidth + col,0,0), 256*32, precision_input); //dst
-            requests.push_back(*request);
+//     for(int col=0; col<cfg->_meshWidth; col++){
+//         for(int row=1; row<cfg->_meshHeight; row++){
+//             request = new Request(Request::Type::TileSend);
+//             request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //src
+//             request->addOperand(sys->getAddress(row * cfg->_meshWidth + col,0,0), 256*32, precision_input); //dst
+//             requests.push_back(*request);
 
-            request = new Request(Request::Type::TileReceive);
-            request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //src
-            request->addOperand(sys->getAddress(row * cfg->_meshWidth + col,0,0), 256*32, precision_input); //dst
-            requests.push_back(*request);        
-        }
-    }
-    for (unsigned int i = 0; i < requests.size(); i++)
-        sys->sendRequest(requests[i]);
-}
+//             request = new Request(Request::Type::TileReceive);
+//             request->addOperand(sys->getAddress(col,0,0), 256*32, precision_input); //src
+//             request->addOperand(sys->getAddress(row * cfg->_meshWidth + col,0,0), 256*32, precision_input); //dst
+//             requests.push_back(*request);        
+//         }
+//     }
+//     for (unsigned int i = 0; i < requests.size(); i++)
+//         sys->sendRequest(requests[i]);
+// }
 
 int32_t gemm_inner_multicast(System* sys){
     std::vector<Request> requests;
@@ -62,9 +63,11 @@ int32_t gemm_inner_multicast(System* sys){
         request->addOperand(sys->getAddress(0,0,i*precision_input.bits()),cfg->_ncols*matrixBColNum, precision_input); //cram addr
         request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
         requests.push_back(*request);
-        
 
-        broadcast(sys,cfg,precision_input);
+        std::vector<int> v(cfg->_meshHeight*cfg->_meshWidth);
+        std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
+
+        sys->broadcast(sys->getAddress(0,0,i*precision_input.bits()),precision_input,v);
     }
 
     cout<<matrixARowNum/(cfg->_ncols/matrixBColNum)<<endl;
