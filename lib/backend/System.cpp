@@ -628,8 +628,9 @@ void System::run(std::string workload)
         #ifdef PRINT_TICK
         //Reducing I/O
         if((_time%5000==0) || (_time==1) || (finishedReqNo==totalReqNo))
-        cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
         #endif
+        cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
+        
         //check if all chips finished
         finished = true;
         for(int i=0; i< _config->_nchips; i++){

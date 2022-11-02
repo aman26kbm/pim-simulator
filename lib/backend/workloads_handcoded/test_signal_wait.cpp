@@ -9,18 +9,18 @@ int32_t test_signal_wait(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    PrecisionT::Precision precision = PrecisionT::INT8;
+    PrecisionT::Precision precision = PrecisionT::INT4;
     int use_tiles = sys->_config->_ntiles_used;
-    int size = 128*4;
+    int size = 256*64;
     for(int i=1; i<use_tiles; i++){
             
             request = new Request(Request::Type::Signal);
-                            request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT16); //src
-                            request->addOperand(sys->getAddress(i,0,0), 0, PrecisionT::INT16); //dst
+                            request->addOperand(sys->getAddress(0,0,0), 0, precision); //src
+                            request->addOperand(sys->getAddress(i,0,0), 0, precision); //dst
                             requests.push_back(*request);
             request = new Request(Request::Type::Wait);
-                            request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT16); //src
-                            request->addOperand(sys->getAddress(i,0,0), 0, PrecisionT::INT16); //dst
+                            request->addOperand(sys->getAddress(0,0,0), 0, precision); //src
+                            request->addOperand(sys->getAddress(i,0,0), 0, precision); //dst
                             requests.push_back(*request);
 
             request = new Request(Request::Type::TileSend);
@@ -43,35 +43,39 @@ int32_t test_signal_wait_phased(System* sys){
     std::vector<Request> requests;
     Request *request;
 
-    PrecisionT::Precision precision = PrecisionT::INT8;
+    PrecisionT::Precision precision = PrecisionT::INT4;
     int use_tiles = sys->_config->_ntiles_used;
-    int size = 128*4;
+    int size = 256*64;
     int tile=1;
-    for(int phase=1; phase<use_tiles/sys->_config->_router_channel_number; phase++){
+    while(tile<use_tiles){
         int thisTile = tile;
         for(int i=0; i<sys->_config->_router_channel_number; i++){ 
-            request = new Request(Request::Type::Signal);
-                            request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT16); //src
-                            request->addOperand(sys->getAddress(thisTile,0,0), 0, PrecisionT::INT16); //dst
-                            requests.push_back(*request);
-            request = new Request(Request::Type::Wait);
-                            request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT16); //src
-                            request->addOperand(sys->getAddress(thisTile,0,0), 0, PrecisionT::INT16); //dst
-                            requests.push_back(*request);
+            if(thisTile<use_tiles){
+                request = new Request(Request::Type::Signal);
+                                request->addOperand(sys->getAddress(0,0,0), 0, precision); //src
+                                request->addOperand(sys->getAddress(thisTile,0,0), 0, precision); //dst
+                                requests.push_back(*request);
+                request = new Request(Request::Type::Wait);
+                                request->addOperand(sys->getAddress(0,0,0), 0, precision); //src
+                                request->addOperand(sys->getAddress(thisTile,0,0), 0, precision); //dst
+                                requests.push_back(*request);
 
-            thisTile++;
+                thisTile++;
+            }
         }
         for(int i=0; i<sys->_config->_router_channel_number; i++){
-            request = new Request(Request::Type::TileSend);
-            request->addOperand(sys->getAddress(tile,0,0), size, precision);//src
-            request->addOperand(sys->getAddress(0,0,0),size, precision);//DST
-            requests.push_back(*request);
+            if(tile<use_tiles){
+                request = new Request(Request::Type::TileSend);
+                request->addOperand(sys->getAddress(tile,0,0), size, precision);//src
+                request->addOperand(sys->getAddress(0,0,0),size, precision);//DST
+                requests.push_back(*request);
 
-            request = new Request(Request::Type::TileReceive);
-            request->addOperand(sys->getAddress(tile,0,0), size, precision);//src
-            request->addOperand(sys->getAddress(0,0,0), size, precision);//DST
-            requests.push_back(*request);
-            tile++;
+                request = new Request(Request::Type::TileReceive);
+                request->addOperand(sys->getAddress(tile,0,0), size, precision);//src
+                request->addOperand(sys->getAddress(0,0,0), size, precision);//DST
+                requests.push_back(*request);
+                tile++;
+            }
         }
     }
 
