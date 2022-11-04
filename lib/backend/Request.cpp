@@ -108,6 +108,10 @@ std::string Request::print_name(Type type) {
         enableTransposeUnit = req.enableTransposeUnit;
         dram_ready =req.dram_ready;
         broadcast = req.broadcast;
+        broadcast_en = req.broadcast_en;
+        multicast_en = req.multicast_en;
+        shift_amount = req.shift_amount;
+        bit_count = req.shift_amount;
     }
 
     std::string Request::reqToStr() {
@@ -203,6 +207,13 @@ std::string Request::print_name(Type type) {
 
     void Request::enableTranspose() {
         enableTransposeUnit = true;
+    }
+
+    void Request::setShuffle(bool ben, bool men, int samt, int bcnt) {
+        broadcast_en = ben;
+        multicast_en = men;
+        shift_amount = samt;
+        bit_count = bcnt;
     }
 
 ////////////////////REQQUEUE//////////////////////////////////////////////

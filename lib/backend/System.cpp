@@ -626,10 +626,12 @@ void System::run(std::string workload)
         //update time
         _time++;
         #ifdef PRINT_TICK
+        #ifdef REDUCE_IO
         //Reducing I/O
         if((_time%5000==0) || (_time==1) || (finishedReqNo==totalReqNo))
         #endif
         cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
+        #endif
         
         //check if all chips finished
         finished = true;

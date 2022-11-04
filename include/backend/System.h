@@ -3,7 +3,8 @@
 
 //#define DEBUG_OUTPUT
 //#define OLD
-//#define PRINT_TICK
+#define PRINT_TICK
+//#define REDUCE_IO
 #define NEW
 
 #include "Util.h"

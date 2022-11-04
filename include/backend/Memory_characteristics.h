@@ -23,7 +23,7 @@ public:
     MemoryCharacteristics(Configuration configuration, 
                            Config* config);
 
-    int numHtreesInBlock = 0;
+    int numHtreeSwitchesInTile = 0;
 
     //One clock cycle in the hybrid mode 
     //Currently assuming to be 1ns
@@ -52,7 +52,9 @@ public:
     //Energy in J spent in tranfering a bit from one port of switch to another
     const double E_HTreeRoot = 5.04e-15; //Same as HTree so not used in calculations
     //Energy in J spent in transposing data per bit (average)
-    const double E_Transpose = 2.45e-12;
+    const double E_Transpose = 1.06e-15;
+    //Energy in J spent in shuffling data per bit
+    const double E_Shuffle = 1.86e-14;
     //Energy in J spent in DRAM controller
     //We don't have a model for this. The area of the chip occupied by
     //the memory controller is about 4%.
@@ -64,13 +66,34 @@ public:
 
     //Static/Leakage energy (per clock) (unit = J)
     const double SE_NoC = 2.21e-10;
-    const double SE_HTreeRoot = 1.5e-13;
+    //const double SE_HTreeRoot = 1.5e-13; //We don't need separate energy for the root H-tree. It's the same as the others.
+    const double SE_HTreeRoot = 3.64e-14;
     const double SE_HTree = 3.64e-14;
     const double SE_InstrCtrl = 5.86e-14; 
     const double SE_Transpose = 3.39e-12; 
     const double SE_Popcount = 2.19e-15; 
     const double SE_RF = 2.17e-14; 
     const double SE_Array = 1.5e-12; //Extrapolated between NoC and RF; The value from OpenRAM was too low.
+    const double SE_Shuffle = 2.32e-14;
+
+    //Energy stats
+    double shuffleDynEnergy = 0;
+    double hTreeDynEnergy = 0;
+    double arrayDynEnergy = 0;
+    double transposeDynEnergy = 0;
+    double nocDynEnergy = 0; //Not populated in MemoryCharacteristics
+    double instCtrlDynEnergy = 0;
+    double rfDynEnergy = 0;
+    double popcountDynEnergy = 0;
+
+    double shuffleStaticEnergy = 0;
+    double hTreeStaticEnergy = 0;
+    double arrayStaticEnergy = 0;
+    double transposeStaticEnergy = 0;
+    double nocStaticEnergy = 0;
+    double instCtrlStaticEnergy = 0;
+    double rfStaticEnergy = 0;
+    double popcountStaticEnergy = 0;
 
 	double getTiming(Request req);
 	double getDynamicEnergy(Request req);

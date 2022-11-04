@@ -382,33 +382,48 @@ void System::generate_energy_csv(){
         for (int j = 0; j < _chips[i]->_DynaMesh->switch_list.size(); j++) {
             DynaSwitch* cur_switch;
             cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
-
             // cout<<"Number of hops = "<<cur_switch->numHops<<std::endl;
-            
             tot_noc_dynamic_energy += cur_switch->numHops * _chips[i]->_values->config->_wordsize_tile2tile * _chips[i]->_values->E_NoC;
         }
 
+        //We populate nocDynEnergy into MemoryCharacteristics here as well (just for completeness)
+        _chips[i]->_values->nocDynEnergy = tot_noc_dynamic_energy;
         tot_dynamic_energy += tot_noc_dynamic_energy;
         tot_static_energy = _chips[i]->_values->getStaticEnergy();
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 16;
+        const int NUM_CSV_COLUMNS = 31;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
-                          "Total_RowAdd_Energy",
-                          "Total_RowCompare_Energy",
-                          "Total_RowMul_Energy",
-                          "Total_RowMul_CRAM_RF_Energy",
-                          "Total_RowReset_Energy",
-                          "Total_RowRead_Energy",
-                          "Total_RowRead_RF_Energy",
-                          "Total_TileSend_Energy",
-                          "Total_TileReceive_Energy",
-                          "Total_RowLoad_Energy",
-                          "Total_RowLoad_RF_Energy",
-                          "Total_RowStore_Energy",
-                          "Total_RowShift_Energy",
-                          "Total_NoC_Dynamic_Energy",
+                          "RowAdd_Energy",
+                          "RowCompare_Energy",
+                          "RowMul_Energy",
+                          "RowMul_CRAM_RF_Energy",
+                          "RowReset_Energy",
+                          "RowRead_Energy",
+                          "RowRead_RF_Energy",
+                          "TileSend_Energy",
+                          "TileReceive_Energy",
+                          "RowLoad_Energy",
+                          "RowLoad_RF_Energy",
+                          "RowStore_Energy",
+                          "RowShift_Energy",
+                          "Shuffle_Dynamic_Energy",
+                          "HTree_Dynamic_Energy",
+                          "CRAM_Dynamic_Energy",
+                          "Transpose_Dynamic_Energy",
+                          "NoC_Dynamic_Energy",
+                          "InstCtrl_Dynamic_Energy",
+                          "RF_Dynamic_Energy",
+                          "Popcount_Dynamic_Energy",
+                          "Shuffle_Static_Energy",
+                          "HTree_Static_Energy",
+                          "CRAM_Static_Energy",
+                          "Transpose_Static_Energy",
+                          "NoC_Static_Energy",
+                          "InstCtrl_Static_Energy",
+                          "RF_Static_Energy",
+                          "Popcount_Static_Energy",
                           "Total_Dynamic_Energy",
                           "Total_Static_Energy"
         };
@@ -434,7 +449,22 @@ void System::generate_energy_csv(){
                 tot_row_load_rf_energy,
                 tot_row_store_energy,
                 tot_row_shift_energy,
-                tot_noc_dynamic_energy,
+                _chips[i]->_values->shuffleDynEnergy,
+                _chips[i]->_values->hTreeDynEnergy,
+                _chips[i]->_values->arrayDynEnergy,
+                _chips[i]->_values->transposeDynEnergy,
+                _chips[i]->_values->nocDynEnergy,
+                _chips[i]->_values->instCtrlDynEnergy,
+                _chips[i]->_values->rfDynEnergy,
+                _chips[i]->_values->popcountDynEnergy,
+                _chips[i]->_values->shuffleStaticEnergy,
+                _chips[i]->_values->hTreeStaticEnergy,
+                _chips[i]->_values->arrayStaticEnergy,
+                _chips[i]->_values->transposeStaticEnergy,
+                _chips[i]->_values->nocStaticEnergy,
+                _chips[i]->_values->instCtrlStaticEnergy,
+                _chips[i]->_values->rfStaticEnergy,
+                _chips[i]->_values->popcountStaticEnergy,
                 tot_dynamic_energy,
                 tot_static_energy
         };

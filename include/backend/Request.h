@@ -187,18 +187,34 @@ public:
         //////////////////////////////////
         //DRAM loads and stores 
         //////////////////////////////////
-        RowLoad,    //Load multiple rows from DRAM into a CRAM block.
-                    //The "size" argument is ignored.
-                    //The "precision" argument tells the number of rows to load
-                    //DRAM bandwidth is specified in memory characteristics (_wordsize_dram).
-                    //The unit time taken is 1 cycle in memory characteristics. The total time is found by multiplying this unit time
-                    //with number of transfer bursts.
-                    //The number of bursts = number of rows / dram bandwidth
+        RowLoad,    //Load multiple rows from DRAM into CRAM (all CRAMs in a core are loaded with one instruction).
+                    //The "size" argument specifies the number of columns to load. For example, if size=number of columns in a CRAM,
+                    //then only that many columns are loaded. That is, only one CRAM will be loaded.
+                    //The "precision" argument tells the number of rows to load.
                     //The "addr" argument will specify the row ID of row0.
-                    //example:
+                    //Example:
+                    // size = 256;
                     // request = new Request(Request::Type::RowLoad);
-                    // request->addOperand(sys->getAddress(tile,0,row), 0, PrecisionT::INT4); //cram addr
-                    // request->addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT4); //dram addr
+                    // request->addOperand(sys->getAddress(tile,0,row), size, PrecisionT::INT4); //cram addr
+                    // request->addOperand(sys->DRAM_ADDR, size, PrecisionT::INT4); //dram addr
+                    // requests.push_back(*request);
+                    //We have more arguments related to data shuffling here:
+                    //1. broadcast_en
+                    //2. multicast_en
+                    //3. shift_amount
+                    //4. bit_count
+                    //If broadcast_en or multicast_en is set to 1, then the "size" has to be number of columns in a CRAM.
+                    //For details, see: https://docs.google.com/document/d/1Bf0mXqqMR2pZI0vSRqwMha4yL-xd5H8vjs1tdAiPKfM/edit?usp=sharing
+                    //Example with multicast:
+                    // size = 256; //this needs to match num_cols in CRAMs
+                    // broadcast_en = 0;
+                    // multicast_en = 1;
+                    // shift_amount = 2;
+                    // bit_count = 2;
+                    // request = new Request(Request::Type::RowLoad);
+                    // request->addOperand(sys->getAddress(tile,0,row), size, PrecisionT::INT4); //cram addr
+                    // request->addOperand(sys->DRAM_ADDR, size, PrecisionT::INT4); //dram addr
+                    // request->setShuffle(broadcast_en, multicast_en, shift_amount, bit_count);
                     // requests.push_back(*request);
         RowStore,   //Store multiple rows from a CRAM block to DRAM
                     //Rest of the details are the same as RowLoad
@@ -320,6 +336,12 @@ public:
                                      //when you're sending contents that spilled from CRAMs or RF to the DRAM, or when you are loading weights from the DRAM.
                                      //this is only relevant for dram related instructions. also, this is enabled by default.
 
+    //Members related to data shuffling. These are applicable when loading data from DRAM
+    bool broadcast_en = 0;
+    bool multicast_en = 0;
+    int shift_amount = 0;
+    int bit_count = 0;
+
     bool dram_ready=false;
 
     enum class BroadcastType: int {
@@ -351,6 +373,8 @@ public:
     bool isPIM();
     //a request is an explicit synchronization request
     bool isSync();
+    //set shuffle related parameters
+    void setShuffle(bool ben, bool men, int samt, int bcnt);
 
 };
 
