@@ -76,6 +76,10 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
     tgt->neighborE = src->neighborE;
     tgt->isSent = src->isSent;
     tgt->numHops = src->numHops;
+    tgt->numHopsNorth = src->numHopsNorth;
+    tgt->numHopsSouth = src->numHopsSouth;
+    tgt->numHopsEast = src->numHopsEast;
+    tgt->numHopsWest = src->numHopsWest;
 }
 
 bool DynaSwitch::inject(Request req){
@@ -425,21 +429,25 @@ void DynaSwitch::push2Neighbor(Request req, Direction direction, int channel){
         case N:
             neighborN->next->receiveQueues[S][channel].push(req);
             neighborN->next->numHops++;
+            neighborN->next->numHopsSouth++;
             //req.dynaMeshHops++;
             break;
         case S:
             neighborS->next->receiveQueues[N][channel].push(req);
             neighborS->next->numHops++;
+            neighborS->next->numHopsNorth++;
             //req.dynaMeshHops++;
             break;
         case W:
             neighborW->next->receiveQueues[E][channel].push(req);
             neighborW->next->numHops++;
+            neighborW->next->numHopsEast++;
             //req.dynaMeshHops++;
             break;
         case E:
             neighborE->next->receiveQueues[W][channel].push(req);
             neighborE->next->numHops++;
+            neighborE->next->numHopsWest++;
             //req.dynaMeshHops++;
             break;
         case L:
@@ -486,6 +494,11 @@ void DynaSwitch::setupConnection(Direction in,int channelIn, Direction out, int 
 void DynaSwitch::setupConnectionForInputChannel(Direction in,int channelIn, Direction out, int packets){
     for(int c_out=0; c_out<channelNumber; c_out++){
         if(!connected[out][c_out]){
+            //find an empty queue
+            if(out==N && !neighborN->receiveQueues[S][c_out].empty()) continue;
+            if(out==S && !neighborS->receiveQueues[N][c_out].empty()) continue;
+            if(out==W && !neighborW->receiveQueues[E][c_out].empty()) continue;
+            if(out==E && !neighborE->receiveQueues[W][c_out].empty()) continue;
             setupConnection(in,channelIn,out,c_out, packets);
             return;
             // if((req.type == Request::Type::RowLoad || req.type == Request::Type::RowLoad_RF)

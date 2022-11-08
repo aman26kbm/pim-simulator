@@ -17,16 +17,18 @@ System::System(Config* config) : _config(config)
 
     std::string csv_filename;
     rstFile = fopen(config->get_rstfile().c_str(), "w");
-    csv_filename = config->get_rstfile() + ".req_count.csv";
-    req_count_csv_file.open(csv_filename.c_str(), ios::out);
-    csv_filename = config->get_rstfile() + ".cycle.csv";
-    cycle_csv_file.open(csv_filename.c_str(), ios::out);
+    //csv_filename = config->get_rstfile() + ".req_count.csv";
+    //req_count_csv_file.open(csv_filename.c_str(), ios::out);
+    //csv_filename = config->get_rstfile() + ".cycle.csv";
+    //cycle_csv_file.open(csv_filename.c_str(), ios::out);
     csv_filename = config->get_rstfile() + ".states_count.csv";
     states_csv_file.open(csv_filename.c_str(),ios::out);
     csv_filename = config->get_rstfile() + ".reqs_stats.csv";
     reqs_csv_file.open(csv_filename.c_str(),ios::out);
     csv_filename = config->get_rstfile() + ".energy.csv";
     energy_csv_file.open(csv_filename.c_str(),ios::out);
+    csv_filename = config->get_rstfile() + ".router_hops.csv";
+    router_hops_csv_file.open(csv_filename.c_str(),ios::out);
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
@@ -40,7 +42,7 @@ System::System(Config* config) : _config(config)
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::Ideal, _config);
     }
 
-    cout<<"distributed dram: "<<_values->config->_dramDistributed<<std::endl;
+    //cout<<"distributed dram: "<<_values->config->_dramDistributed<<std::endl;
 
     for (int i = 0; i < config->_nchips; i++) {
         MemoryChip* chip = new MemoryChip(_values, &finishedReqNo);
@@ -62,11 +64,12 @@ System::System(Config* config) : _config(config)
 System::~System()
 {
     fclose(rstFile);
-    cycle_csv_file.close();
-    req_count_csv_file.close();
+    //cycle_csv_file.close();
+    //req_count_csv_file.close();
     states_csv_file.close();
     reqs_csv_file.close();
     energy_csv_file.close();
+    router_hops_csv_file.close();
 }
 
 
@@ -490,6 +493,11 @@ void System::decode(Request& req, int& chip, int& tile){
             req.setLocation(chip, tile, block, row, col);
             req.bits = req.precision_list[0].bits();
             break;
+        case Request::Type::Wait:
+            getLocation(req.addr_list[1], chip, tile, block, row, col);
+            req.setLocation(chip, tile, block, row, col);
+            req.bits =1;
+            break;
         default:
             getLocation(req.addr_list[0], chip, tile, block, row, col);
             req.setLocation(chip, tile, block, row, col);
@@ -618,10 +626,13 @@ void System::run(std::string workload)
         //update time
         _time++;
         #ifdef PRINT_TICK
-        //printf("current time: %d\n", _time);
-        //if((_time%10000==0) || (_time==1) || (finishedReqNo==totalReqNo))
+        #ifdef REDUCE_IO
+        //Reducing I/O
+        if((_time%5000==0) || (_time==1) || (finishedReqNo==totalReqNo))
+        #endif
         cout<<"\r"<<"current time: "<<_time <<" requests:"<<finishedReqNo<<"/"<<totalReqNo<<std::flush;
         #endif
+        
         //check if all chips finished
         finished = true;
         for(int i=0; i< _config->_nchips; i++){
@@ -669,6 +680,7 @@ void System::finish()
     generate_states_csv();
     generate_req_states_csv();
     generate_energy_csv();
+    generate_router_hops_csv();
 
 }
 
@@ -695,4 +707,119 @@ Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(Syste
   return Registry::registeredSimulation()[ky];
 }
 
+}
+
+void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers){
+    std::vector<Request> requests;
+    Request *request;
+    int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
+    assert(tile<_config->_meshWidth);
+    int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
+    assert(block==0);
+    int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
+    for(int col=0; col<_config->_meshWidth; col++){
+        if(col==tile) continue;
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(tile,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(tile,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+        }
+    }
+
+    for(int col=0; col<_config->_meshWidth; col++){
+        for(int row=1; row<_config->_meshHeight; row++){
+            bool isReceiver = false;
+            for(int i:receivers){
+                if (row*_config->_meshWidth+col==i) isReceiver = true;
+            }
+            if(isReceiver){
+                request = new Request(Request::Type::TileSend);
+                request->addOperand(getAddress(col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);
+
+                request = new Request(Request::Type::TileReceive);
+                request->addOperand(getAddress(col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);      
+            }  
+        }
+    }
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
+}
+void System::broadcast_p2p(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers){
+    std::vector<Request> requests;
+    Request *request;
+    int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
+    assert(tile<_config->_meshWidth);
+    int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
+    assert(block==0);
+    int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
+    for(int col=tile+1; col<_config->_meshWidth; col++){
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(col-1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(col-1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+        }
+    }
+    for(int col=tile-1; col>=0; col--){
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(col+1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(col+1,0,row), 256*32, precision_input); //src
+            request->addOperand(getAddress(col,0,row), 256*32, precision_input); //dst
+            requests.push_back(*request);
+        }
+    }
+
+    for(int col=0; col<_config->_meshWidth; col++){
+        for(int row=1; row<_config->_meshHeight; row++){
+            bool isReceiver = false;
+            for(int i:receivers){
+                if (row*_config->_meshWidth+col==i) isReceiver = true;
+            }
+            if(isReceiver){
+                request = new Request(Request::Type::TileSend);
+                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);
+
+                request = new Request(Request::Type::TileReceive);
+                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), 256*32, precision_input); //src
+                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), 256*32, precision_input); //dst
+                requests.push_back(*request);   
+            }     
+        }
+    }
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sendRequest(requests[i]);
 }

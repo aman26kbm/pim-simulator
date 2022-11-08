@@ -74,7 +74,9 @@ static __attribute__((unused)) Registry::Entry &load_conv_kernel##kernel_size##l
   pimsim::registerFunc("load_conv_kernel_" #kernel_size "_" #loaders,                         \
                        load_conv_kernel_##kernel_size##loaders)
 
+
 LOAD_CONV_KERN_IMPL(9, 8);
+LOAD_CONV_KERN_IMPL(1, 8);
 // LOAD_CONV_KERN_IMPL(8, 16);
 // LOAD_CONV_KERN_IMPL(18, 16);
 

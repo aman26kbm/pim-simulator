@@ -5,7 +5,7 @@
 #include "Status.h"
 #include <array>
 #define ENTRY_LENGTH  (int)status_t::MAX+8
-#define HEADER_LENGTH (int)status_t::MAX+10
+#define HEADER_LENGTH (int)status_t::MAX+11
 namespace pimsim {
 
 class ReqStatsEntry{
@@ -21,7 +21,7 @@ public:
     int endTime=0;
     std::array<long unsigned int, (int)status_t::MAX> cyclesInStates{};
     ReqStatsEntry(Request req, int startTime);
-    static std::array<std::string, ENTRY_LENGTH+2> reqStatsHeader();
+    static std::array<std::string, HEADER_LENGTH> reqStatsHeader();
     std::array<long unsigned int, ENTRY_LENGTH> reqStatsValue();
 };
 

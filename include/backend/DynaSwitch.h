@@ -68,6 +68,10 @@ public:
 
     //Number of hops through this switch
     int numHops = 0;
+    int numHopsNorth = 0;
+    int numHopsSouth = 0;
+    int numHopsEast = 0;
+    int numHopsWest = 0;
 
     //buffers all dram requests
     FixedQueue<Request> dramReceiveBuffer;

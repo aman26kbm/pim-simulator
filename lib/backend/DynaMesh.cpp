@@ -37,7 +37,7 @@ DynaMesh::DynaMesh(Config* cfg){
 bool DynaMesh::receive_request(Request req){
     
     //request should be Send or Load Store
-    assert(req.type == Request::Type::TileSend
+    assert(req.type == Request::Type::TileSend ||req.type == Request::Type::Signal
     || req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
     || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF
     );

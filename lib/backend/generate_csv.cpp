@@ -1,6 +1,8 @@
 #include "System.h"
 #include "Status.h"
+#include "Request.h"
 
+/*
 void System::generate_req_count_csv(){
     ///////////////////////////////
     //Generating csv file
@@ -224,9 +226,10 @@ void System::generate_cycle_csv(){
         cycle_csv_file << std::endl;
     }
 }
+*/
 
 void System::generate_states_csv(){
-///////////////////////////////
+    ///////////////////////////////
     //Generating csv file
     ///////////////////////////////
 
@@ -291,7 +294,7 @@ void System::generate_states_csv(){
 }
 
 void System::generate_req_states_csv(){
-///////////////////////////////
+    ///////////////////////////////
     //Generating csv file
     ///////////////////////////////
 
@@ -314,7 +317,9 @@ void System::generate_req_states_csv(){
                 //now the actual data
                 std::array<long unsigned int, ENTRY_LENGTH> value_row = tile->reqStats[k].reqStatsValue();
 
-                reqs_csv_file << workload <<","<<i<<","<<j<<",";
+                std::string reqName = Request::print_name((Request::Type)value_row[1]);
+
+                reqs_csv_file << workload <<","<<reqName<<","<<i<<","<<j<<",";
                 for (int i=0; i<value_row.size(); i++) {
                     reqs_csv_file << value_row[i] << "," ;
                 }
@@ -377,33 +382,48 @@ void System::generate_energy_csv(){
         for (int j = 0; j < _chips[i]->_DynaMesh->switch_list.size(); j++) {
             DynaSwitch* cur_switch;
             cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
-
             // cout<<"Number of hops = "<<cur_switch->numHops<<std::endl;
-            
             tot_noc_dynamic_energy += cur_switch->numHops * _chips[i]->_values->config->_wordsize_tile2tile * _chips[i]->_values->E_NoC;
         }
 
+        //We populate nocDynEnergy into MemoryCharacteristics here as well (just for completeness)
+        _chips[i]->_values->nocDynEnergy = tot_noc_dynamic_energy;
         tot_dynamic_energy += tot_noc_dynamic_energy;
         tot_static_energy = _chips[i]->_values->getStaticEnergy();
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 16;
+        const int NUM_CSV_COLUMNS = 31;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
-                          "Total_RowAdd_Energy",
-                          "Total_RowCompare_Energy",
-                          "Total_RowMul_Energy",
-                          "Total_RowMul_CRAM_RF_Energy",
-                          "Total_RowReset_Energy",
-                          "Total_RowRead_Energy",
-                          "Total_RowRead_RF_Energy",
-                          "Total_TileSend_Energy",
-                          "Total_TileReceive_Energy",
-                          "Total_RowLoad_Energy",
-                          "Total_RowLoad_RF_Energy",
-                          "Total_RowStore_Energy",
-                          "Total_RowShift_Energy",
-                          "Total_NoC_Dynamic_Energy",
+                          "RowAdd_Energy",
+                          "RowCompare_Energy",
+                          "RowMul_Energy",
+                          "RowMul_CRAM_RF_Energy",
+                          "RowReset_Energy",
+                          "RowRead_Energy",
+                          "RowRead_RF_Energy",
+                          "TileSend_Energy",
+                          "TileReceive_Energy",
+                          "RowLoad_Energy",
+                          "RowLoad_RF_Energy",
+                          "RowStore_Energy",
+                          "RowShift_Energy",
+                          "Shuffle_Dynamic_Energy",
+                          "HTree_Dynamic_Energy",
+                          "CRAM_Dynamic_Energy",
+                          "Transpose_Dynamic_Energy",
+                          "NoC_Dynamic_Energy",
+                          "InstCtrl_Dynamic_Energy",
+                          "RF_Dynamic_Energy",
+                          "Popcount_Dynamic_Energy",
+                          "Shuffle_Static_Energy",
+                          "HTree_Static_Energy",
+                          "CRAM_Static_Energy",
+                          "Transpose_Static_Energy",
+                          "NoC_Static_Energy",
+                          "InstCtrl_Static_Energy",
+                          "RF_Static_Energy",
+                          "Popcount_Static_Energy",
                           "Total_Dynamic_Energy",
                           "Total_Static_Energy"
         };
@@ -429,7 +449,22 @@ void System::generate_energy_csv(){
                 tot_row_load_rf_energy,
                 tot_row_store_energy,
                 tot_row_shift_energy,
-                tot_noc_dynamic_energy,
+                _chips[i]->_values->shuffleDynEnergy,
+                _chips[i]->_values->hTreeDynEnergy,
+                _chips[i]->_values->arrayDynEnergy,
+                _chips[i]->_values->transposeDynEnergy,
+                _chips[i]->_values->nocDynEnergy,
+                _chips[i]->_values->instCtrlDynEnergy,
+                _chips[i]->_values->rfDynEnergy,
+                _chips[i]->_values->popcountDynEnergy,
+                _chips[i]->_values->shuffleStaticEnergy,
+                _chips[i]->_values->hTreeStaticEnergy,
+                _chips[i]->_values->arrayStaticEnergy,
+                _chips[i]->_values->transposeStaticEnergy,
+                _chips[i]->_values->nocStaticEnergy,
+                _chips[i]->_values->instCtrlStaticEnergy,
+                _chips[i]->_values->rfStaticEnergy,
+                _chips[i]->_values->popcountStaticEnergy,
                 tot_dynamic_energy,
                 tot_static_energy
         };
@@ -439,5 +474,53 @@ void System::generate_energy_csv(){
             energy_csv_file << value_row[i] << "," ;
         }
         energy_csv_file << std::endl;
+    }
+}
+
+void System::generate_router_hops_csv(){
+    ///////////////////////////////
+    //Generating csv file
+    ///////////////////////////////
+
+    const int NUM_CSV_COLUMNS = 7;
+    //header first
+    std::array<std::string, NUM_CSV_COLUMNS> header_row = {
+                      "Router_Row",
+                      "Router_Col",
+                      "Hops_North",
+                      "Hops_South",
+                      "Hops_West",
+                      "Hops_East",
+                      "Hops_Total"
+    };
+
+    router_hops_csv_file << "WorkloadName, Logfile,";
+    for (int i=0; i<header_row.size(); i++) {
+        router_hops_csv_file << header_row[i] << "," ;
+    }
+    router_hops_csv_file << std::endl;
+
+    //now the actual data
+    for (int i = 0; i < _config->_nchips; i++) {
+        for (int j = 0; j < _chips[i]->_DynaMesh->switch_list.size(); j++) {
+            DynaSwitch* cur_switch;
+            cur_switch = &(_chips[i]->_DynaMesh->switch_list[j]);
+
+            std::array<int, NUM_CSV_COLUMNS> value_row = {
+                cur_switch->myRow,
+                cur_switch->myCol,
+                cur_switch->numHopsNorth,
+                cur_switch->numHopsSouth,
+                cur_switch->numHopsWest,
+                cur_switch->numHopsEast,
+                cur_switch->numHops
+            };
+
+            router_hops_csv_file << workload <<","<< this->_config->get_rstfile() <<",";
+            for (int i=0; i<value_row.size(); i++) {
+                router_hops_csv_file << value_row[i] << "," ;
+            }
+            router_hops_csv_file << std::endl;
+        }
     }
 }

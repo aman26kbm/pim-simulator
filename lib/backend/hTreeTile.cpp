@@ -21,7 +21,7 @@ int hTreeTile::getCycles(Request req, Config* cfg){
         int cycles = distance + req.bits -1;
         return cycles;
     }
-    else if(req.type == Request::Type::TileSend || req.type == Request::Type::TileReceive
+    else if(req.type == Request::Type::TileSend || req.type == Request::Type::Signal || req.type == Request::Type::TileReceive || req.type == Request::Type::Wait
             || req.type == Request::Type::RowLoad || req.type == Request::Type::RowStore
             || req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF ){
         //from leaves to root
@@ -53,7 +53,8 @@ int hTreeTile::getCycles(Request req, Config* cfg){
                 int cycles_to_add = mantissa + i;
                 cycles += cycles_to_add; //add
                 int distance = (i%2)?(i+1):i;
-                cycles += distance + bits - 1; //move bits through distance in htree
+                //cycles += distance + bits - 1; //move bits through distance in htree
+                cycles += distance; //move bits through distance in htree
             }
         }
         return cycles;
