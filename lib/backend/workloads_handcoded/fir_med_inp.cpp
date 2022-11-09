@@ -26,9 +26,9 @@ int32_t fir_med_inp(System* sys)
 
     int use_tiles = cfg->_ntiles_used;
 
-    //Each core will load 5 arrays worth of data
+    //Each core will load 256 arrays worth of data
     //The last array's data will be wasted
-    //The other 4 will compute easily
+    //The other 255 will compute 256*255 output elements
 
     int param = 255; //this is the last multiplier in the input_size
 
@@ -57,21 +57,29 @@ int32_t fir_med_inp(System* sys)
             //When we are broadcasting though, other tiles shouldn't do anything.
             //So they will wait for a semaphore.
             //Assume the number of weights is 8
-            if (tile == 0) {
-                request = new Request(Request::Type::RowLoad_RF, Request::BroadcastType::ALL);
-                request->addOperand(0, 32, precision_input); //dst
-                request->addOperand(sys->DRAM_ADDR,32, precision_input); //src
-                requests.push_back(*request);   
 
-                request = new Request(Request::Type::Signal, sys->m1);
-                request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
-                requests.push_back(*request);
-            } 
-            else {
-                request = new Request(Request::Type::Wait, sys->m1);
-                request->addOperand(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //src
-                requests.push_back(*request);
-            }
+            //For now, we don't support BroadcastType for requests in the dynaMesh.
+            //So reading the filters every time from DRAM
+            //if (tile == 0) {
+            //    request = new Request(Request::Type::RowLoad_RF, Request::BroadcastType::ALL);
+            //    request->addOperand(0, 32, precision_input); //dst
+            //    request->addOperand(sys->DRAM_ADDR,32, precision_input); //src
+            //    requests.push_back(*request);   
+
+            //    request = new Request(Request::Type::Signal, sys->m1);
+            //    request->addOperand(sys->getAddress(0,0,0), 0, PrecisionT::INT4); //src
+            //    requests.push_back(*request);
+            //} 
+            //else {
+            //    request = new Request(Request::Type::Wait, sys->m1);
+            //    request->addOperand(sys->getAddress(tile,0,0), 0, PrecisionT::INT4); //src
+            //    requests.push_back(*request);
+            //}
+
+            request = new Request(Request::Type::RowLoad_RF);
+            request->addOperand(cfg->_num_regs_per_rf * tile,  32, precision_input); //dst
+            request->addOperand(sys->DRAM_ADDR,32, precision_input); //src
+            requests.push_back(*request);   
 
             //Loop over the following set of instructions N times,
             //where N is the number of filter coefficients

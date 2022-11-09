@@ -2,6 +2,7 @@
 #define TVM_EXPORTS
 #include <cstdint>
 #include <cmath>
+#include <numeric>
 
 #include "backend/System.h"
 /////////////////////////////////////////////////////////////
@@ -119,7 +120,11 @@ int32_t conv2d_ocvec(System* sys)
             request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
             requests.push_back(*request);
         
-            broadcast_conv2d(sys,cfg,precision_input);
+            //broadcast_conv2d(sys,cfg,precision_input);
+
+            std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
+            std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
+            sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v);
         }
     }
 
