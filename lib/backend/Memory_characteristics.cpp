@@ -547,15 +547,27 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             arrayDynEnergy += R_arrayDynEnergy;
             hTreeDynEnergy += R_hTreeDynEnergy;
             break;
-        case Request::Type::TileReceive: 
-            //Instruction controller + Array Write (rest of the stuff is counted in TileSend)
-            cycles = getPrecisionBits(req);
+        case Request::Type::TileReceive: {
+            //Instruction ontroller + Shuffle + Array Write (rest of the stuff is counted in TileSend)
+            rows = getPrecisionBits(req);
+
+            //Check that if broadcast or multicast is enabled, then the size must be equal to number of cols in a block
+            if (req.broadcast_en || req.multicast_en) {
+                if (req.size_list[0] != config->get_ncols()) {
+                    std::cout<<"Broadcast or multicast features are only supported when req.size = ncols"<<std::endl;
+                    assert(0);
+                }
+                R_shuffleDynEnergy = E_Shuffle * req.size_list[0] * config->get_nblocks() * rows;
+            }
+            
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = cycles * E_ArrayWr * (cols / config->get_ncols());
-            energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
+            R_arrayDynEnergy = rows * E_ArrayWr * (cols / config->get_ncols());
+            energy = R_instCtrlDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
+            shuffleDynEnergy += R_shuffleDynEnergy;
             break;
+        }
         case Request::Type::RowLoad: {
             //Instruction controller + DRAM controller + Transpose Logic + DRAM read + NoC + H-tree + Shuffle + Array Write
             //DRAM related stuff is not accounted for
