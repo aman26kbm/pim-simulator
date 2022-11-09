@@ -41,6 +41,7 @@ const Precision FP8_e3m4 = Precision{1, 4, 3};
 const Precision BF16_e8m7 = Precision{1, 8, 7};
 const Precision FP16_e5m10 = Precision{1, 10, 5};
 const Precision FP32_e8m23 = Precision{1, 23, 8};
+const Precision INT1 = Precision{0, 1, 0};
 const Precision INT4 = Precision{0, 4, 0};
 const Precision INT8 = Precision{0, 8, 0};
 const Precision INT16 = Precision{0, 16, 0};

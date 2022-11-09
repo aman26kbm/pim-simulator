@@ -124,7 +124,7 @@ int32_t conv2d_ocvec(System* sys)
 
             std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
             std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-            sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v);
+            sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, cfg->_nblocks*cfg->_ncols);
         }
     }
 
