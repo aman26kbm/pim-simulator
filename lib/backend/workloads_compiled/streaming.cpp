@@ -135,32 +135,37 @@ int32_t systolic_mesh_stream_impl(System *sys) {
           sys->sendRequest(request);
         }
       }
-      // for (int k = 0; k < 1; ++k) {
-      //   int current = i * 12 + j;
-      //   int next_row = i * 12 + j + 1;
-      //   if (j == 0) {
-      //     Request request(Request::Type::RowLoad);
-      //     request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
-      //     request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::Precision{0, 8, 0});
-      //     sys->sendRequest(request);
-      //   }
-      //   if (j + 1 < 12) {
-      //     {
-      //       Request request(Request::Type::TileReceive);
-      //       request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
-      //       request.addOperand(sys->getAddress(next_row, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
-      //       sys->sendRequest(request);
-      //     }
-      //     {
-      //       Request request(Request::Type::TileSend);
-      //       request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
-      //       request.addOperand(sys->getAddress(next_row, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
-      //       sys->sendRequest(request);
-      //     }
-      //   }
-      // }
+     
     }
   }
+ for (int i = 0; i < 9; ++i) {
+    for (int j = 0; j < 12; ++j) {
+      for (int k = 0; k < 1; ++k) {
+        int current = i * 12 + j;
+        int next_row = i * 12 + j + 1;
+        if (j == 0) {
+          Request request(Request::Type::RowLoad);
+          request.addOperand(sys->getAddress(current, 0, 1), 0, PrecisionT::Precision{0, 8, 0});
+          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::Precision{0, 8, 0});
+          sys->sendRequest(request);
+        }
+        if (j + 1 < 12) {
+          {
+            Request request(Request::Type::TileReceive);
+            request.addOperand(sys->getAddress(current, 0, 1), 0, PrecisionT::Precision{0, 8, 0});
+            request.addOperand(sys->getAddress(next_row, 0, 1), 0, PrecisionT::Precision{0, 8, 0});
+            sys->sendRequest(request);
+          }
+          {
+            Request request(Request::Type::TileSend);
+            request.addOperand(sys->getAddress(current, 0, 1), 0, PrecisionT::Precision{0, 8, 0});
+            request.addOperand(sys->getAddress(next_row, 0, 1), 0, PrecisionT::Precision{0, 8, 0});
+            sys->sendRequest(request);
+          }
+        }
+      }
+    }
+ }
   return 0;
 }
 
