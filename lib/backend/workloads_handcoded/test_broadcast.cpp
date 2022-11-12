@@ -67,7 +67,7 @@ int32_t test_broadcast_dmesh(System* sys){
     for(int i=0; i<10; i++){
         std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-        sys->broadcast(sys->getAddress(1,0,i),PrecisionT::INT8, v);
+        sys->broadcast(sys->getAddress(1,0,i),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols);
     }
 }
 
@@ -76,7 +76,7 @@ int32_t test_broadcast_dmesh_p2p(System* sys){
     for(int i=0; i<10; i++){
         std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-        sys->broadcast_p2p(sys->getAddress(1,0,i),PrecisionT::INT8, v);
+        sys->broadcast_p2p(sys->getAddress(1,0,i),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols);
     }
 }
 

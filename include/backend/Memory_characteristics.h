@@ -54,7 +54,7 @@ public:
     //Energy in J spent in transposing data per bit (average)
     const double E_Transpose = 1.06e-15;
     //Energy in J spent in shuffling data per bit
-    const double E_Shuffle = 1.86e-14;
+    const double E_Shuffle = 7.08e-15;
     //Energy in J spent in DRAM controller
     //We don't have a model for this. The area of the chip occupied by
     //the memory controller is about 4%.
@@ -74,7 +74,7 @@ public:
     const double SE_Popcount = 2.19e-15; 
     const double SE_RF = 2.17e-14; 
     const double SE_Array = 1.5e-12; //Extrapolated between NoC and RF; The value from OpenRAM was too low.
-    const double SE_Shuffle = 2.32e-14;
+    const double SE_Shuffle = 7.81e-15;
 
     //Energy stats
     double shuffleDynEnergy = 0;
