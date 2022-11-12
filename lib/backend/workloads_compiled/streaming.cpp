@@ -108,3 +108,61 @@ int32_t write_read_activations(System *sys) {
 
 static __attribute__((unused)) Registry::Entry &write_read_activations_reg =
   pimsim::registerFunc("write_read_act_112_7", write_read_activations);
+
+
+int32_t systolic_mesh_stream_impl(System *sys) {
+  for (int i = 0; i < 9; ++i) {
+    for (int j = 0; j < 12; ++j) {
+      for (int k = 0; k < 8; ++k) {
+        int current = i * 12 + j;
+        int next_row = (i + 1) * 12 + j;
+        if (i == 0) {
+          Request request(Request::Type::RowLoad);
+          request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::Precision{0, 8, 0});
+          sys->sendRequest(request);
+        }
+        {
+          Request request(Request::Type::TileReceive);
+          request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+          request.addOperand(sys->getAddress(next_row, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+          sys->sendRequest(request);
+        }
+        {
+          Request request(Request::Type::TileSend);
+          request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+          request.addOperand(sys->getAddress(next_row, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+          sys->sendRequest(request);
+        }
+      }
+      // for (int k = 0; k < 1; ++k) {
+      //   int current = i * 12 + j;
+      //   int next_row = i * 12 + j + 1;
+      //   if (j == 0) {
+      //     Request request(Request::Type::RowLoad);
+      //     request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+      //     request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::Precision{0, 8, 0});
+      //     sys->sendRequest(request);
+      //   }
+      //   if (j + 1 < 12) {
+      //     {
+      //       Request request(Request::Type::TileReceive);
+      //       request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+      //       request.addOperand(sys->getAddress(next_row, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+      //       sys->sendRequest(request);
+      //     }
+      //     {
+      //       Request request(Request::Type::TileSend);
+      //       request.addOperand(sys->getAddress(current, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+      //       request.addOperand(sys->getAddress(next_row, 0, 0), 0, PrecisionT::Precision{0, 8, 0});
+      //       sys->sendRequest(request);
+      //     }
+      //   }
+      // }
+    }
+  }
+  return 0;
+}
+
+static __attribute__((unused)) Registry::Entry &systolic_mesh_stream_reg =
+  pimsim::registerFunc("systolic_mesh_stream", systolic_mesh_stream_impl);
