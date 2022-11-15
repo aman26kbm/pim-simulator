@@ -9,7 +9,7 @@
 // FIR filter micro benchmark
 /////////////////////////////////////////////////////////////
 
-int32_t fir_med_inp(System* sys)
+int32_t fir_med_inp_256bit_loads(System* sys)
 {
     std::vector<Request> requests;
     Request *request;
@@ -66,10 +66,12 @@ int32_t fir_med_inp(System* sys)
     if ( (use_tiles*t + tile) < tiles_needed ) {
 
         //Now we load inputs from DRAM
+        for(int kk=0; kk<param+1; kk++) {
         request = new Request(Request::Type::RowLoad);
-        request->addOperand(sys->getAddress(tile,0,0), (param+1) * cfg->_ncols, precision_input); //dst
-        request->addOperand(sys->DRAM_ADDR, (param+1) * cfg->_ncols, precision_input); //src
+        request->addOperand(sys->getAddress(tile,0,0), cfg->_ncols, precision_input); //dst
+        request->addOperand(sys->DRAM_ADDR, cfg->_ncols, precision_input); //src
         requests.push_back(*request);
+        }
 
         //Initialize rows that'll hold the accumulator (accumulator size=16)
         request = new Request(Request::Type::RowReset);
@@ -160,5 +162,5 @@ int32_t fir_med_inp(System* sys)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__fir_med_inp__ = pimsim::registerFunc("fir_med_inp", fir_med_inp);
+static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads__ = pimsim::registerFunc("fir_med_inp_256bit_loads", fir_med_inp_256bit_loads);
 
