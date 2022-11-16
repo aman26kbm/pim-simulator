@@ -4,8 +4,8 @@
 #include "Request.h"
 #include "Status.h"
 #include <array>
-#define ENTRY_LENGTH  (int)status_t::MAX+8
-#define HEADER_LENGTH (int)status_t::MAX+11
+#define ENTRY_LENGTH  (int)status_t::MAX+9
+#define HEADER_LENGTH (int)status_t::MAX+13
 namespace pimsim {
 
 class ReqStatsEntry{

@@ -9,7 +9,7 @@ int32_t vadd(System* sys){
     Request *request;
 
     //int array_size = 256*128*sys->_config->_ntiles_used;
-    int array_size = 120*256*512;
+    int array_size = 108*256*512;
     PrecisionT::Precision precision_input = PrecisionT::INT8;
     PrecisionT::Precision precision_output = PrecisionT::INT8;
     int use_tiles = sys->_config->_ntiles_used;
