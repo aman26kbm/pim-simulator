@@ -52,8 +52,8 @@ int32_t mv_120_256_256(System *sys) {
       #undef max
         {
           Request request(Request::Type::BlockSend_Receive);
-          request.addOperand(sys->getAddress(x_outer_outer, 0, 40), 0, PrecisionT::Precision{1, 23, 8} /*c.global[ramp(0, 1, 256)]*/);
-          request.addOperand(sys->getAddress(x_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*c.global.rf[ramp((k.outer.v*256), 1, 256)]*/);
+          request.addOperand(sys->getAddress(x_outer_outer, 0, 40), 65536, PrecisionT::Precision{0, 32, 0} /*c.global[ramp(0, 1, 256)]*/);
+          request.addOperand(sys->getAddress(x_outer_outer, 0, 0), 65536, PrecisionT::Precision{0, 32, 0} /*c.global.rf[ramp((k.outer.v*256), 1, 256)]*/);
           sys->sendRequest(request);
         }
         {
