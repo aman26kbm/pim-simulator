@@ -174,8 +174,11 @@ std::string Request::print_name(Type type) {
             case Type::RowSet:
             case Type::RowReset:
             case Type::RowRead:
+            case Type::RowRead_RF:
             case Type::RowWrite:
+            case Type::RowWrite_RF:
             case Type::RowAdd:
+            case Type::RowAdd_RF:
             case Type::RowAdd_CRAM_RF:
             case Type::RowSub:
             case Type::RowCompare:
@@ -188,11 +191,58 @@ std::string Request::print_name(Type type) {
             case Type::RowReduce:
             case Type::RowReduce_WithinTile:
             case Type::RowShift:
+            case Type::PopCountReduce_RF: 
                 return true;
             default:
                 return false;
         }
     }
+
+    std::string Request::print_category(Type type) {
+        switch (type) {
+            case Type::RowSet:
+            case Type::RowReset:
+            case Type::RowRead:
+            case Type::RowRead_RF:
+            case Type::RowWrite:
+            case Type::RowWrite_RF:
+            case Type::RowAdd:
+            case Type::RowAdd_RF:
+            case Type::RowAdd_CRAM_RF:
+            case Type::RowSub:
+            case Type::RowCompare:
+            case Type::RowMul:
+            case Type::RowMul_CRAM_RF:
+            case Type::RowBitwise:
+            case Type::ColBitwise:
+            case Type::RowSearch:
+            case Type::ColSearch:
+            case Type::RowReduce:
+            case Type::RowReduce_WithinTile:
+            case Type::RowShift:
+            case Type::PopCountReduce_RF: 
+                return "Compute";
+            case Type::BlockSend_Receive:
+            case Type::BlockBroadCast:
+            case Type::TileSend:
+            case Type::TileReceive:
+            case Type::TileSend_BroadCast:
+            case Type::TileReceive_BroadCast:
+            case Type::Signal:
+            case Type::Wait:
+            case Type::Barrier:
+                return "Network";
+            case Type::RowLoad:
+            case Type::RowStore:
+            case Type::RowLoad_RF:
+            case Type::RowStore_RF:
+                return "DRAM";
+            default:
+                return "Others";
+        }
+    }
+
+            
 
     bool Request::isSync() {
         if (type == Type::Signal || type == Type::Wait)

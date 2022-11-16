@@ -127,8 +127,25 @@ public:
     //DRAM addresses don't matter. We just define 1 address
     //and use it everywhere.
     AddrT DRAM_ADDR = 0;
-    void broadcast(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers, int size);
-    void broadcast_p2p(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers, int size);
+
+    //Methods to send data from one to multiple tiles
+    void broadcast(int addr, 
+                   PrecisionT::Precision precision_input, 
+                   std::vector<int> receivers, 
+                   int size,
+                   bool ben=false,
+                   bool men=false,
+                   int samt=0,
+                   int bcnt=0);
+
+    void broadcast_p2p(int addr, 
+                       PrecisionT::Precision precision_input, 
+                       std::vector<int> receivers, 
+                       int size, 
+                       bool ben=false,
+                       bool men=false,
+                       int samt=0,
+                       int bcnt=0);
 
 };
 

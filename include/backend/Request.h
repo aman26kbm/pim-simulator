@@ -308,6 +308,7 @@ public:
 
 
     static std::string print_name(Type type);
+    static std::string print_category(Type type);
     int reqNo;
     
     TimeT arrive_time = 0; //The time at which the request arrived in the request queue

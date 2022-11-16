@@ -318,8 +318,9 @@ void System::generate_req_states_csv(){
                 std::array<long unsigned int, ENTRY_LENGTH> value_row = tile->reqStats[k].reqStatsValue();
 
                 std::string reqName = Request::print_name((Request::Type)value_row[1]);
+                std::string reqCategory = Request::print_category((Request::Type)value_row[1]);
 
-                reqs_csv_file << workload <<","<<reqName<<","<<i<<","<<j<<",";
+                reqs_csv_file << workload <<","<<reqName<<","<<reqCategory<<","<<i<<","<<j<<",";
                 for (int i=0; i<value_row.size(); i++) {
                     reqs_csv_file << value_row[i] << "," ;
                 }
@@ -337,16 +338,26 @@ void System::generate_energy_csv(){
     double tot_row_add_energy = 0;
     double tot_row_compare_energy = 0;
     double tot_row_mul_energy = 0;
+    double tot_row_add_cram_rf_energy = 0;
     double tot_row_mul_cram_rf_energy = 0;
+    double tot_row_shift_energy = 0;
+    double tot_row_reduce_energy = 0;
+    double tot_row_reduce_within_tile_energy = 0;
+    double tot_row_bitwise_energy = 0;
+    double tot_row_set_energy = 0;
     double tot_row_reset_energy = 0;
     double tot_row_read_energy = 0;
+    double tot_row_write_energy = 0;
     double tot_row_read_rf_energy = 0;
+    double tot_row_write_rf_energy = 0;
     double tot_tile_send_energy = 0;
     double tot_tile_receive_energy = 0;
     double tot_row_load_energy = 0;
     double tot_row_load_rf_energy = 0;
     double tot_row_store_energy = 0;
-    double tot_row_shift_energy = 0;
+    double tot_popcount_energy = 0;
+    double tot_block_broadcast_energy = 0;
+    double tot_block_sendreceive_energy = 0;
     double tot_noc_dynamic_energy = 0;
     double tot_dynamic_energy = 0;
     double tot_static_energy = 0;
@@ -358,19 +369,29 @@ void System::generate_energy_csv(){
             cur_tile = _chips[i]->_children[j];
 
             //Add up energy of each type across all tiles
+            tot_row_set_energy += cur_tile->req_energy[int(Request::Type::RowSet)];
+            tot_row_reset_energy += cur_tile->req_energy[int(Request::Type::RowReset)];
+            tot_row_read_energy += cur_tile->req_energy[int(Request::Type::RowRead)];
+            tot_row_write_energy += cur_tile->req_energy[int(Request::Type::RowWrite)];
             tot_row_add_energy += cur_tile->req_energy[int(Request::Type::RowAdd)];
             tot_row_compare_energy += cur_tile->req_energy[int(Request::Type::RowCompare)];
             tot_row_mul_energy += cur_tile->req_energy[int(Request::Type::RowMul)];
+            tot_row_bitwise_energy += cur_tile->req_energy[int(Request::Type::RowBitwise)];
             tot_row_mul_cram_rf_energy += cur_tile->req_energy[int(Request::Type::RowMul_CRAM_RF)];
-            tot_row_reset_energy += cur_tile->req_energy[int(Request::Type::RowReset)];
-            tot_row_read_energy += cur_tile->req_energy[int(Request::Type::RowRead)];
+            tot_row_add_cram_rf_energy += cur_tile->req_energy[int(Request::Type::RowAdd_CRAM_RF)];
+            tot_row_reduce_energy += cur_tile->req_energy[int(Request::Type::RowReduce)];
+            tot_row_shift_energy += cur_tile->req_energy[int(Request::Type::RowShift)];
+            tot_row_reduce_within_tile_energy += cur_tile->req_energy[int(Request::Type::RowReduce_WithinTile)];
+            tot_popcount_energy += cur_tile->req_energy[int(Request::Type::PopCountReduce_RF)];
+            tot_block_broadcast_energy += cur_tile->req_energy[int(Request::Type::BlockBroadCast)];
+            tot_block_sendreceive_energy += cur_tile->req_energy[int(Request::Type::BlockSend_Receive)];
             tot_row_read_rf_energy += cur_tile->req_energy[int(Request::Type::RowRead_RF)];
+            tot_row_write_rf_energy += cur_tile->req_energy[int(Request::Type::RowWrite_RF)];
             tot_tile_send_energy += cur_tile->req_energy[int(Request::Type::TileSend)];
             tot_tile_receive_energy += cur_tile->req_energy[int(Request::Type::TileReceive)];
             tot_row_load_energy += cur_tile->req_energy[int(Request::Type::RowLoad)];
             tot_row_load_rf_energy += cur_tile->req_energy[int(Request::Type::RowLoad_RF)];
             tot_row_store_energy += cur_tile->req_energy[int(Request::Type::RowStore)];
-            tot_row_shift_energy += cur_tile->req_energy[int(Request::Type::RowShift)];
 
             //Dynamic energy is just the sum of all requests' energy
             for (int i = 0; i < int(Request::Type::MAX); i++) {
@@ -392,22 +413,32 @@ void System::generate_energy_csv(){
         tot_static_energy = _chips[i]->_values->getStaticEnergy();
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 31;
+        const int NUM_CSV_COLUMNS = 41;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "RowAdd_Energy",
                           "RowCompare_Energy",
                           "RowMul_Energy",
+                          "RowAdd_CRAM_RF_Energy",
                           "RowMul_CRAM_RF_Energy",
+                          "RowShift_Energy",
+                          "RowReduce_Energy",
+                          "RowReduceWithinTile_Energy",
+                          "RowBitwise_Energy",
+                          "RowSet_Energy",
                           "RowReset_Energy",
                           "RowRead_Energy",
+                          "RowWrite_Energy",
                           "RowRead_RF_Energy",
+                          "RowWrite_RF_Energy",
                           "TileSend_Energy",
                           "TileReceive_Energy",
                           "RowLoad_Energy",
                           "RowLoad_RF_Energy",
                           "RowStore_Energy",
-                          "RowShift_Energy",
+                          "Popcount_Energy",
+                          "Block_Broadcast_Energy",
+                          "Block_SendReceive_Energy",
                           "Shuffle_Dynamic_Energy",
                           "HTree_Dynamic_Energy",
                           "CRAM_Dynamic_Energy",
@@ -439,16 +470,26 @@ void System::generate_energy_csv(){
                 tot_row_add_energy,
                 tot_row_compare_energy,
                 tot_row_mul_energy,
+                tot_row_add_cram_rf_energy,
                 tot_row_mul_cram_rf_energy,
+                tot_row_shift_energy,
+                tot_row_reduce_energy,
+                tot_row_reduce_within_tile_energy,
+                tot_row_bitwise_energy,
+                tot_row_set_energy,
                 tot_row_reset_energy,
                 tot_row_read_energy,
+                tot_row_write_energy,
                 tot_row_read_rf_energy,
+                tot_row_write_rf_energy,
                 tot_tile_send_energy,
                 tot_tile_receive_energy,
                 tot_row_load_energy,
                 tot_row_load_rf_energy,
                 tot_row_store_energy,
-                tot_row_shift_energy,
+                tot_popcount_energy,
+                tot_block_broadcast_energy,
+                tot_block_sendreceive_energy,
                 _chips[i]->_values->shuffleDynEnergy,
                 _chips[i]->_values->hTreeDynEnergy,
                 _chips[i]->_values->arrayDynEnergy,

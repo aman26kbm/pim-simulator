@@ -15,6 +15,7 @@ ReqStatsEntry::ReqStatsEntry(Request req, int startTime){
 std::array<std::string, HEADER_LENGTH> ReqStatsEntry::reqStatsHeader(){
         std::array<std::string,HEADER_LENGTH> header_row = {
                         "ReqName",
+                        "ReqCategory",
                         "Chip",
                         "Tile",
                         "ReqNo",
@@ -25,6 +26,7 @@ std::array<std::string, HEADER_LENGTH> ReqStatsEntry::reqStatsHeader(){
                         "bits",
                         "startTime",
                         "endTime",
+                        "timeTaken",
                         "IDLE", 
                         "REQ_MODE",
                         "DRAM_WAIT",
@@ -54,6 +56,7 @@ std::array<long unsigned int, ENTRY_LENGTH> ReqStatsEntry::reqStatsValue(){
                     bits,
                     startTime,
                     endTime,
+                    endTime-startTime,
                     cyclesInStates[int(status_t::IDLE)],
                     cyclesInStates[int(status_t::REQ_MODE)],
                     cyclesInStates[int(status_t::DRAM_WAIT)],

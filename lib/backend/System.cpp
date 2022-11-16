@@ -709,7 +709,25 @@ Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(Syste
 
 }
 
-void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers, int size){
+//////////////////////////////////////////////////////
+// Send data located in tile pointed to by 'addr'
+// to multiple other tiles. This uses a one-to-many method, so it 
+// generates a lot of traffic in the mesh.
+// The precision (number of rows) is specified by 'precision_input'. 
+// The list of receivers is populated in 'receivers'. If the list 
+// contains all tiles (except the originator), then it is a broacast.
+// If the list contains some tiles, then it is a multicast.
+// When the the data is received inside the tiles into CRAMs,
+// then shuffling can be specified by using the ben, men, samt, bcnt
+// args. For details, of these args see: 
+// https://docs.google.com/document/d/1Bf0mXqqMR2pZI0vSRqwMha4yL-xd5H8vjs1tdAiPKfM/edit?usp=sharing
+// 'size' should be equal to number of columns in a CRAM for
+// these shuffle options to work.
+//////////////////////////////////////////////////////
+void System::broadcast(int addr, 
+                       PrecisionT::Precision precision_input, 
+                       std::vector<int> receivers, 
+                       int size, bool ben, bool men, int samt, int bcnt){
     std::vector<Request> requests;
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
@@ -717,6 +735,15 @@ void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vec
     int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
     assert(block==0);
     int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
+
+    //Check sanity of shuffle related args
+    if ((ben==1) || (men==1)) {
+        if (size != _config->_ncols) {
+            std::cout<<"If broadcast_en or multicast_en is 1, then size should be equal to number of cols in a CRAM";
+            assert(0);
+        }
+    }
+
     for(int col=0; col<_config->_meshWidth; col++){
         if(col==tile) continue;
         bool isReceiver = false;
@@ -732,6 +759,7 @@ void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vec
             request = new Request(Request::Type::TileReceive);
             request->addOperand(getAddress(tile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
+            request->setShuffle(ben, men, samt, bcnt);
             requests.push_back(*request);
         }
     }
@@ -751,6 +779,7 @@ void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vec
                 request = new Request(Request::Type::TileReceive);
                 request->addOperand(getAddress(col,0,row), size, precision_input); //src
                 request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                request->setShuffle(ben, men, samt, bcnt);
                 requests.push_back(*request);      
             }  
         }
@@ -758,66 +787,135 @@ void System::broadcast(int addr, PrecisionT::Precision precision_input, std::vec
     for (unsigned int i = 0; i < requests.size(); i++)
         sendRequest(requests[i]);
 }
-void System::broadcast_p2p(int addr, PrecisionT::Precision precision_input, std::vector<int> receivers, int size){
+
+//////////////////////////////////////////////////////
+// Send data located in tile pointed to by 'addr'
+// to multiple other tiles. This uses the peer-to-peer method, so it 
+// reduces traffic in the mesh.
+// The precision (number of rows) is specified by 'precision_input'. 
+// The list of receivers is populated in 'receivers'. If the list 
+// contains all tiles (except the originator), then it is a broacast.
+// If the list contains some tiles, then it is a multicast.
+// When the the data is received inside the tiles into CRAMs,
+// then shuffling can be specified by using the ben, men, samt, bcnt
+// args. For details, of these args see: 
+// https://docs.google.com/document/d/1Bf0mXqqMR2pZI0vSRqwMha4yL-xd5H8vjs1tdAiPKfM/edit?usp=sharing
+// 'size' should be equal to number of columns in a CRAM for
+// these shuffle options to work.
+//////////////////////////////////////////////////////
+void System::broadcast_p2p(int addr, 
+                           PrecisionT::Precision precision_input, 
+                           std::vector<int> receivers, 
+                           int size, bool ben, bool men, int samt, int bcnt){
     std::vector<Request> requests;
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
-    assert(tile<_config->_meshWidth);
+    assert(tile<_config->_meshWidth * _config->_meshHeight);
     int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
     assert(block==0);
     int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
-    for(int col=tile+1; col<_config->_meshWidth; col++){
-        bool isReceiver = false;
-        for(int i:receivers){
-            if (col==i) isReceiver = true;
-        }
-        if(isReceiver){
-            request = new Request(Request::Type::TileSend);
-            request->addOperand(getAddress(col-1,0,row), size, precision_input); //src
-            request->addOperand(getAddress(col,0,row), size, precision_input); //dst
-            requests.push_back(*request);
 
-            request = new Request(Request::Type::TileReceive);
-            request->addOperand(getAddress(col-1,0,row), size, precision_input); //src
-            request->addOperand(getAddress(col,0,row), size, precision_input); //dst
-            requests.push_back(*request);
+    //Check sanity of shuffle related args
+    if ((ben==1) || (men==1)) {
+        if (size != _config->_ncols) {
+            std::cout<<"If broadcast_en or multicast_en is 1, then size should be equal to number of cols in a CRAM";
+            assert(0);
         }
     }
-    for(int col=tile-1; col>=0; col--){
+
+    int lastTile = tile;
+    for(int col=tile+1; col<(tile/_config->_meshWidth +1)*_config->_meshWidth; col++){
         bool isReceiver = false;
         for(int i:receivers){
             if (col==i) isReceiver = true;
         }
         if(isReceiver){
             request = new Request(Request::Type::TileSend);
-            request->addOperand(getAddress(col+1,0,row), size, precision_input); //src
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
             requests.push_back(*request);
 
             request = new Request(Request::Type::TileReceive);
-            request->addOperand(getAddress(col+1,0,row), size, precision_input); //src
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
+            request->addOperand(getAddress(col,0,row), size, precision_input); //dst
+            request->setShuffle(ben, men, samt, bcnt);
+            requests.push_back(*request);
+
+            lastTile = col;
+        }
+    }
+    lastTile = tile;
+    for(int col=tile-1; col>=(tile/_config->_meshWidth)*_config->_meshWidth; col--){
+        bool isReceiver = false;
+        for(int i:receivers){
+            if (col==i) isReceiver = true;
+        }
+        if(isReceiver){
+            request = new Request(Request::Type::TileSend);
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
             requests.push_back(*request);
+
+            request = new Request(Request::Type::TileReceive);
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
+            request->addOperand(getAddress(col,0,row), size, precision_input); //dst
+            request->setShuffle(ben, men, samt, bcnt);
+            requests.push_back(*request);
+
+            lastTile = col;
         }
     }
 
     for(int col=0; col<_config->_meshWidth; col++){
-        for(int row=1; row<_config->_meshHeight; row++){
-            bool isReceiver = false;
-            for(int i:receivers){
-                if (row*_config->_meshWidth+col==i) isReceiver = true;
-            }
-            if(isReceiver){
-                request = new Request(Request::Type::TileSend);
-                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), size, precision_input); //src
-                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
-                requests.push_back(*request);
+        bool isSender = false;
+        int senderRow = tile/_config->_meshWidth;
+        for(int i:receivers){
+            if (senderRow*_config->_meshWidth+col==i) isSender = true;
+        }
+        if(senderRow*_config->_meshWidth+col == tile) isSender = true;
+        if(isSender){
+            int lastRow = senderRow;
+            for(int row = senderRow +1; row<_config->_meshHeight; row++){
+                bool isReceiver = false;
+                for(int i:receivers){
+                    if (row*_config->_meshWidth+col==i) isReceiver = true;
+                }
+                if(isReceiver){
+                    request = new Request(Request::Type::TileSend);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    requests.push_back(*request);
 
-                request = new Request(Request::Type::TileReceive);
-                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), size, precision_input); //src
-                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
-                requests.push_back(*request);   
-            }     
+                    request = new Request(Request::Type::TileReceive);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    request->setShuffle(ben, men, samt, bcnt);
+                    requests.push_back(*request);  
+
+                    lastRow = row; 
+                }     
+            }
+            lastRow = senderRow;
+            for(int row = senderRow -1; row>=0; row--){
+                bool isReceiver = false;
+                for(int i:receivers){
+                    if (row*_config->_meshWidth+col==i) isReceiver = true;
+                }
+                if(isReceiver){
+                    request = new Request(Request::Type::TileSend);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    requests.push_back(*request);
+
+                    request = new Request(Request::Type::TileReceive);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    request->setShuffle(ben, men, samt, bcnt);
+                    requests.push_back(*request);  
+
+                    lastRow = row;  
+                }     
+            }
         }
     }
     for (unsigned int i = 0; i < requests.size(); i++)

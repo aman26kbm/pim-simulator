@@ -9,7 +9,7 @@
 // FIR filter micro benchmark
 /////////////////////////////////////////////////////////////
 
-int32_t fir_med_inp(System* sys)
+int32_t fir_med_inp_double_load(System* sys)
 {
     std::vector<Request> requests;
     Request *request;
@@ -66,6 +66,12 @@ int32_t fir_med_inp(System* sys)
     if ( (use_tiles*t + tile) < tiles_needed ) {
 
         //Now we load inputs from DRAM
+        request = new Request(Request::Type::RowLoad);
+        request->addOperand(sys->getAddress(tile,0,0), (param+1) * cfg->_ncols, precision_input); //dst
+        request->addOperand(sys->DRAM_ADDR, (param+1) * cfg->_ncols, precision_input); //src
+        requests.push_back(*request);
+
+        //Load the same data again (well the data is actually shifted by 1 CRAM, but we're not modelling DRAM address)
         request = new Request(Request::Type::RowLoad);
         request->addOperand(sys->getAddress(tile,0,0), (param+1) * cfg->_ncols, precision_input); //dst
         request->addOperand(sys->DRAM_ADDR, (param+1) * cfg->_ncols, precision_input); //src
@@ -160,5 +166,5 @@ int32_t fir_med_inp(System* sys)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__fir_med_inp__ = pimsim::registerFunc("fir_med_inp", fir_med_inp);
+static __attribute__((unused)) Registry::Entry &__fir_med_inp_double_load__ = pimsim::registerFunc("fir_med_inp_double_load", fir_med_inp_double_load);
 
