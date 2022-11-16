@@ -810,7 +810,7 @@ void System::broadcast_p2p(int addr,
     std::vector<Request> requests;
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
-    assert(tile<_config->_meshWidth);
+    assert(tile<_config->_meshWidth * _config->_meshHeight);
     int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
     assert(block==0);
     int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
@@ -823,61 +823,99 @@ void System::broadcast_p2p(int addr,
         }
     }
 
-    for(int col=tile+1; col<_config->_meshWidth; col++){
+    int lastTile = tile;
+    for(int col=tile+1; col<(tile/_config->_meshWidth +1)*_config->_meshWidth; col++){
         bool isReceiver = false;
         for(int i:receivers){
             if (col==i) isReceiver = true;
         }
         if(isReceiver){
             request = new Request(Request::Type::TileSend);
-            request->addOperand(getAddress(col-1,0,row), size, precision_input); //src
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
             requests.push_back(*request);
 
             request = new Request(Request::Type::TileReceive);
-            request->addOperand(getAddress(col-1,0,row), size, precision_input); //src
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
             request->setShuffle(ben, men, samt, bcnt);
             requests.push_back(*request);
+
+            lastTile = col;
         }
     }
-    for(int col=tile-1; col>=0; col--){
+    lastTile = tile;
+    for(int col=tile-1; col>=(tile/_config->_meshWidth)*_config->_meshWidth; col--){
         bool isReceiver = false;
         for(int i:receivers){
             if (col==i) isReceiver = true;
         }
         if(isReceiver){
             request = new Request(Request::Type::TileSend);
-            request->addOperand(getAddress(col+1,0,row), size, precision_input); //src
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
             requests.push_back(*request);
 
             request = new Request(Request::Type::TileReceive);
-            request->addOperand(getAddress(col+1,0,row), size, precision_input); //src
+            request->addOperand(getAddress(lastTile,0,row), size, precision_input); //src
             request->addOperand(getAddress(col,0,row), size, precision_input); //dst
             request->setShuffle(ben, men, samt, bcnt);
             requests.push_back(*request);
+
+            lastTile = col;
         }
     }
 
     for(int col=0; col<_config->_meshWidth; col++){
-        for(int row=1; row<_config->_meshHeight; row++){
-            bool isReceiver = false;
-            for(int i:receivers){
-                if (row*_config->_meshWidth+col==i) isReceiver = true;
-            }
-            if(isReceiver){
-                request = new Request(Request::Type::TileSend);
-                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), size, precision_input); //src
-                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
-                requests.push_back(*request);
+        bool isSender = false;
+        int senderRow = tile/_config->_meshWidth;
+        for(int i:receivers){
+            if (senderRow*_config->_meshWidth+col==i) isSender = true;
+        }
+        if(senderRow*_config->_meshWidth+col == tile) isSender = true;
+        if(isSender){
+            int lastRow = senderRow;
+            for(int row = senderRow +1; row<_config->_meshHeight; row++){
+                bool isReceiver = false;
+                for(int i:receivers){
+                    if (row*_config->_meshWidth+col==i) isReceiver = true;
+                }
+                if(isReceiver){
+                    request = new Request(Request::Type::TileSend);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    requests.push_back(*request);
 
-                request = new Request(Request::Type::TileReceive);
-                request->addOperand(getAddress((row-1) * _config->_meshWidth + col,0,row), size, precision_input); //src
-                request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
-                request->setShuffle(ben, men, samt, bcnt);
-                requests.push_back(*request);   
-            }     
+                    request = new Request(Request::Type::TileReceive);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    request->setShuffle(ben, men, samt, bcnt);
+                    requests.push_back(*request);  
+
+                    lastRow = row; 
+                }     
+            }
+            lastRow = senderRow;
+            for(int row = senderRow -1; row>=0; row--){
+                bool isReceiver = false;
+                for(int i:receivers){
+                    if (row*_config->_meshWidth+col==i) isReceiver = true;
+                }
+                if(isReceiver){
+                    request = new Request(Request::Type::TileSend);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    requests.push_back(*request);
+
+                    request = new Request(Request::Type::TileReceive);
+                    request->addOperand(getAddress((lastRow) * _config->_meshWidth + col,0,row), size, precision_input); //src
+                    request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
+                    request->setShuffle(ben, men, samt, bcnt);
+                    requests.push_back(*request);  
+
+                    lastRow = row;  
+                }     
+            }
         }
     }
     for (unsigned int i = 0; i < requests.size(); i++)
