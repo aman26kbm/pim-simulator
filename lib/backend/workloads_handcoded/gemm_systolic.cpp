@@ -74,18 +74,20 @@ int32_t gemm_systolic(System* sys){
                 }
 
                 //compute
-                for(int i=0; i<8; i++){
-                    request = new Request(Request::Type::RowMul);
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,i*precision_input.bits()), 0, precision_input); //src
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+i*precision_input.bits()), 0, precision_input); //src
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()), 0, precision_multiply); //dst
-                    requests.push_back(*request);  
+                for(int j=0; j<4; j++){
+                    for(int i=0; i<8; i++){
+                        request = new Request(Request::Type::RowMul);
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,i*precision_input.bits()), 0, precision_input); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+i*precision_input.bits()), 0, precision_input); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()), 0, precision_multiply); //dst
+                        requests.push_back(*request);  
 
-                    request = new Request(Request::Type::RowAdd);
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+i*precision_input.bits()), 0, precision_multiply); //src
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
-                    requests.push_back(*request);  
+                        request = new Request(Request::Type::RowAdd);
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+i*precision_input.bits()), 0, precision_multiply); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
+                        requests.push_back(*request);  
+                    }
                 }
                 request = new Request(Request::Type::RowReduce_WithinTile);
                 request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,8*precision_input.bits()+8*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //src
