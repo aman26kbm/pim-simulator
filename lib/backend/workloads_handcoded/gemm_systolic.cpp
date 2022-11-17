@@ -58,7 +58,7 @@ int32_t gemm_systolic(System* sys){
                 //     std::cout<<i<<" ";
                 // }
                 // std::cout<<std::endl;
-                sys->broadcast_p2p(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()), precision_input, v, cfg->_nblocks);
+                sys->broadcast_p2p(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()), precision_input, v, cfg->_nblocks, requests);
             }
         }
     }
