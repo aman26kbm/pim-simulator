@@ -52,7 +52,7 @@ int32_t fir_med_inp(System* sys)
 
     std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
     std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-    sys->broadcast_p2p(sys->getAddress(0,0,0), PrecisionT::INT1, v, cfg->get_num_regs_per_rf()*cfg->get_num_bits_per_reg());
+    sys->broadcast_p2p(sys->getAddress(0,0,0), PrecisionT::INT1, v, cfg->get_num_regs_per_rf()*cfg->get_num_bits_per_reg(), requests);
 
     //in our case this is ceil(120/108) = 2
     int iter_tile_count = (int)ceil((float)tiles_needed/(float)use_tiles);

@@ -33,7 +33,7 @@ int32_t gemm_inner_new_broadcast(System* sys){
 
         std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-        sys->broadcast_p2p(sys->getAddress(0,0,0), precision_input, v, cfg->_ncols*cfg->_nblocks);
+        sys->broadcast_p2p(sys->getAddress(0,0,0), precision_input, v, cfg->_ncols*cfg->_nblocks, requests);
 
     for(int iter=0; iter<matrixARowNum/use_tiles+1; iter++){
         for(int core=0; core<use_tiles; core++){

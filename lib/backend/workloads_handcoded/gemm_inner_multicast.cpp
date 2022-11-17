@@ -67,7 +67,7 @@ int32_t gemm_inner_multicast(System* sys){
         std::vector<int> v(cfg->_meshHeight*cfg->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
 
-        sys->broadcast(sys->getAddress(0,0,i*precision_input.bits()),precision_input,v,cfg->_nblocks*cfg->_ncols);
+        sys->broadcast(sys->getAddress(0,0,i*precision_input.bits()),precision_input,v,cfg->_nblocks*cfg->_ncols, requests);
     }
 
     cout<<matrixARowNum/(cfg->_ncols/matrixBColNum)<<endl;

@@ -18,10 +18,10 @@ int32_t fir_med_inp_256bit_loads(System* sys)
     //int size_input = 256*128*128;
     //int size_filter = 257;
 
-    int size_input = 108*256*255;
+    int size_input = 120*256*255;
     int size_filter = 32;
     int param = 255; //this is the last multiplier in the input_size
-    int tiles_needed = 108; //this is the first multiplier in the input_size
+    int tiles_needed = 120; //this is the first multiplier in the input_size
 
     //Here is a summary of the algo we use
     //Load the RF with the filter weights (32 in number) and then broadcast it to all RFs (i.e. all cores).
@@ -52,7 +52,7 @@ int32_t fir_med_inp_256bit_loads(System* sys)
 
     std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
     std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-    sys->broadcast_p2p(sys->getAddress(0,0,0), PrecisionT::INT1, v, cfg->get_num_regs_per_rf()*cfg->get_num_bits_per_reg());
+    sys->broadcast_p2p(sys->getAddress(0,0,0), PrecisionT::INT1, v, cfg->get_num_regs_per_rf()*cfg->get_num_bits_per_reg(), requests);
 
     //in our case this is ceil(120/108) = 2
     int iter_tile_count = (int)ceil((float)tiles_needed/(float)use_tiles);
