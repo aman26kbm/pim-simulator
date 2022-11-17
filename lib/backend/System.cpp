@@ -727,8 +727,9 @@ Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(Syste
 void System::broadcast(int addr, 
                        PrecisionT::Precision precision_input, 
                        std::vector<int> receivers, 
-                       int size, bool ben, bool men, int samt, int bcnt){
-    std::vector<Request> requests;
+                       int size, 
+                       std::vector<Request>& requests,
+                       bool ben, bool men, int samt, int bcnt){
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
     assert(tile<_config->_meshWidth);
@@ -784,8 +785,8 @@ void System::broadcast(int addr,
             }  
         }
     }
-    for (unsigned int i = 0; i < requests.size(); i++)
-        sendRequest(requests[i]);
+    //for (unsigned int i = 0; i < requests.size(); i++)
+    //    sendRequest(requests[i]);
 }
 
 //////////////////////////////////////////////////////
@@ -806,8 +807,9 @@ void System::broadcast(int addr,
 void System::broadcast_p2p(int addr, 
                            PrecisionT::Precision precision_input, 
                            std::vector<int> receivers, 
-                           int size, bool ben, bool men, int samt, int bcnt){
-    std::vector<Request> requests;
+                           int size, 
+                           std::vector<Request>& requests,
+                           bool ben, bool men, int samt, int bcnt){
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
     assert(tile<_config->_meshWidth * _config->_meshHeight);
@@ -918,6 +920,6 @@ void System::broadcast_p2p(int addr,
             }
         }
     }
-    for (unsigned int i = 0; i < requests.size(); i++)
-        sendRequest(requests[i]);
+    //for (unsigned int i = 0; i < requests.size(); i++)
+    //    sendRequest(requests[i]);
 }
