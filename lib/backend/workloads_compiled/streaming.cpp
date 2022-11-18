@@ -160,27 +160,50 @@ SYSTOLIC_MESH_STREAM(20, 12, 128, 256);
 SYSTOLIC_MESH_STREAM(5, 24, 256, 256);
 SYSTOLIC_MESH_STREAM(20, 6, 256, 256);
 
-int conv_3x3_weight_load_impl(System *sys) {
-  for (int tile = 0; tile < 9; ++tile) {
-    Request request(Request::Type::RowLoad);
-    request.addOperand(sys->getAddress(tile, 0, 1), 65536, PrecisionT::Precision{0, 8, 0});
-    request.addOperand(sys->DRAM_ADDR, 65536, PrecisionT::Precision{0, 8, 0});
-    sys->sendRequest(request);
-  }
-  for (int i = 0; i < 9; ++i) {
-    std::vector<int> recv;
-    for (int j = 0; j < 120; ++j) {
-      if (j != i) {
-        recv.push_back(j);
-      }
-    }
-    sys->broadcast_p2p(sys->getAddress(i, 0, 1), PrecisionT::Precision{0, 8, 0}, recv, 65536);
-  }
-  return 0;
-}
+#define CONV_3x3_WEIGHT_LOAD(row, col, ic, oc) \
+int conv_3x3_weight_load_##row##_##col##_##ic##_##oc##_impl(System *sys) { \
+  int loaders = col; \
+  int width = min(ic * oc, 65536); \
+  int cnt[loaders]; \
+  memset(cnt, 0, sizeof cnt); \
+  int total = 3 * 3 * ic * oc; \
+  int tile = 0; \
+  while (total) { \
+    Request request(Request::Type::RowLoad); \
+    request.addOperand(sys->getAddress(tile, 0, 1), width, PrecisionT::Precision{0, 8, 0}); \
+    request.addOperand(sys->DRAM_ADDR, width, PrecisionT::Precision{0, 8, 0}); \
+    sys->sendRequest(request); \
+    total -= width; \
+    cnt[tile]++; \
+    tile = (tile + 1) % loaders; \
+  } \
+  for (int i = 0; i < loaders; ++i) { \
+    std::vector<int> recv; \
+    for (int j = 8; j < row * col; ++j) { \
+      if (j != i) { \
+        recv.push_back(j); \
+      } \
+    } \
+    for (int j = 0; j < cnt[i]; ++j) { \
+      sys->broadcast_p2p(sys->getAddress(i, 0, 1), PrecisionT::Precision{0, 8, 0}, recv, 65536); \
+    } \
+  } \
+  return 0; \
+} \
+static __attribute__((unused)) Registry::Entry &conv_3x3_weight_load_##row##_##col##_##ic##_##oc##_reg = \
+  pimsim::registerFunc("conv_3x3_weight_load_" #row "_" #col "_" #ic "_" #oc, \
+  conv_3x3_weight_load_##row##_##col##_##ic##_##oc##_impl)
 
-static __attribute__((unused)) Registry::Entry &conv_3x3_weight_load_reg =
-  pimsim::registerFunc("conv_3x3_weight_load", conv_3x3_weight_load_impl);
+CONV_3x3_WEIGHT_LOAD(10, 12, 4, 64);
+CONV_3x3_WEIGHT_LOAD(10, 12, 64, 64);
+CONV_3x3_WEIGHT_LOAD(10, 12, 64, 128);
+CONV_3x3_WEIGHT_LOAD(10, 12, 128, 128);
+CONV_3x3_WEIGHT_LOAD(10, 12, 128, 256);
+CONV_3x3_WEIGHT_LOAD(10, 12, 256, 256);
+CONV_3x3_WEIGHT_LOAD(10, 12, 256, 512);
+CONV_3x3_WEIGHT_LOAD(10, 12, 512, 512);
+
+CONV_3x3_WEIGHT_LOAD(5, 24, 512, 512);
 
 int conv_3x3_weight_load_6_impl(System *sys) {
   for (int tile = 0; tile < 9; ++tile) {
