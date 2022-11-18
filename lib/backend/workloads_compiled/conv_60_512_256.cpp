@@ -21,10 +21,16 @@ int32_t conv_60_512_256(System *sys) {
             bool _3 = rc_outer < 256;
             if (_3) {
               {
-                Request request(Request::Type::RowMul_CRAM_RF);
+                Request request(Request::Type::RowLoad);
+                request.addOperand(sys->getAddress(ax1_ax2_fused, 0, 0), 512, PrecisionT::Precision{0, 8, 0} /*DRAM*/);
+                request.addOperand(sys->getAddress(ax1_ax2_fused, 0, 0), 512, PrecisionT::Precision{0, 8, 0} /*x[((((((ax0*20736) + ((ax1.ax2.fused/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax1.ax2.fused % 7)*256)) + rc.outer)]*/);
+                sys->sendRequest(request);
+              }
+              {
+                Request request(Request::Type::RowMul);
                 request.addOperand(sys->getAddress(ax1_ax2_fused, 0, 72), 131072, PrecisionT::Precision{0, 16, 0} /**/);
+                request.addOperand(sys->getAddress(ax1_ax2_fused, 0, 0), 512, PrecisionT::Precision{0, 8, 0} /*x[((((((ax0*20736) + ((ax1.ax2.fused/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax1.ax2.fused % 7)*256)) + rc.outer)]*/);
                 request.addOperand(sys->getAddress(ax1_ax2_fused, 0, 64), 131072, PrecisionT::Precision{0, 8, 0} /*w[ramp((((ry*196608) + (rx*65536)) + (rc.outer*256)), 1, 256)]*/);
-                request.addOperand(ax1_ax2_fused * 32, 131072, PrecisionT::Precision{0, 8, 0} /*x[((((((ax0*20736) + ((ax1.ax2.fused/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax1.ax2.fused % 7)*256)) + rc.outer)]*/);
                 sys->sendRequest(request);
               }
               {

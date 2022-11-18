@@ -19,17 +19,23 @@ int32_t conv_120_64_512(System *sys) {
         for (int32_t rx = 0; rx < 3; ++rx) {
           for (int32_t rc_inner = 0; rc_inner < 4; ++rc_inner) {
             {
-              Request request(Request::Type::RowMul_CRAM_RF);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 32768, PrecisionT::Precision{0, 16, 0} /**/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 64), 32768, PrecisionT::Precision{0, 8, 0} /*w[ramp(((((ry*196608) + (rx*65536)) + (rc.outer*1024)) + (rc.inner*256)), 1, 256)]*/);
-              request.addOperand(ax0_ax1_fused_ax2_fused * 32, 32768, PrecisionT::Precision{0, 8, 0} /*x[((((((((ax0.ax1.fused.ax2.fused/49)*20736) + (((ax0.ax1.fused.ax2.fused % 49)/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax0.ax1.fused.ax2.fused % 7)*256)) + (rc.outer*4)) + rc.inner)]*/);
+              Request request(Request::Type::RowLoad);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 64, PrecisionT::Precision{0, 8, 0} /*DRAM*/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 64, PrecisionT::Precision{0, 8, 0} /*x[((((((((ax0.ax1.fused.ax2.fused/49)*20736) + (((ax0.ax1.fused.ax2.fused % 49)/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax0.ax1.fused.ax2.fused % 7)*256)) + (rc.outer*4)) + rc.inner)]*/);
+              sys->sendRequest(request);
+            }
+            {
+              Request request(Request::Type::RowMul);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 16384, PrecisionT::Precision{0, 16, 0} /**/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 64, PrecisionT::Precision{0, 8, 0} /*x[((((((((ax0.ax1.fused.ax2.fused/49)*20736) + (((ax0.ax1.fused.ax2.fused % 49)/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax0.ax1.fused.ax2.fused % 7)*256)) + (rc.outer*4)) + rc.inner)]*/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 64), 16384, PrecisionT::Precision{0, 8, 0} /*w[ramp(((((ry*196608) + (rx*65536)) + (rc.outer*1024)) + (rc.inner*256)), 1, 256)]*/);
               sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowAdd);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 32768, PrecisionT::Precision{0, 32, 0} /**/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 32768, PrecisionT::Precision{0, 32, 0} /**/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 32768, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)]*/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 16384, PrecisionT::Precision{0, 32, 0} /**/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 16384, PrecisionT::Precision{0, 32, 0} /**/);
+              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 16384, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)]*/);
               sys->sendRequest(request);
             }
           }
@@ -42,22 +48,22 @@ int32_t conv_120_64_512(System *sys) {
     #undef max
       {
         Request request(Request::Type::BlockSend_Receive);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 32768, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.repl.global[ramp(0, 1, 256)]*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 32768, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer.v*256), 1, 256)]*/);
+        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 16384, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.repl.global[ramp(0, 1, 256)]*/);
+        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 16384, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer.v*256), 1, 256)]*/);
         sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 32768, PrecisionT::Precision{0, 32, 0} /**/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 32768, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.repl.global[ramp(0, 1, 256)]*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 32768, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer.v*256), 1, 256)]*/);
+        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 16384, PrecisionT::Precision{0, 32, 0} /**/);
+        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 16384, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.repl.global[ramp(0, 1, 256)]*/);
+        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 16384, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer.v*256), 1, 256)]*/);
         sys->sendRequest(request);
       }
     }
     {
       Request request(Request::Type::RowStore);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 512, PrecisionT::Precision{0, 32, 0} /*DRAM*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 512, PrecisionT::Precision{0, 32, 0} /*CRAM*/);
+      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 32, 0} /*DRAM*/);
+      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 32), 256, PrecisionT::Precision{0, 32, 0} /*CRAM*/);
       sys->sendRequest(request);
     }
   }
