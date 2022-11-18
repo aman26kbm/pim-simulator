@@ -64,19 +64,21 @@ int32_t test_broadcast(System* sys){
 
 int32_t test_broadcast_dmesh(System* sys){
     PrecisionT::Precision p = PrecisionT::INT8;
+    std::vector<Request> requests;
     for(int i=0; i<10; i++){
         std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-        sys->broadcast(sys->getAddress(1,0,i),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols);
+        sys->broadcast(sys->getAddress(1,0,i),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols, requests);
     }
 }
 
 int32_t test_broadcast_dmesh_p2p(System* sys){
     PrecisionT::Precision p = PrecisionT::INT8;
+    std::vector<Request> requests;
     for(int i=9; i<10; i++){
         std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-        sys->broadcast_p2p(sys->getAddress(14,0,i),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols);
+        sys->broadcast_p2p(sys->getAddress(14,0,i),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols, requests);
     }
 }
 
