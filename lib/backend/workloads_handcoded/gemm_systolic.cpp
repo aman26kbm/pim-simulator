@@ -50,6 +50,7 @@ int32_t gemm_systolic(System* sys){
                 request = new Request(Request::Type::RowLoad);
                 request->addOperand(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()),cfg->_nblocks, precision_input); //cram addr
                 request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
+                request->setShuffle(0, 1, 0, 1);
                 requests.push_back(*request);
 
                 std::vector<int> v(sys->_config->_meshWidth);
@@ -58,7 +59,7 @@ int32_t gemm_systolic(System* sys){
                 //     std::cout<<i<<" ";
                 // }
                 // std::cout<<std::endl;
-                sys->broadcast_p2p(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()), precision_input, v, cfg->_nblocks, requests);
+                sys->broadcast_p2p(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()), precision_input, v, cfg->_nblocks, requests,0,1,0,1);
             }
         }
     }
@@ -94,46 +95,48 @@ int32_t gemm_systolic(System* sys){
 
                 //compute
                 for(int j=0; j<sub_B_col_loaded; j++){
-                    for(int i=0; i<A_col_partition; i++){
-                        request = new Request(Request::Type::RowMul);
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,i*precision_input.bits()), 0, precision_input); //src
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(j*A_col_partition+i)*precision_input.bits()), 0, precision_input); //src
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //dst
-                        requests.push_back(*request);  
+                    if(meshRow*sub_B_col_loaded + j <matrixBColNum){
+                        for(int i=0; i<A_col_partition; i++){
+                            request = new Request(Request::Type::RowMul);
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,i*precision_input.bits()), 0, precision_input); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(j*A_col_partition+i)*precision_input.bits()), 0, precision_input); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //dst
+                            requests.push_back(*request);  
 
-                        request = new Request(Request::Type::RowAdd);
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //src
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
-                        requests.push_back(*request);  
+                            request = new Request(Request::Type::RowAdd);
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
+                            requests.push_back(*request);  
+                        }
+                    
+                        request = new Request(Request::Type::RowReduce_WithinTile);
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //dst
+                        requests.push_back(*request);
+
+                        request = new Request(Request::Type::RowStore);
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()),cfg->_ncols, precision_accumulate); //cram addr
+                        request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
+                        requests.push_back(*request);
+                            
+                        //     request = new Request(Request::Type::RowAdd);
+                        //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //src
+                        //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), 0, precision_accumulate); //src
+                        //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), 0, precision_accumulate); //dst
+                        //     requests.push_back(*request);  
+                        // }
+                    
+                        // request = new Request(Request::Type::RowReduce_WithinTile);
+                        // request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), (int)log2(cfg->_nblocks), precision_accumulate); //src
+                        // request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), (int)log2(cfg->_nblocks), precision_accumulate); //dst
+                        // requests.push_back(*request);
+
+                        // request = new Request(Request::Type::RowStore);
+                        // request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0),cfg->_ncols, precision_accumulate); //cram addr
+                        // request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
+                        // requests.push_back(*request);
                     }
-                
-                    request = new Request(Request::Type::RowReduce_WithinTile);
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //src
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //dst
-                    requests.push_back(*request);
-
-                    request = new Request(Request::Type::RowStore);
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()),cfg->_ncols, precision_accumulate); //cram addr
-                    request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
-                    requests.push_back(*request);
-                        
-                    //     request = new Request(Request::Type::RowAdd);
-                    //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //src
-                    //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), 0, precision_accumulate); //src
-                    //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), 0, precision_accumulate); //dst
-                    //     requests.push_back(*request);  
-                    // }
-                
-                    // request = new Request(Request::Type::RowReduce_WithinTile);
-                    // request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), (int)log2(cfg->_nblocks), precision_accumulate); //src
-                    // request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0), (int)log2(cfg->_nblocks), precision_accumulate); //dst
-                    // requests.push_back(*request);
-
-                    // request = new Request(Request::Type::RowStore);
-                    // request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,0),cfg->_ncols, precision_accumulate); //cram addr
-                    // request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
-                    // requests.push_back(*request);
                 }
 
                 //finish rest sub_B cols

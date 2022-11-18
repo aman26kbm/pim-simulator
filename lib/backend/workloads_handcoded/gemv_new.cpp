@@ -12,7 +12,7 @@ int32_t gemv_new(System* sys)
 {
     //int matrix_row = 32768*1;//32768 * X
     //int matrix_col = 4096 *1;// 4096 * Y
-    int matrix_row = 108*512;
+    int matrix_row = 120*512;
     int matrix_col = 256*8;
     Config* cfg = sys->_config;
     int use_tiles = cfg->_ntiles_used;
