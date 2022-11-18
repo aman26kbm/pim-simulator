@@ -487,6 +487,8 @@ void DynaSwitch::setupConnection(Direction in,int channelIn, Direction out, int 
     // this to avoid 2 input set up connection to same output
     //this->packetsRemaining[out]=packets;
     connected[out][channelOut] = true;
+    this->packetsRemaining[out][channelOut]=packets;
+    this->connectStates[in][channelIn] = ConnectState((OutDirection)out,channelOut);
     next->packetsRemaining[out][channelOut]=packets;
     next->connectStates[in][channelIn] = ConnectState((OutDirection)out,channelOut);
 }

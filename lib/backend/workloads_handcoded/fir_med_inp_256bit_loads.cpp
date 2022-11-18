@@ -15,10 +15,10 @@ int32_t fir_med_inp_256bit_loads(System* sys)
     Request *request;
     Config* cfg = sys->_config;
 
-    //int size_input = 256*128*128;
+    int size_input = 256*128*128;
     //int size_filter = 257;
 
-    int size_input = 120*256*255;
+    //int size_input = 120*256*255;
     int size_filter = 32;
     int param = 255; //this is the last multiplier in the input_size
     int tiles_needed = 120; //this is the first multiplier in the input_size
