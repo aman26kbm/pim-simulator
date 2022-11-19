@@ -923,3 +923,14 @@ void System::broadcast_p2p(int addr,
     //for (unsigned int i = 0; i < requests.size(); i++)
     //    sendRequest(requests[i]);
 }
+
+void System::broadcast_p2p(int addr, 
+                           PrecisionT::Precision precision_input, 
+                           std::vector<int> receivers, 
+                           int size, 
+                           bool ben, bool men, int samt, int bcnt) {
+  std::vector<Request> reqs;
+  broadcast_p2p(addr, precision_input, receivers, size, reqs, ben, men, samt, bcnt);
+  for (auto &elem : reqs)
+    sendRequest(elem);
+}

@@ -2,8 +2,6 @@
 #include"backend/global.h"
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
-//workaround
-#include "DataStructs.cpp"
 
 using namespace pimsim;
 

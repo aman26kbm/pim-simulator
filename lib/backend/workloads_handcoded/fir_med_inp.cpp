@@ -153,6 +153,7 @@ int32_t fir_med_inp(System* sys)
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+    return 0;
 }
 
 /////////////////////////////////////////////////////////////

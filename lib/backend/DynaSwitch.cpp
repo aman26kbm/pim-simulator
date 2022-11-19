@@ -1,6 +1,5 @@
 #include "backend/DynaSwitch.h"
 //workaround
-#include "DataStructs.cpp"
 #include <string.h>
 using namespace pimsim;
 DynaSwitch::DynaSwitch(){}

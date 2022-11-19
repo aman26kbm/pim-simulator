@@ -149,6 +149,15 @@ public:
                        int samt=0,
                        int bcnt=0);
 
+    void broadcast_p2p(int addr, 
+                       PrecisionT::Precision precision_input, 
+                       std::vector<int> receivers, 
+                       int size, 
+                       bool ben=false,
+                       bool men=false,
+                       int samt=0,
+                       int bcnt=0);
+
 };
 
 struct Registry {

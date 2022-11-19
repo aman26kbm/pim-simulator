@@ -201,6 +201,8 @@ int32_t gemm_systolic(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 
