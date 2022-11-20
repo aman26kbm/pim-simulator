@@ -46,23 +46,25 @@ public:
     //Energy in J spent per RF write
     const double E_RfWr = 4.22e-12;
     //Energy in J spent in transfer a bit from one router to another (1 hop)
-    const double E_NoC = 2.85e-12 / 1024;
+    const double E_NoC = 4.33e-13;
     //Energy in J spent in tranfering a bit from one port of switch to another
-    const double E_HTree = 5.1e-15;
+    const double E_HTree = 4.98e-15;
     //Energy in J spent in tranfering a bit from one port of switch to another
     const double E_HTreeRoot = 5.04e-15; //Same as HTree so not used in calculations
     //Energy in J spent in transposing data per bit (average)
-    const double E_Transpose = 1.06e-15;
+    const double E_Transpose = 2.73e-13;
     //Energy in J spent in shuffling data per bit
     const double E_Shuffle = 7.08e-15;
-    //Energy in J spent in DRAM controller
+    //Energy in J spent in DRAM controller and DRAM
     //We don't have a model for this. The area of the chip occupied by
     //the memory controller is about 4%.
     //The Harmonia paper says memory controller power is 3% of the total 
     //memory power. And 40% of total power was memory power and 40% of total
     //power was gpu chip power. We will calculate chip power and then we can
     //add 12% to it .
-    const double E_DramCtrl = 0;
+    //Updated: Nov 19: We are using data from GPU
+    //This is energy in J spent in reading or writing per bit from DRAM
+    const double E_Dram = 9.32e-12;
 
     //Static/Leakage energy (per clock) (unit = J)
     const double SE_NoC = 2.21e-10;
@@ -85,6 +87,7 @@ public:
     double instCtrlDynEnergy = 0;
     double rfDynEnergy = 0;
     double popcountDynEnergy = 0;
+    double dramDynEnergy = 0;
 
     double shuffleStaticEnergy = 0;
     double hTreeStaticEnergy = 0;

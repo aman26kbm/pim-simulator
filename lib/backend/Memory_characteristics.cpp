@@ -316,6 +316,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
     double R_instCtrlDynEnergy = 0;
     double R_rfDynEnergy = 0;
     double R_popcountDynEnergy = 0;
+    double R_dramDynEnergy = 0;
 
     if (req.type == Request::Type::NOP) return 0;
 
@@ -578,6 +579,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
                 R_transposeDynEnergy = E_Transpose * bitsToFromDram;
             }
             bitsReadFromDram += bitsToFromDram;
+            R_dramDynEnergy = E_Dram * bitsToFromDram;
 
             //Check that if broadcast or multicast is enabled, then the size must be equal to number of cols in a block
             if (req.broadcast_en || req.multicast_en) {
@@ -592,12 +594,13 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree;
             R_arrayDynEnergy = rows * E_ArrayWr * (cols / config->get_ncols());
-            energy = R_instCtrlDynEnergy + R_hTreeDynEnergy + R_transposeDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
+            energy = R_instCtrlDynEnergy + R_hTreeDynEnergy + R_dramDynEnergy + R_transposeDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             hTreeDynEnergy += R_hTreeDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
             transposeDynEnergy += R_transposeDynEnergy;
             shuffleDynEnergy += R_shuffleDynEnergy;
+            dramDynEnergy += R_dramDynEnergy;
             break;
         }
         case Request::Type::RowStore: {
@@ -610,16 +613,18 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
                 R_transposeDynEnergy = E_Transpose * bitsToFromDram;
             }
             bitsWrittenToDram += bitsToFromDram;
+            R_dramDynEnergy = E_Dram * bitsToFromDram;
 
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC +
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = rows * E_ArrayRd * (cols / config->get_ncols());
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree;
-            energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy + R_transposeDynEnergy;
+            energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy + R_transposeDynEnergy + R_dramDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             hTreeDynEnergy += R_hTreeDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
             transposeDynEnergy += R_transposeDynEnergy;
+            dramDynEnergy += R_dramDynEnergy;
             break;
         }
         case Request::Type::RowLoad_RF: {
@@ -630,13 +635,17 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //No transpose here because the data for RF is never transposed
             //NoC energy is not accounted for here
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + 
+            int bitsToFromDram = config->_num_regs_per_rf * config->_num_bits_per_reg;
+            bitsReadFromDram += bitsToFromDram;
+            R_dramDynEnergy = E_Dram * bitsToFromDram;
+
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_rfDynEnergy = E_RfWr * config->_num_regs_per_rf;
-            energy = R_instCtrlDynEnergy + R_rfDynEnergy;
+            energy = R_instCtrlDynEnergy + R_rfDynEnergy + R_dramDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             rfDynEnergy += R_rfDynEnergy;
+            dramDynEnergy += R_dramDynEnergy;
 
-            bitsReadFromDram += config->_num_regs_per_rf * config->_num_bits_per_reg;
             break;
         }
         case Request::Type::RowStore_RF: {
@@ -646,13 +655,17 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //No transpose here because the data for RF is never transposed
             //NoC energy is not accounted for here
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + 
+            int bitsToFromDram = config->_num_regs_per_rf * config->_num_bits_per_reg;
+            bitsWrittenToDram += bitsToFromDram;
+            R_dramDynEnergy = E_Dram * bitsToFromDram;
+
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_rfDynEnergy = E_RfRd * config->_num_regs_per_rf;
-            energy = R_instCtrlDynEnergy + R_rfDynEnergy;
+            energy = R_instCtrlDynEnergy + R_rfDynEnergy + R_dramDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             rfDynEnergy += R_rfDynEnergy;
+            dramDynEnergy += R_dramDynEnergy;
 
-            bitsWrittenToDram += config->_num_regs_per_rf * config->_num_bits_per_reg;
             break;
         }
         //Synchronization requests only generate sync packets, not data packets.

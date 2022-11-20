@@ -413,7 +413,7 @@ void System::generate_energy_csv(){
         tot_static_energy = _chips[i]->_values->getStaticEnergy();
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 41;
+        const int NUM_CSV_COLUMNS = 42;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "RowAdd_Energy",
@@ -443,6 +443,7 @@ void System::generate_energy_csv(){
                           "HTree_Dynamic_Energy",
                           "CRAM_Dynamic_Energy",
                           "Transpose_Dynamic_Energy",
+                          "Dram_Dynamic_Energy",
                           "NoC_Dynamic_Energy",
                           "InstCtrl_Dynamic_Energy",
                           "RF_Dynamic_Energy",
@@ -494,6 +495,7 @@ void System::generate_energy_csv(){
                 _chips[i]->_values->hTreeDynEnergy,
                 _chips[i]->_values->arrayDynEnergy,
                 _chips[i]->_values->transposeDynEnergy,
+                _chips[i]->_values->dramDynEnergy,
                 _chips[i]->_values->nocDynEnergy,
                 _chips[i]->_values->instCtrlDynEnergy,
                 _chips[i]->_values->rfDynEnergy,
