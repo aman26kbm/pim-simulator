@@ -662,6 +662,10 @@ void System::finish()
         //fprintf(rstFile, "Chip#%d leakage power is %.4lf W\n", i, _chips[i]->getTotalLeakageEnergy());
         fprintf(rstFile, "--------------------------------\n");
 
+        cout<<std::endl;
+        cout<<"Bits read from DRAM: "<< _chips[i]->_values->bitsReadFromDram<<std::endl;
+        cout<<"Bits written to DRAM: "<< _chips[i]->_values->bitsWrittenToDram;
+
         for (int j = 0; j < _chips[i]->_values->config->_ntiles; j++) {
             fprintf(rstFile, "Chip#%d Tile#%d has ticked %lu clocks, last active time is %lu\n", i, j, (long) _time, (long)_chips[i]->_children[j]->_last_req_time);
             fprintf(rstFile, "--------------------------------\n");

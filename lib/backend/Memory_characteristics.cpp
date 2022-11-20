@@ -577,6 +577,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             if (req.enableTransposeUnit) {
                 R_transposeDynEnergy = E_Transpose * bitsToFromDram;
             }
+            bitsReadFromDram += bitsToFromDram;
 
             //Check that if broadcast or multicast is enabled, then the size must be equal to number of cols in a block
             if (req.broadcast_en || req.multicast_en) {
@@ -608,6 +609,8 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             if (req.enableTransposeUnit) {
                 R_transposeDynEnergy = E_Transpose * bitsToFromDram;
             }
+            bitsWrittenToDram += bitsToFromDram;
+
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC +
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = rows * E_ArrayRd * (cols / config->get_ncols());
@@ -632,6 +635,8 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             energy = R_instCtrlDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             rfDynEnergy += R_rfDynEnergy;
+
+            bitsReadFromDram += config->_num_regs_per_rf * config->_num_bits_per_reg;
             break;
         }
         case Request::Type::RowStore_RF: {
@@ -646,6 +651,8 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             energy = R_instCtrlDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             rfDynEnergy += R_rfDynEnergy;
+
+            bitsWrittenToDram += config->_num_regs_per_rf * config->_num_bits_per_reg;
             break;
         }
         //Synchronization requests only generate sync packets, not data packets.
@@ -669,7 +676,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
     }
 
     //Add 4% energy for DRAM controller
-    energy *= 1.04;
+    //energy *= 1.04;
     return energy;
 }
 
@@ -693,7 +700,7 @@ double MemoryCharacteristics::getStaticEnergy() {
                     arrayStaticEnergy + shuffleStaticEnergy;
 
     //Add 4% energy for DRAM controller
-    static_energy *= 1.04;
+    //static_energy *= 1.04;
     
     return static_energy;
 }                              
