@@ -32,11 +32,11 @@ public:
     const TimeT T_CLK = 1; 
 
     //Energy in J spent per word read from a memory array
-    const double E_ArrayRd = 8.6e-12; //from NC paper
+    const double E_ArrayRd = 3.309e-12;
     //Energy in J spent per word written to a memory array
-    const double E_ArrayWr = 8.6e-12; //from NC paper
+    const double E_ArrayWr = 3.309e-12; 
     //Energy in J spent per compute op performed in a memory array
-    const double E_ArrayCompute = 17.2e-12; //read+write
+    const double E_ArrayCompute = 5.926e-12; 
     //Energy in J spent per instruction decode/execute
     const double E_InstrCtrl = 7.66e-11;
     //Energy in J spent per popcount operation (all steps)
