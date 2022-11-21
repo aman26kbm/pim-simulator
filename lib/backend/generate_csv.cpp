@@ -359,6 +359,9 @@ void System::generate_energy_csv(){
     double tot_block_broadcast_energy = 0;
     double tot_block_sendreceive_energy = 0;
     double tot_noc_dynamic_energy = 0;
+    double tot_compute_dynamic_energy = 0;
+    double tot_network_dynamic_energy = 0;
+    double tot_dram_dynamic_energy = 0;
     double tot_dynamic_energy = 0;
     double tot_static_energy = 0;
 
@@ -411,9 +414,25 @@ void System::generate_energy_csv(){
         _chips[i]->_values->nocDynEnergy = tot_noc_dynamic_energy;
         tot_dynamic_energy += tot_noc_dynamic_energy;
         tot_static_energy = _chips[i]->_values->getStaticEnergy();
+
+        //Calculate totals for energy breakdown
+        tot_compute_dynamic_energy = 
+                _chips[i]->_values->arrayDynEnergy +
+                _chips[i]->_values->instCtrlDynEnergy +
+                _chips[i]->_values->rfDynEnergy +
+                _chips[i]->_values->popcountDynEnergy;
+
+        tot_dram_dynamic_energy =
+                _chips[i]->_values->transposeDynEnergy +
+                _chips[i]->_values->dramDynEnergy;
+                
+        tot_network_dynamic_energy =
+                _chips[i]->_values->shuffleDynEnergy +
+                _chips[i]->_values->hTreeDynEnergy +
+                _chips[i]->_values->nocDynEnergy;
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 42;
+        const int NUM_CSV_COLUMNS = 45;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "RowAdd_Energy",
@@ -456,6 +475,9 @@ void System::generate_energy_csv(){
                           "InstCtrl_Static_Energy",
                           "RF_Static_Energy",
                           "Popcount_Static_Energy",
+                          "Total_Compute_Dynamic_Energy",
+                          "Total_Network_Dynamic_Energy",
+                          "Total_DRAM_Dynamic_Energy",
                           "Total_Dynamic_Energy",
                           "Total_Static_Energy"
         };
