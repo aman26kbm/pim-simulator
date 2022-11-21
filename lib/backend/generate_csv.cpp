@@ -530,6 +530,9 @@ void System::generate_energy_csv(){
                 _chips[i]->_values->instCtrlStaticEnergy,
                 _chips[i]->_values->rfStaticEnergy,
                 _chips[i]->_values->popcountStaticEnergy,
+                tot_compute_dynamic_energy,
+                tot_network_dynamic_energy,
+                tot_dram_dynamic_energy,
                 tot_dynamic_energy,
                 tot_static_energy
         };
