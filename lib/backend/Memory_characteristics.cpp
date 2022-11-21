@@ -308,6 +308,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
     int compute_cycles = 0;
     int rows = 0;
     int cols = 0;
+    int num_crams_involved = 0;
 
     double R_shuffleDynEnergy = 0;
     double R_hTreeDynEnergy = 0;
@@ -322,16 +323,19 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
 
     if (req.size_list[0]==0) { 
         cols = config->get_nblocks() * config->get_ncols();
+        num_crams_involved = config->get_nblocks();
     }
     else {
         cols = req.size_list[0];
+        //Assuming that for compute instructions as well, the size field specify how many bitlines are involved in the operation
+        num_crams_involved = (int)ceil((float)cols/(float)config->get_ncols());
     }
     switch (req.type) {
         case Request::Type::RowRead: 
             //Instruction controller + Array read
             cycles = getPrecisionBits(req);
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy =  E_ArrayRd * cycles * config->get_nblocks();
+            R_arrayDynEnergy =  E_ArrayRd * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -342,7 +346,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array write
             cycles = getPrecisionBits(req);
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy =  E_ArrayWr * cycles * config->get_nblocks();
+            R_arrayDynEnergy =  E_ArrayWr * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -351,7 +355,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array compute 
             cycles = getClocksForReq(req.precision_list, "add");
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy =  E_ArrayCompute * cycles * config->get_nblocks();
+            R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -360,7 +364,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array compute 
             cycles = getClocksForReq(req.precision_list, "compare");
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy =  E_ArrayCompute * cycles * config->get_nblocks();
+            R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -369,7 +373,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array compute 
             cycles = getClocksForReq(req.precision_list, "mul");
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy =  E_ArrayCompute * cycles * config->get_nblocks();
+            R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -378,7 +382,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array compute 
             cycles = getPrecisionBits(req);
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy =  E_ArrayCompute * cycles * config->get_nblocks();
+            R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -387,7 +391,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array compute across all arrays in a tile
             compute_cycles = getClocksForReq(req.precision_list, "reduce", req.size_list[0]);
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = compute_cycles * E_ArrayCompute;
+            R_arrayDynEnergy = compute_cycles * E_ArrayCompute * config->get_nblocks(); //TODO: There is no way to specify how many crams are involved currently. So assume all CRAMs in a core are involved.
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -421,7 +425,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + Array compute across all arrays in a tile
             cycles = getClocksForReq(req.precision_list, "read", req.size_list[0]);
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = cycles * E_ArrayCompute * config->get_nblocks();
+            R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -430,7 +434,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + RF read + Array compute 
             cycles = getClocksForReq(req.precision_list, "mul_cram_rf");
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = cycles * E_ArrayCompute * config->get_nblocks();
+            R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
             R_rfDynEnergy = E_RfRd;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
@@ -441,7 +445,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //Instruction controller + RF read + Array compute 
             cycles = getClocksForReq(req.precision_list, "add_cram_rf");
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = cycles * E_ArrayCompute * config->get_nblocks();
+            R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
             R_rfDynEnergy = E_RfRd;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
@@ -540,7 +544,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             rows = getPrecisionBits(req);
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC +
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = rows * E_ArrayRd * (cols / config->get_ncols());
+            R_arrayDynEnergy = rows * E_ArrayRd * num_crams_involved;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree + 
                                config->_htreeTileDepth * rows * cols * E_HTree;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
@@ -562,7 +566,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             }
             
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = rows * E_ArrayWr * (cols / config->get_ncols());
+            R_arrayDynEnergy = rows * E_ArrayWr * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
@@ -593,7 +597,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + 
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree;
-            R_arrayDynEnergy = rows * E_ArrayWr * (cols / config->get_ncols());
+            R_arrayDynEnergy = rows * E_ArrayWr * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_hTreeDynEnergy + R_dramDynEnergy + R_transposeDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             hTreeDynEnergy += R_hTreeDynEnergy;
@@ -617,7 +621,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
 
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC +
             R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = rows * E_ArrayRd * (cols / config->get_ncols());
+            R_arrayDynEnergy = rows * E_ArrayRd * num_crams_involved;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy + R_transposeDynEnergy + R_dramDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;

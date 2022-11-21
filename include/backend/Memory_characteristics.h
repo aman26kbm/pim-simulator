@@ -56,12 +56,6 @@ public:
     //Energy in J spent in shuffling data per bit
     const double E_Shuffle = 7.08e-15;
     //Energy in J spent in DRAM controller and DRAM
-    //We don't have a model for this. The area of the chip occupied by
-    //the memory controller is about 4%.
-    //The Harmonia paper says memory controller power is 3% of the total 
-    //memory power. And 40% of total power was memory power and 40% of total
-    //power was gpu chip power. We will calculate chip power and then we can
-    //add 12% to it .
     //Updated: Nov 19: We are using data from GPU
     //This is energy in J spent in reading or writing per bit from DRAM
     const double E_Dram = 9.32e-12;

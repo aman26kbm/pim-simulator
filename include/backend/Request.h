@@ -18,7 +18,7 @@ public:
         //Basic PIM instructions
         //////////////////////////////////
         RowSet,   //Sets (to 1) 1 row in a block. 
-                  //"size" argument is not used.
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
                   //The address of the row is specified by the "addr" argument.
                   //Entire row is set. No way to set a few columns in the chunk of rows.
                   //It'd take the same time if either all columns or a few columns of the chunk of rows was needed to be set. 
@@ -26,7 +26,7 @@ public:
         RowReset, //Resets (to 0) a row in a block.
         RowRead,  //Read 1 row in a block and bring its contents into the row buffer of the block.
                   //The addr argument specifies the row ID. 
-                  //"size" argument is not used.
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
                   //Can't specify a few columns within the row to read. Read all columns in the row.
         RowWrite, //Write a row in a block; rest same as above 
 
@@ -35,7 +35,7 @@ public:
                   //The time taken is specified to be X cycles in MemoryCharacteristics
                   //where X includes the cycles required to fully add multi-bit numbers. 
                   //The "precision" argument specifies precision.
-                  //The "size" argument is unused.
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
                   //There is implicit parallellism here. This instruction involves multiple rows.
                   //Also, the add operation happens across all columns.
                   //example: 
@@ -59,7 +59,7 @@ public:
                   //The time taken is specified to be X cycles in MemoryCharacteristics
                   //where X includes the cycles required to fully multiply multi-bit numbers.
                   //The "precision" argument specifies precision.
-                  //The "size" argument is unused.
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
                   //There is implicit parallellism here. This instruction involves multiple rows.
                   //Also, the multiply operation happens across all columns.
                   //example:
@@ -75,7 +75,7 @@ public:
                    //The "precision" argument specifies precision.
                    //The time taken is specified to be X cycles in MemoryCharacteristics
                    //where X includes the cycles required to fully add multi-bit numbers.
-                   //The "size" argument is unused.
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
         ColBitwise,//UNUSED
 
         RowSearch, //UNUSED
@@ -111,6 +111,7 @@ public:
                   //   request = new Request(Request::Type::RowShift);
                   //     request->addOperand(sys->getAddress(tile,0,src1_row), size, src1_precision); //src
                   //     requests.push_back(*request);
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
 
         //////////////////////////////////
         //Data transfer instructions
@@ -138,7 +139,8 @@ public:
                   //For the H-tree interconnect, this involves some hops. So, there are some extra cycles to be added.
                   //But for the bus interconnect, this involves the delay in the tile-to-tile interconnect (the bus structure
                   //isn't global across the entire chip; there is a hierarchy)
-                  //size, precision and addr arguments have the same meaning as BlockSend_Receive.
+                  //precision and addr arguments have the same meaning as BlockSend_Receive.
+                  //"size" argument can be used to specify how many bitlines are involved across the whole tile.
                   //example:
                     // request = new Request(Request::Type::TileSend);
                     // request->addOperand(sys->getAddress(src_tile,0,src_row), 0, PrecisionT::INT16); //src
@@ -271,7 +273,7 @@ public:
                         //The time taken is specified to be X cycles in MemoryCharacteristics
                         //where X includes the cycles required to fully multiply multi-bit numbers.
                         //The "precision" argument specifies precision.
-                        //The "size" argument is unused.
+                        //"size" argument can be used to specify how many bitlines are involved across the whole tile.
                         //There is implicit parallellism here. This instruction involves multiple rows.
                         //Also, the multiply operation happens across all columns.
         RowAdd_CRAM_RF, //Addition between a value in CRAM and RF
