@@ -236,22 +236,44 @@ int fir_stream_##cores##_##arrays##_##bitlines##_impl(System *sys) { \
     total -= width; \
     { \
       Request request(Request::Type::RowLoad); \
-      request.addOperand(sys->getAddress(tile, 0, 1), width, PrecisionT::Precision{0, 8, 0}); \
-      request.addOperand(sys->DRAM_ADDR, width, PrecisionT::Precision{0, 8, 0}); \
+      request.addOperand(sys->getAddress(tile, 0, 1), width, PrecisionT::Precision{0, 16, 0}); \
+      request.addOperand(sys->DRAM_ADDR, width, PrecisionT::Precision{0, 16, 0}); \
       sys->sendRequest(request); \
     } \
     tile++; \
     tile %= cores; \
   } \
   { \
+    for (int i = 1; i < cores; ++i) { \
+      int sender = i; \
+      int recv = i - 1; \
+      {                                                                                   \
+        Request request(Request::Type::TileReceive);                                      \
+        request.addOperand(sys->getAddress(sender, 0, 0), 256,                         \
+                           PrecisionT::Precision{0, 16, 0});                               \
+        request.addOperand(sys->getAddress(recv, 0, 0), 256,                           \
+                           PrecisionT::Precision{0, 16, 0});                               \
+        sys->sendRequest(request);                                                        \
+      }                                                                                   \
+      {                                                                                   \
+        Request request(Request::Type::TileSend);                                         \
+        request.addOperand(sys->getAddress(sender, 0, 0), 256,                         \
+                           PrecisionT::Precision{0, 16, 0});                               \
+        request.addOperand(sys->getAddress(recv, 0, 0), 256,                           \
+                           PrecisionT::Precision{0, 16, 0});                               \
+        sys->sendRequest(request);                                                        \
+      }                                                                                   \
+    } \
+  } \
+  { \
     Request request(Request::Type::RowLoad); \
-    request.addOperand(sys->getAddress(0, 0, 1), 32, PrecisionT::Precision{0, 8, 0}); \
-    request.addOperand(sys->DRAM_ADDR, 32, PrecisionT::Precision{0, 8, 0}); \
+    request.addOperand(sys->getAddress(0, 0, 1), 32, PrecisionT::Precision{0, 16, 0}); \
+    request.addOperand(sys->DRAM_ADDR, 32, PrecisionT::Precision{0, 16, 0}); \
     sys->sendRequest(request); \
   } \
   { \
     std::vector<int> recv; \
-    for (int i = 1; i < cores; ++i) { \
+    for (int i = 0; i < cores; ++i) { \
       recv.push_back(i); \
     } \
     sys->broadcast_p2p(sys->getAddress(0, 0, 1), PrecisionT::Precision{0, 8, 0}, recv, 32); \

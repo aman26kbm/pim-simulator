@@ -30,10 +30,6 @@ int32_t tvmgen_default_fused_nn_max_pool2d(System *sys) {
             sys->sendRequest(request);
           }
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax1, 0, 0), 3584, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax1, 0, 0), 3584, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
             Request request(Request::Type::RowAdd_CRAM_RF);
@@ -82,16 +78,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -130,10 +118,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       }
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -143,10 +127,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowMul);
@@ -156,10 +136,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -169,10 +145,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -231,10 +203,6 @@ int32_t tvmgen_default_fused_nn_contrib_dense_pack_add_cast_multiply(System *sys
           sys->sendRequest(request);
         }
         {
-          Request request(Request::Type::RowShift);
-          request.addOperand(sys->getAddress(ax0_ax1_outer_fused, 0, 0), 128, PrecisionT::Precision{0, 16, 0} /*Unaligned Shift*/);
-          request.addOperand(sys->getAddress(ax0_ax1_outer_fused, 0, 0), 128, PrecisionT::Precision{0, 16, 0} /*Unaligned Shift*/);
-          sys->sendRequest(request);
         }
         {
           Request request(Request::Type::RowLoad);
@@ -243,10 +211,6 @@ int32_t tvmgen_default_fused_nn_contrib_dense_pack_add_cast_multiply(System *sys
           sys->sendRequest(request);
         }
         {
-          Request request(Request::Type::RowShift);
-          request.addOperand(sys->getAddress(ax0_ax1_outer_fused, 0, 62), 32000, PrecisionT::Precision{0, 16, 0} /*Unaligned Shift*/);
-          request.addOperand(sys->getAddress(ax0_ax1_outer_fused, 0, 62), 32000, PrecisionT::Precision{0, 16, 0} /*Unaligned Shift*/);
-          sys->sendRequest(request);
         }
         {
           Request request(Request::Type::RowMul);
@@ -289,10 +253,6 @@ int32_t tvmgen_default_fused_nn_contrib_dense_pack_add_cast_multiply(System *sys
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_outer_fused, 0, 62), 250, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_outer_fused, 0, 62), 250, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -350,16 +310,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -398,10 +350,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -411,10 +359,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -424,10 +368,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -437,10 +377,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -508,16 +444,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1(
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -555,10 +483,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1(
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -568,10 +492,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1(
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -581,10 +501,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1(
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -594,10 +510,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1(
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -639,10 +551,6 @@ int32_t tvmgen_default_fused_divide_round_cast_clip_cast_cast_layout_transform(S
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax1_outer, 0, 0), 1344, PrecisionT::Precision{1, 23, 8} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax1_outer, 0, 0), 1344, PrecisionT::Precision{1, 23, 8} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul_CRAM_RF);
@@ -658,10 +566,6 @@ int32_t tvmgen_default_fused_divide_round_cast_clip_cast_cast_layout_transform(S
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax1_outer, 0, 0), 1344, PrecisionT::Precision{1, 23, 8} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax1_outer, 0, 0), 1344, PrecisionT::Precision{1, 23, 8} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul_CRAM_RF);
@@ -718,16 +622,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         void* _2 = (void*) "Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)] = x256(0)/*skip-init*/";
         for (int32_t rc_inner = 0; rc_inner < 4; ++rc_inner) {
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 0), 7, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 0), 7, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
             Request request(Request::Type::RowMul);
@@ -764,10 +660,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -777,10 +669,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -790,10 +678,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -803,10 +687,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -816,10 +696,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 1792, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 1792, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -881,16 +757,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
             sys->sendRequest(request);
           }
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
             Request request(Request::Type::RowMul);
@@ -928,10 +796,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       }
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -941,10 +805,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowMul);
@@ -954,10 +814,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -967,10 +823,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1040,16 +892,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast(Sy
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -1088,10 +932,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast(Sy
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1101,10 +941,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast(Sy
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -1114,10 +950,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast(Sy
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1127,10 +959,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast(Sy
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1184,16 +1012,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2(
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -1232,10 +1052,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2(
       }
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1245,10 +1061,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2(
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowMul);
@@ -1258,10 +1070,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2(
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1271,10 +1079,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2(
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1312,16 +1116,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
       int32_t rc_outer = 0;
       void* _2 = (void*) "Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)] = x256(0)/*skip-init*/";
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -1357,10 +1153,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
       }
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1370,10 +1162,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowMul);
@@ -1383,10 +1171,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1396,10 +1180,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1409,10 +1189,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -1477,16 +1253,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -1525,10 +1293,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1538,10 +1302,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -1551,10 +1311,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1564,10 +1320,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1667,16 +1419,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -1715,10 +1459,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1728,10 +1468,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -1741,10 +1477,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1754,10 +1486,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1767,10 +1495,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul_CRAM_RF);
@@ -1869,16 +1593,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -1917,10 +1633,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1930,10 +1642,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -1943,10 +1651,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -1956,10 +1660,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2027,16 +1727,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -2075,10 +1767,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
       }
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -2088,10 +1776,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowMul);
@@ -2101,10 +1785,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -2114,10 +1794,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowAdd);
@@ -2127,10 +1803,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
       sys->sendRequest(request);
     }
     {
-      Request request(Request::Type::RowShift);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-      request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_ax3_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-      sys->sendRequest(request);
     }
     {
       Request request(Request::Type::RowMul_CRAM_RF);
@@ -2228,16 +1900,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 0), 7, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 0), 7, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -2276,10 +1940,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2289,10 +1949,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -2302,10 +1958,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2315,10 +1967,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2386,16 +2034,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -2433,10 +2073,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2446,10 +2082,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -2459,10 +2091,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2472,10 +2100,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2542,16 +2166,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax1, 0, 0), 112, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax1, 0, 0), 112, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax1, 0, 8), 64, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax1, 0, 8), 64, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -2571,10 +2187,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax1, 0, 8), 64, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax1, 0, 8), 64, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2584,10 +2196,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax1, 0, 24), 64, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax1, 0, 24), 64, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -2597,10 +2205,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax1, 0, 24), 64, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax1, 0, 24), 64, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2610,10 +2214,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cl
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax1, 0, 12), 64, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax1, 0, 12), 64, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2683,16 +2283,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -2731,10 +2323,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2744,10 +2332,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -2757,10 +2341,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2770,10 +2350,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2783,10 +2359,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul_CRAM_RF);
@@ -2878,16 +2450,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         void* _2 = (void*) "Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)] = x256(0)/*skip-init*/";
         for (int32_t rc_inner = 0; rc_inner < 2; ++rc_inner) {
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
           }
           {
             Request request(Request::Type::RowMul);
@@ -2924,10 +2488,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2937,10 +2497,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -2950,10 +2506,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2963,10 +2515,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -2976,10 +2524,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ad
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 1792, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 1792, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3045,16 +2589,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
                 sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
-                Request request(Request::Type::RowShift);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 8192, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-                sys->sendRequest(request);
               }
               {
                 Request request(Request::Type::RowMul);
@@ -3093,10 +2629,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3106,10 +2638,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -3119,10 +2647,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3132,10 +2656,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3145,10 +2665,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_outer_fused, 0, 64), 1792, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul_CRAM_RF);
@@ -3233,10 +2749,6 @@ int32_t tvmgen_default_fused_nn_global_avg_pool2d_cast(System *sys) {
           sys->sendRequest(request);
         }
         {
-          Request request(Request::Type::RowShift);
-          request.addOperand(sys->getAddress(ax3_outer, 0, 32), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-          request.addOperand(sys->getAddress(ax3_outer, 0, 32), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-          sys->sendRequest(request);
         }
         {
           Request request(Request::Type::RowAdd);
@@ -3307,16 +2819,8 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowShift);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowMul);
@@ -3354,10 +2858,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         }
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 32, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3367,10 +2867,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul);
@@ -3380,10 +2876,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 128), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3393,10 +2885,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 80), 256, PrecisionT::Precision{0, 64, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowAdd);
@@ -3406,10 +2894,6 @@ int32_t tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_ca
         sys->sendRequest(request);
       }
       {
-        Request request(Request::Type::RowShift);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_outer_fused, 0, 64), 256, PrecisionT::Precision{0, 8, 0} /*Unaligned Shift*/);
-        sys->sendRequest(request);
       }
       {
         Request request(Request::Type::RowMul_CRAM_RF);

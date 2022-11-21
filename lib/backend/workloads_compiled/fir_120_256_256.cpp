@@ -17,18 +17,12 @@ int32_t fir_120_256_256(System *sys) {
       {
         int32_t x_inner_outer_inner = 0;
         void* _2 = (void*) "c.global[ramp(0, 1, 256)] = x256((int16)0)/*skip-init*/";
-        for (int32_t rv_inner = 0; rv_inner < 32; ++rv_inner) {
-          {
-            Request request(Request::Type::RowShift);
-            request.addOperand(sys->getAddress(x_outer, 0, 16), 65536, PrecisionT::Precision{0, 16, 0} /*Unaligned Shift*/);
-            request.addOperand(sys->getAddress(x_outer, 0, 16), 65536, PrecisionT::Precision{0, 16, 0} /*Unaligned Shift*/);
-            sys->sendRequest(request);
-          }
+        for (int32_t rv = 0; rv < 32; ++rv) {
           {
             Request request(Request::Type::RowMul_CRAM_RF);
             request.addOperand(sys->getAddress(x_outer, 0, 32), 65536, PrecisionT::Precision{0, 16, 0} /**/);
-            request.addOperand(sys->getAddress(x_outer, 0, 16), 65536, PrecisionT::Precision{0, 16, 0} /*a[ramp(((((x.outer*65536) + (x.inner.outer.outer*8192)) + (x.inner.outer.inner*256)) + rv.inner), 1, 256)]*/);
-            request.addOperand(x_outer * 32, 256, PrecisionT::Precision{0, 16, 0} /*b[rv.inner]*/);
+            request.addOperand(sys->getAddress(x_outer, 0, 16), 65536, PrecisionT::Precision{0, 16, 0} /*a[ramp(((((x.outer*65536) + (x.inner.outer.outer*8192)) + (x.inner.outer.inner*256)) + rv), 1, 256)]*/);
+            request.addOperand(x_outer * 32, 1, PrecisionT::Precision{0, 16, 0} /*b[rv]*/);
             sys->sendRequest(request);
           }
           {
