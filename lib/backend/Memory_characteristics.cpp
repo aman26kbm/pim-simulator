@@ -326,7 +326,10 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
         num_crams_involved = config->get_nblocks();
     }
     else {
-        cols = req.size_list[0];
+      for (int i = 0; i < req.size_list.size(); ++i) {
+        cols = std::max(cols, req.size_list[i]);
+      }
+        //cols = req.size_list[0];
         //Assuming that for compute instructions as well, the size field specify how many bitlines are involved in the operation
         num_crams_involved = (int)ceil((float)cols/(float)config->get_ncols());
     }

@@ -3,12 +3,12 @@ import subprocess
 to_sim = [
     #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vecadd_cache_120_256_256'),
     #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'mv_120_256_256'),
-    ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gemm4_120_256_256'),
+    #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gemm4_120_256_256'),
     #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'systolic_mesh_stream_10_12_256_256'),
     #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'conv_120_256_256'),
     #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'conv_3x3_weight_load_10_12_256_256'),
-    #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256'),
-    #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_stream_120_256_256'),
+    ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256'),
+    ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_stream_120_256_256'),
 
     #('../configs/DMesh24x5_TileSize256_CramSize256x256.cfg', 'gemm4_120_256_256'),
     #('../configs/DMesh24x5_TileSize256_CramSize256x256.cfg', 'systolic_mesh_stream_5_24_256_256')

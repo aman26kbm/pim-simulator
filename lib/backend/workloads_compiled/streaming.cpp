@@ -179,7 +179,7 @@ int conv_3x3_weight_load_##row##_##col##_##ic##_##oc##_impl(System *sys) { \
   } \
   for (int i = 0; i < loaders; ++i) { \
     std::vector<int> recv; \
-    for (int j = 8; j < row * col; ++j) { \
+    for (int j = 0; j < row * col; ++j) { \
       if (j != i) { \
         recv.push_back(j); \
       } \
