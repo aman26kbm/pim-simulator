@@ -49,6 +49,7 @@ std::string Request::print_name(Type type) {
             case Type::RowStore_RF: return        "RowStore_RF";
             case Type::RowMul_CRAM_RF: return        "RowMul_CRAM_RF";
             case Type::RowAdd_CRAM_RF: return        "RowAdd_CRAM_RF";
+            case Type::RowDotProduct_CRAM_RF: return        "RowDotProduct_CRAM_RF";
             case Type::RowRead_RF: return        "RowRead_RF";
             case Type::RowWrite_RF: return        "RowWrite_RF";
             case Type::RowAdd_RF: return        "RowAdd_RF";
@@ -184,6 +185,7 @@ std::string Request::print_name(Type type) {
             case Type::RowCompare:
             case Type::RowMul:
             case Type::RowMul_CRAM_RF:
+            case Type::RowDotProduct_CRAM_RF:
             case Type::RowBitwise:
             case Type::ColBitwise:
             case Type::RowSearch:
@@ -213,6 +215,7 @@ std::string Request::print_name(Type type) {
             case Type::RowCompare:
             case Type::RowMul:
             case Type::RowMul_CRAM_RF:
+            case Type::RowDotProduct_CRAM_RF:
             case Type::RowBitwise:
             case Type::ColBitwise:
             case Type::RowSearch:

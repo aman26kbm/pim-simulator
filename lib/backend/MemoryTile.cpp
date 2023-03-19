@@ -142,6 +142,7 @@ MemoryTile::commitReq(Request& req)
               || (req.type == Request::Type::RowReset)
               || (req.type == Request::Type::RowAdd_CRAM_RF)
               || (req.type == Request::Type::RowMul_CRAM_RF)
+              || (req.type == Request::Type::RowDotProduct_CRAM_RF)
               ) {
         n_pim_reqs++;
     }

@@ -96,11 +96,14 @@ public:
 
     int sendPIM_one_operand(Request& req);
     int sendPIM_two_operands(Request& req);
+    int sendPIM_four_operands(Request& req);
     int sendPimReq(Request& req);
 
+    #ifdef OLD
     int sendRF_one_operand(Request& req);
     int sendRF_two_operands(Request& req);
     int sendRFReq(Request& req);
+    #endif
 
     int sendTileReq(Request& req, int para);
     int sendChipReq(Request& req, int para);
