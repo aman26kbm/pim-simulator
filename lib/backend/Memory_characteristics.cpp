@@ -179,7 +179,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
         clocks = -1;
     }
 
-    return clocks;
+    return clocks*10;
 }
 
 int MemoryCharacteristics::getPrecisionBits(Request req) {

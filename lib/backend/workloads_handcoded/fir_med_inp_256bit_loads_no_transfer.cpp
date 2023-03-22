@@ -9,7 +9,7 @@
 // FIR filter micro benchmark
 /////////////////////////////////////////////////////////////
 
-int32_t fir_med_inp_256bit_loads(System* sys)
+int32_t fir_med_inp_256bit_loads_no_transfer(System* sys)
 {
     std::vector<Request> requests;
     Request *request;
@@ -45,14 +45,14 @@ int32_t fir_med_inp_256bit_loads(System* sys)
     int results_from_1_tile = (cfg->_nblocks - 1) * cfg->_ncols;
 
     //Load filters into RF in one core and then broadcast
-    request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->getAddress(0,0,0), size_filter, precision_input); 
-    request->addOperand(sys->DRAM_ADDR, size_filter, precision_input);
-    requests.push_back(*request);
+    // request = new Request(Request::Type::RowLoad);
+    // request->addOperand(sys->getAddress(0,0,0), size_filter, precision_input); 
+    // request->addOperand(sys->DRAM_ADDR, size_filter, precision_input);
+    // requests.push_back(*request);
 
-    std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
-    std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-    sys->broadcast_p2p(sys->getAddress(0,0,0), PrecisionT::INT1, v, cfg->get_num_regs_per_rf()*cfg->get_num_bits_per_reg(), requests);
+    // std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
+    // std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
+    // sys->broadcast_p2p(sys->getAddress(0,0,0), PrecisionT::INT1, v, cfg->get_num_regs_per_rf()*cfg->get_num_bits_per_reg(), requests);
 
     //in our case this is ceil(120/108) = 2
     int iter_tile_count = (int)ceil((float)tiles_needed/(float)use_tiles);
@@ -66,12 +66,12 @@ int32_t fir_med_inp_256bit_loads(System* sys)
     if ( (use_tiles*t + tile) < tiles_needed ) {
 
         //Now we load inputs from DRAM
-        for(int kk=0; kk<param+1; kk++) {
-        request = new Request(Request::Type::RowLoad);
-        request->addOperand(sys->getAddress(tile,0,0), cfg->_ncols, precision_input); //dst
-        request->addOperand(sys->DRAM_ADDR, cfg->_ncols, precision_input); //src
-        requests.push_back(*request);
-        }
+        // for(int kk=0; kk<param+1; kk++) {
+        // request = new Request(Request::Type::RowLoad);
+        // request->addOperand(sys->getAddress(tile,0,0), cfg->_ncols, precision_input); //dst
+        // request->addOperand(sys->DRAM_ADDR, cfg->_ncols, precision_input); //src
+        // requests.push_back(*request);
+        // }
 
         //Initialize rows that'll hold the accumulator (accumulator size=16)
         request = new Request(Request::Type::RowReset);
@@ -143,9 +143,9 @@ int32_t fir_med_inp_256bit_loads(System* sys)
         //Now store the results back into DRAM
         //Only 1 result is present per column.
         //So, just 1 RowStore instruction is enough.
-        request = new Request(Request::Type::RowStore);
-        request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), param * cfg->_ncols, precision_accumulate); //src
-        request->addOperand(sys->DRAM_ADDR, param * cfg->_ncols, PrecisionT::INT16); //dst
+        // request = new Request(Request::Type::RowStore);
+        // request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), param * cfg->_ncols, precision_accumulate); //src
+        // request->addOperand(sys->DRAM_ADDR, param * cfg->_ncols, PrecisionT::INT16); //dst
 
         requests.push_back(*request);
     }
@@ -163,4 +163,4 @@ int32_t fir_med_inp_256bit_loads(System* sys)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads__ = pimsim::registerFunc("fir_med_inp_256bit_loads", fir_med_inp_256bit_loads);
+static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads_no_transfer__ = pimsim::registerFunc("fir_med_inp_256bit_loads_no_transfer", fir_med_inp_256bit_loads_no_transfer);
