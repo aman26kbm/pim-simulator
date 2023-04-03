@@ -37,6 +37,8 @@ int32_t test_signal_wait(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 int32_t test_signal_wait_phased(System* sys){
@@ -81,6 +83,8 @@ int32_t test_signal_wait_phased(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 

@@ -510,6 +510,17 @@ bool System::sendRequest(Request& req)
 {
     int chip = 0;
     int tile = 0;
+    if (req.type == Request::Type::RowLoad ||
+        req.type == Request::Type::RowStore ||
+        req.type == Request::Type::RowLoad_RF) {
+      for (auto &elem : req.precision_list) {
+        if (!elem.isfloat) {
+          int residue = elem.mantissa % 8;
+          if (residue && 8 % elem.mantissa != 0)
+            elem.mantissa += (8 - residue);
+        }
+      }
+    }
     decode(req, chip, tile);
     req.reqNo = currReqNo;
     bool success = _chips[chip]->receiveReq(req);

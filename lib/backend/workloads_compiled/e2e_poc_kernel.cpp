@@ -7,25 +7,6 @@
 #include "./tvm_common.h"
 
 namespace e2e_poc {
-int32_t tvmgen_default_fused_layout_transform(System *sys) {
-  void* _1 = nullptr;
-  for (int32_t ax1 = 0; ax1 < 224; ++ax1) {
-    for (int32_t ax2 = 0; ax2 < 224; ++ax2) {
-      for (int32_t ax3 = 0; ax3 < 4; ++ax3) {
-        {
-          Request request(Request::Type::RowStore);
-          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
-          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // dst
-          sys->sendRequest(request);
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-static __attribute__((unused)) Registry::Entry &_e2e_poc_tvmgen_default_fused_layout_transform__ = pimsim::registerFunc("e2e_poc_tvmgen_default_fused_layout_transform", tvmgen_default_fused_layout_transform);
-
 int32_t tvmgen_default_fused_layout_transform_1(System *sys) {
   void* _1 = nullptr;
   for (int32_t ax1 = 0; ax1 < 64; ++ax1) {
@@ -44,6 +25,25 @@ int32_t tvmgen_default_fused_layout_transform_1(System *sys) {
 }
 
 static __attribute__((unused)) Registry::Entry &_e2e_poc_tvmgen_default_fused_layout_transform_1__ = pimsim::registerFunc("e2e_poc_tvmgen_default_fused_layout_transform_1", tvmgen_default_fused_layout_transform_1);
+
+int32_t tvmgen_default_fused_layout_transform(System *sys) {
+  void* _1 = nullptr;
+  for (int32_t ax1 = 0; ax1 < 224; ++ax1) {
+    for (int32_t ax2 = 0; ax2 < 224; ++ax2) {
+      for (int32_t ax3 = 0; ax3 < 4; ++ax3) {
+        {
+          Request request(Request::Type::RowStore);
+          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // src
+          request.addOperand(sys->DRAM_ADDR, 0, PrecisionT::INT16); // dst
+          sys->sendRequest(request);
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+static __attribute__((unused)) Registry::Entry &_e2e_poc_tvmgen_default_fused_layout_transform__ = pimsim::registerFunc("e2e_poc_tvmgen_default_fused_layout_transform", tvmgen_default_fused_layout_transform);
 
 int32_t tvmgen_default_fused_nn_conv2d_cast(System *sys) {
   void* _1 = nullptr;

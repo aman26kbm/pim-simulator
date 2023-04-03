@@ -21,6 +21,8 @@ int32_t test_load_simple(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 
@@ -40,6 +42,8 @@ int32_t test_load_rf_simple(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 int32_t test_load_all(System* sys){
@@ -65,6 +69,8 @@ int32_t test_load_all(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 int32_t test_load_rf_all(System* sys){
@@ -87,6 +93,8 @@ int32_t test_load_rf_all(System* sys){
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
+
+    return 0;
 }
 
 

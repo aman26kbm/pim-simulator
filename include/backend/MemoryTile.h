@@ -68,12 +68,14 @@ public:
 
     virtual void outputStats(FILE* rstFile);
     MemoryComponent* getDestTile(Request& req) {
-        std::cout<<"We shouldn't be here in getDestTile() of MemoryTile";
-        assert(0);
+        std::cout << "We shouldn't be here in getDestTile() of MemoryTile";
+        assert(false);
+        throw;
     };
     MemoryComponent* getSourceTile(Request& req) {
-        std::cout<<"We shouldn't be here in getSourceTile() of MemoryTile";
-        assert(0);
+        std::cout << "We shouldn't be here in getSourceTile() of MemoryTile";
+        assert(false);
+        throw;
     };
     void update_next();
     void update_current();
