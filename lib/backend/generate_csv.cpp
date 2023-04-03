@@ -340,6 +340,7 @@ void System::generate_energy_csv(){
     double tot_row_mul_energy = 0;
     double tot_row_add_cram_rf_energy = 0;
     double tot_row_mul_cram_rf_energy = 0;
+    double tot_row_dp_cram_rf_energy = 0;
     double tot_row_shift_energy = 0;
     double tot_row_reduce_energy = 0;
     double tot_row_reduce_within_tile_energy = 0;
@@ -382,6 +383,7 @@ void System::generate_energy_csv(){
             tot_row_bitwise_energy += cur_tile->req_energy[int(Request::Type::RowBitwise)];
             tot_row_mul_cram_rf_energy += cur_tile->req_energy[int(Request::Type::RowMul_CRAM_RF)];
             tot_row_add_cram_rf_energy += cur_tile->req_energy[int(Request::Type::RowAdd_CRAM_RF)];
+            tot_row_dp_cram_rf_energy += cur_tile->req_energy[int(Request::Type::RowDotProduct_CRAM_RF)];
             tot_row_reduce_energy += cur_tile->req_energy[int(Request::Type::RowReduce)];
             tot_row_shift_energy += cur_tile->req_energy[int(Request::Type::RowShift)];
             tot_row_reduce_within_tile_energy += cur_tile->req_energy[int(Request::Type::RowReduce_WithinTile)];
@@ -432,7 +434,7 @@ void System::generate_energy_csv(){
                 _chips[i]->_values->nocDynEnergy;
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 45;
+        const int NUM_CSV_COLUMNS = 46;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "RowAdd_Energy",
@@ -440,6 +442,7 @@ void System::generate_energy_csv(){
                           "RowMul_Energy",
                           "RowAdd_CRAM_RF_Energy",
                           "RowMul_CRAM_RF_Energy",
+                          "RowDotProduct_CRAM_RF_Energy",
                           "RowShift_Energy",
                           "RowReduce_Energy",
                           "RowReduceWithinTile_Energy",
@@ -495,6 +498,7 @@ void System::generate_energy_csv(){
                 tot_row_mul_energy,
                 tot_row_add_cram_rf_energy,
                 tot_row_mul_cram_rf_energy,
+                tot_row_dp_cram_rf_energy,
                 tot_row_shift_energy,
                 tot_row_reduce_energy,
                 tot_row_reduce_within_tile_energy,

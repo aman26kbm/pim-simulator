@@ -198,6 +198,43 @@ int System::sendPIM_two_operands(Request& req)
     return tot_clks;
 }
 
+int System::sendPIM_four_operands(Request& req)
+{
+    int tot_clks = 0;
+    int n_ops = req.addr_list.size();
+    //for (int i = 0; i < n_ops; i+=2) {
+        int src_chip = 0, src_tile= 0, src_block= 0, src_row = 0, src_col = 0;
+        int dst_chip = 0, dst_tile= 0, dst_block= 0, dst_row = 0, dst_col = 0;
+      
+        // First address is considered as src1.
+        // Third address is the dst.
+        getLocation(req.addr_list[0], src_chip, src_tile, src_block, src_row, src_col); 
+        getLocation(req.addr_list[4], dst_chip, dst_tile, dst_block, dst_row, dst_col);
+        req.setLocation(src_chip, src_tile, src_block, src_row, src_col);
+
+        Request *pim_req = new Request(req.type);
+
+        pim_req->addOperand(req.addr_list[0], req.size_list[0], req.precision_list[0]);
+        pim_req->addOperand(req.addr_list[1], req.size_list[1], req.precision_list[1]);
+        pim_req->addOperand(req.addr_list[2], req.size_list[2], req.precision_list[2]);
+        pim_req->addOperand(req.addr_list[3], req.size_list[3], req.precision_list[3]);
+        pim_req->addOperand(req.addr_list[4], req.size_list[4], req.precision_list[4]);
+        pim_req->setLocation(src_chip, src_tile, src_block, src_row, src_col);
+
+        tot_clks++;
+        //This queues the request into the queue of the controller.
+        //Ordinarily, this method returns True (indicating that queueing is successful)
+        //But when the queues hold more than 256 outstanding requests,
+        //then this will return False. Then we will go into the while loop
+        //And spend some cycles waiting here to put requests into the queue
+        //The cycle spending happens via the tick().
+        bool res = _chips[src_chip]->receiveReq(*pim_req);
+	    delete pim_req;
+    //}
+    return tot_clks;
+}
+
+#ifdef OLD
 //operand is rf address
 int System::sendRF_one_operand(Request& req)
 {
@@ -231,6 +268,7 @@ int System::sendRF_two_operands(Request& req)
     bool res = _chips[chip_index]->receiveReq(*rf_req);
     return res;
 }
+#endif
 
 //load store send receive requests handled here
 int System::sendChipReq(Request& req, int para)
@@ -445,6 +483,9 @@ int System::sendPimReq(Request& req)
         case Request::Type::RowBitwise:
             return_value =  sendPIM_two_operands(req);
             break;
+        case Request::Type::RowDotProduct_CRAM_RF:
+            return_value =  sendPIM_four_operands(req);
+            break;
         default:
             cout << "Error: cannot handle non-PIM operations here!\n";
             break;
@@ -452,9 +493,9 @@ int System::sendPimReq(Request& req)
     return return_value;
 }
 
+#ifdef OLD
 //Send a RF only request (will get executed by the RF block)
 //Returns number of clocks
-
 int System::sendRFReq(Request& req)
 {
     int return_value = 0;
@@ -473,6 +514,7 @@ int System::sendRFReq(Request& req)
     }
     return return_value;
 }
+#endif
 
 #ifdef NEW
 void System::decode(Request& req, int& chip, int& tile){

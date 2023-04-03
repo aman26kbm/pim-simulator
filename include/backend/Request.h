@@ -279,11 +279,22 @@ public:
         RowAdd_CRAM_RF, //Addition between a value in CRAM and RF
                         //Same as RowMul_CRAM_RF, but for addition
                         //example:
-                        // request = new Request(Request::Type::RowMul_CRAM_RF);
+                        // request = new Request(Request::Type::RowDotProduct_CRAM_RF);
                         // request->addOperand(sys->getAddress(tile,0,src_row), 0, PrecisionT::INT4); //src
                         // request->addOperand(sys->_num_regs_per_rf * tile, 4, PrecisionT::INT4);//rf
                         // request->addOperand(sys->getAddress(tile,0,dest_row), 0, PrecisionT::INT4); //dst
                         // requests.push_back(*request);
+
+        RowDotProduct_CRAM_RF, //Dot product between two values in CRAM (a,b) and two values in RF (x,y)
+                               //Answer = ax + by, where x and y scalars (in RF), but a and b are vectors in CRAM
+                               // request = new Request(Request::Type::RowDotProduct_CRAM_RF);
+                               // request->addOperand(sys->getAddress(tile,0,src1_row), 0, PrecisionT::INT4); //src a
+                               // request->addOperand(sys->getAddress(tile,0,src2_row), 0, PrecisionT::INT4); //src b
+                               // request->addOperand(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4);//rf x 
+                               // request->addOperand(sys->_num_regs_per_rf * tile, 0, PrecisionT::INT4);//rf y
+                               // request->addOperand(sys->getAddress(tile,0,dest_row), 0, PrecisionT::INT4); //dst
+                               // requests.push_back(*request);
+
         RowRead_RF,     //Read a row from the RF into a register (flops)
                         //The addr argument specifies the row ID. 
                         //"size" argument is not used.

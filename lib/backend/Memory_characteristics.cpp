@@ -94,7 +94,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
         exponent = p.exponent;
         bits = p.bits();
         if (dtype=="float") {
-            clocks = mantissa * mantissa + 7 * mantissa + 3 * exponent + 5;
+            clocks = mantissa * mantissa + 6 * mantissa + 2 * exponent + 10;
         }
         else {
             clocks = mantissa * mantissa + 3 * mantissa - 2;
@@ -109,10 +109,55 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
         exponent = p.exponent;
         bits = p.bits();
         if (dtype=="float") {
-            clocks = (mantissa * mantissa + 7 * mantissa + 3 * exponent + 5) / 2;
+            clocks = (mantissa * mantissa + 6 * mantissa + 4 * exponent + 13) / 2;
         }
         else {
             clocks = (mantissa * mantissa + 3 * mantissa - 2) / 2;
+        }
+    }
+    else if (op=="dp_cram_rf") {
+        if(precision_list[0].isfloat) dtype="float";
+        else dtype = "int";
+
+        // we're doing ax+by
+        //a and b are inside the cram
+        //x and y are outside the cram (in the rf)
+        //in the arguments, operands 0 and 1 are a and b, and operands 2 and 3 are x and y
+
+        if (dtype=="float") {
+            PrecisionT::Precision p1 = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger of src in cram
+            PrecisionT::Precision p2 = precision_list[2].bits()>precision_list[3].bits()? precision_list[2] : precision_list[3];//take bigger of src in rf
+            PrecisionT::Precision p3 = p1.bits()>p2.bits()? p1 : p2;
+            mantissa = p3.mantissa;
+            exponent = p3.exponent;
+
+            //This is not the optimal algo. Just the naive one.
+            //Cycles for calculating ax
+            clocks = (mantissa * mantissa + 6 * mantissa + 4 * exponent + 13) / 2;
+            //Cycles for calculating by
+            //Cycles for adding ax and by
+        }
+        else {
+            PrecisionT::Precision p1 = precision_list[0].bits()>precision_list[1].bits()? precision_list[0] : precision_list[1];//take bigger of src in cram
+            PrecisionT::Precision p2 = precision_list[2].bits()>precision_list[3].bits()? precision_list[2] : precision_list[3];//take bigger of src in rf
+            //p = p.bits()>precision_list[2].bits()?precision_list[2] : p;//take smaller of p and dest
+        
+            int c_mantissa;
+            int c_exponent;
+            int r_mantissa;
+            int r_exponent;
+            c_mantissa = p1.mantissa;
+            c_exponent = p1.exponent;
+            r_mantissa = p2.mantissa;
+            r_exponent = p2.exponent;
+
+            int num_bits_result = 2*max(c_mantissa, r_mantissa)+1;
+            int cyc_for_init = num_bits_result - min(c_mantissa, r_mantissa); //we only need to initialize the upper bits of the result. lower bits will be initialize by 'copy' instead of 'add' in the first instruction
+            int cyc_for_a_plus_b = c_mantissa + 1; //we first perform a_plus_b and save it
+            int num_bitpair_evals = r_mantissa; //number of times we look at the bits of x and y
+            int cyc_for_each_add = cyc_for_a_plus_b + 1; //we may be adding c_plus_b every time into the partial result
+
+            clocks = cyc_for_init + cyc_for_a_plus_b + (num_bitpair_evals * cyc_for_each_add)*(3/4); //3/4 because 25% of the times both bits wil be 0
         }
     }
     else if (op=="reduce") {
@@ -287,6 +332,12 @@ double MemoryCharacteristics::getTiming(Request req) {
            //than the operands. (Eg. in case where accumulator is wider)
             time = getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
             break;
+        case Request::Type::RowDotProduct_CRAM_RF: 
+           //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
+           //number of cycles consumed.
+           //Number of src bits gives the right value for multiplication cycles.
+            time = getClocksForReq(req.precision_list, "dp_cram_rf") * T_CLK;
+            break;
         case Request::Type::PopCountReduce_RF:
         //TODO: how to calculate cycles?
             time = T_CLK*(req.precision_list[0].bits()+config->_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages
@@ -447,6 +498,17 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
         case Request::Type::RowAdd_CRAM_RF: 
             //Instruction controller + RF read + Array compute 
             cycles = getClocksForReq(req.precision_list, "add_cram_rf");
+            R_instCtrlDynEnergy = E_InstrCtrl;
+            R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
+            R_rfDynEnergy = E_RfRd;
+            energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_rfDynEnergy;
+            instCtrlDynEnergy += R_instCtrlDynEnergy;
+            arrayDynEnergy += R_arrayDynEnergy;
+            rfDynEnergy += R_rfDynEnergy;
+            break;
+        case Request::Type::RowDotProduct_CRAM_RF: 
+            //Instruction controller + RF read + Array compute 
+            cycles = getClocksForReq(req.precision_list, "dp_cram_rf");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
             R_rfDynEnergy = E_RfRd;
