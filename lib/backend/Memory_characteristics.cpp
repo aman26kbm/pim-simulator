@@ -56,7 +56,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
             clocks = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
         }
         else {
-            clocks = (mantissa / 2)+1; 
+            clocks = mantissa+1; 
         }
     }
     else if (op=="compare") {
