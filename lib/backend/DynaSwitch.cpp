@@ -373,17 +373,86 @@ int DynaSwitch::get_source_index(Request req){
     else return get_addr0_index(req);
 }
 
+int DynaSwitch::get_closest_dram_index(int index){
+    int dist_up = index/cfg->_meshWidth;
+    int dist_left = index%cfg->_meshWidth;
+    int dist_down = cfg->_meshHeight-1-dist_up;
+    int dist_right = cfg->_meshWidth-1-dist_left;
+    int dram_row=0;
+    int dram_col=0;
+    if(dist_up<dist_down){
+        if(dist_left<dist_right){
+            if(dist_left<dist_up){
+                //left edge
+                dram_row = dist_up;
+                dram_col = 0;
+            }
+            else{
+                //top edge
+                dram_row = 0;
+                dram_col = dist_left;
+            }
+        }
+        else{
+            if(dist_right<dist_up){
+                //right edge
+                dram_row = dist_up;
+                dram_col = cfg->_meshWidth-1;
+            }
+            else{
+                //top edge
+                dram_row = 0;
+                dram_col = dist_left;
+            }
+        }
+    }
+    else{
+        if(dist_left<dist_right){
+            if(dist_left<dist_down){
+                //left edge
+                dram_row = dist_up;
+                dram_col = 0;
+            }
+            else{
+                //bottom edge
+                dram_row = cfg->_meshHeight-1;
+                dram_col = dist_left;
+            }
+        }
+        else{
+            if(dist_right<dist_down){
+                //right edge
+                dram_row = dist_up;
+                dram_col = cfg->_meshWidth-1;
+            }
+            else{
+                //bottom edge
+                dram_row = cfg->_meshHeight-1;
+                dram_col = dist_left;
+            }
+        }
+    }
+    return dram_row * cfg->_meshWidth + dram_col;
+}
+
 int DynaSwitch::get_dest_index(Request req){
     if(req.type == Request::Type::RowStore_RF || req.type == Request::Type::RowStore) {
         if(!cfg->_dramDistributed)
             return cfg->_dramTile;
-        return get_addr0_index(req)%cfg->_meshWidth;
+        else{
+            return get_addr0_index(req)%cfg->_meshWidth;
+            //return get_closest_dram_index(get_addr0_index(req));
+        }
     }
     else if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowLoad){
         if(req.requesting_load){
+            
             if(!cfg->_dramDistributed)
                 return cfg->_dramTile;
-            return get_addr0_index(req)%cfg->_meshWidth;
+            else{
+                return get_addr0_index(req)%cfg->_meshWidth;
+                //return get_closest_dram_index(get_addr0_index(req));
+            }
         }
         else
             return get_addr0_index(req);
