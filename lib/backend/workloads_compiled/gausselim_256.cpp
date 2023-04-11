@@ -1,4 +1,5 @@
 // tvm target: c -keys=cpu -link-params=0
+#include "Request.h"
 #define TVM_EXPORTS
 #include <cstdint>
 
@@ -6446,6 +6447,26 @@ int32_t gausselim_256(System *sys) {
     request.addOperand(sys->getAddress(0, 0, 8208), 0, PrecisionT::Precision{1, 23, 8} /**/);
     sys->sendRequest(request);
   }
+
+  for (int i = 0; i < 256; ++i) {
+    for (int j = 0; j < i; ++j) {
+      for (int k = 256; k > 1; k -= k / 2) {
+        Request request(Request::Type::BlockSend_Receive);
+        request.addOperand(sys->getAddress(0, 0, 8208), 0, PrecisionT::Precision{0, 32, 0} /**/);
+        request.addOperand(sys->getAddress(0, 0, 8192), 0, PrecisionT::Precision{0, 32, 0} /**/);
+        request.addOperand(sys->getAddress(0, 0, 8208), 0, PrecisionT::Precision{0, 32, 0} /**/);
+        sys->sendRequest(request);
+      }
+      {
+        Request request(Request::Type::BlockBroadCast);
+        request.addOperand(sys->getAddress(0, 0, 8208), 0, PrecisionT::Precision{0, 32, 0} /**/);
+        request.addOperand(sys->getAddress(0, 0, 8192), 0, PrecisionT::Precision{0, 32, 0} /**/);
+        request.addOperand(sys->getAddress(0, 0, 8208), 0, PrecisionT::Precision{0, 32, 0} /**/);
+        sys->sendRequest(request);
+      }
+    }
+  }
+
   int32_t _18 = TVMBackendFreeWorkspace(1, _1, _15);
   bool _19 = _18 != 0;
   if (_19) {

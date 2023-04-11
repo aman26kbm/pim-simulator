@@ -22,8 +22,8 @@ int32_t vgg4(System *sys) {
       }
   // float32 Conv2dOutput_repl_global[2048], 0
   // float32 Conv2dOutput[2048], 2048
-  for (int32_t ax0_ax1_fused_ax2_fused_outer_outer = 0; ax0_ax1_fused_ax2_fused_outer_outer < 45; ++ax0_ax1_fused_ax2_fused_outer_outer) {
-    for (int32_t ax0_ax1_fused_ax2_fused_outer_inner = 0; ax0_ax1_fused_ax2_fused_outer_inner < 9; ++ax0_ax1_fused_ax2_fused_outer_inner) {
+  for (int32_t ax0_ax1_fused_ax2_fused_outer_outer = 0; ax0_ax1_fused_ax2_fused_outer_outer < 40; ++ax0_ax1_fused_ax2_fused_outer_outer) {
+    for (int32_t ax0_ax1_fused_ax2_fused_outer_inner = 0; ax0_ax1_fused_ax2_fused_outer_inner < 10; ++ax0_ax1_fused_ax2_fused_outer_inner) {
       // cram-array axis
       {
         int32_t ax0_ax1_fused_ax2_fused_inner = 0;
@@ -33,7 +33,7 @@ int32_t vgg4(System *sys) {
           void* _10 = (void*) "Conv2dOutput.rf[ramp((rc.outer*512), 1, 512)] = x512(0f)/*skip-init*/";
           for (int32_t ry = 0; ry < 3; ++ry) {
             for (int32_t rx = 0; rx < 3; ++rx) {
-              int32_t _11 = ax0_ax1_fused_ax2_fused_outer_outer * 18;
+              int32_t _11 = ax0_ax1_fused_ax2_fused_outer_outer * 20;
               int32_t _12 = ax0_ax1_fused_ax2_fused_outer_inner * 2;
               int32_t _13 = _11 + _12;
               int32_t _14 = _13 + ax0_ax1_fused_ax2_fused_inner;
@@ -61,7 +61,7 @@ int32_t vgg4(System *sys) {
         #define max(a,b) ((a)>(b)?(a):(b))
         for (int32_t rc_outer_v = 256, rc_outer_v_cnt = 1; rc_outer_v >= 1; rc_outer_v -= max(rc_outer_v / 2, 1), ++rc_outer_v_cnt) {
         #undef max
-          int32_t _17 = ax0_ax1_fused_ax2_fused_outer_outer * 18;
+          int32_t _17 = ax0_ax1_fused_ax2_fused_outer_outer * 20;
           int32_t _18 = ax0_ax1_fused_ax2_fused_outer_inner * 2;
           int32_t _19 = _17 + _18;
           int32_t _20 = _19 + ax0_ax1_fused_ax2_fused_inner;
@@ -74,10 +74,6 @@ int32_t vgg4(System *sys) {
               sys->sendRequest(request);
             }
             {
-              Request request(Request::Type::RowLoad);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*DRAM*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 192), 0, PrecisionT::Precision{1, 23, 8} /*Conv2dOutput.rf[ramp((rc.outer.v*512), 1, 512)]*/);
-              sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowAdd);
@@ -88,21 +84,17 @@ int32_t vgg4(System *sys) {
             }
           }
         }
-        int32_t _22 = ax0_ax1_fused_ax2_fused_outer_outer * 18;
+        int32_t _22 = ax0_ax1_fused_ax2_fused_outer_outer * 20;
         int32_t _23 = ax0_ax1_fused_ax2_fused_outer_inner * 2;
         int32_t _24 = _22 + _23;
         int32_t _25 = _24 + ax0_ax1_fused_ax2_fused_inner;
         bool _26 = _25 < 784;
         if (_26) {
-          int32_t _27 = ax0_ax1_fused_ax2_fused_outer_outer * 9;
+          int32_t _27 = ax0_ax1_fused_ax2_fused_outer_outer * 10;
           int32_t _28 = _27 + ax0_ax1_fused_ax2_fused_outer_inner;
           bool _29 = _28 < 392;
           if (_29) {
             {
-              Request request(Request::Type::RowStore);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*DRAM*/);
-              request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*CRAM*/);
-              sys->sendRequest(request);
             }
           }
         }
@@ -193,10 +185,6 @@ int32_t vgg4(System *sys) {
       bool _44 = _43 < 196;
       if (_44) {
         {
-          Request request(Request::Type::RowStore);
-          request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*DRAM*/);
-          request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*CRAM*/);
-          sys->sendRequest(request);
         }
       }
     }

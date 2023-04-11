@@ -22,7 +22,7 @@ int32_t vgg5(System *sys) {
       }
   // float32 Conv2dOutput_repl_global[2048], 0
   // float32 Conv2dOutput[2048], 2048
-  for (int32_t ax0_ax1_fused_ax2_fused_outer_outer = 0; ax0_ax1_fused_ax2_fused_outer_outer < 45; ++ax0_ax1_fused_ax2_fused_outer_outer) {
+  for (int32_t ax0_ax1_fused_ax2_fused_outer_outer = 0; ax0_ax1_fused_ax2_fused_outer_outer < 40; ++ax0_ax1_fused_ax2_fused_outer_outer) {
     for (int32_t ax0_ax1_fused_ax2_fused_outer_inner = 0; ax0_ax1_fused_ax2_fused_outer_inner < 3; ++ax0_ax1_fused_ax2_fused_outer_inner) {
       // cram-array axis
       {
@@ -76,10 +76,6 @@ int32_t vgg5(System *sys) {
               sys->sendRequest(request);
             }
             {
-              // Request request(Request::Type::RowLoad);
-              // request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*DRAM*/);
-              // request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 192), 0, PrecisionT::Precision{1, 23, 8} /*Conv2dOutput.rf[ramp((rc.outer.v*512), 1, 512)]*/);
-              // sys->sendRequest(request);
             }
             {
               Request request(Request::Type::RowAdd);
@@ -101,10 +97,6 @@ int32_t vgg5(System *sys) {
           bool _29 = _28 < 98;
           if (_29) {
             {
-              // Request request(Request::Type::RowStore);
-              // request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*DRAM*/);
-              // request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*CRAM*/);
-              // sys->sendRequest(request);
             }
           }
         }
@@ -195,10 +187,6 @@ int32_t vgg5(System *sys) {
       bool _44 = _43 < 49;
       if (_44) {
         {
-          // Request request(Request::Type::RowStore);
-          // request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*DRAM*/);
-          // request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused_outer, 0, 0), 0, PrecisionT::Precision{1, 23, 8} /*CRAM*/);
-          // sys->sendRequest(request);
         }
       }
     }

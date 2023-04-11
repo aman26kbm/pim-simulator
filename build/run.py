@@ -9,7 +9,6 @@ to_sim = [
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'conv_3x3_weight_load_10_12_256_256'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_stream_120_256_256'),
-
   #('../configs/DMesh24x5_TileSize256_CramSize256x256.cfg', 'gemm4_120_256_256'),
   #('../configs/DMesh24x5_TileSize256_CramSize256x256.cfg', 'systolic_mesh_stream_5_24_256_256')
 
@@ -81,7 +80,7 @@ to_sim = [
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vecadd_120_256_256_240'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256_60'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256'),
-  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256_240'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_120_256_256_240'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'mv_120_256_256_60'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'mv_120_256_256_240'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gemm_120_256_256_60'),
@@ -93,6 +92,20 @@ to_sim = [
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_stream_60_120_256_256_16'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_stream_120_120_256_256_16'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'fir_stream_240_120_256_256_16'),
+
+  #VGG
+  #('../configs/SIMDRAM.cfg', 'vgg1'),
+  #('../configs/SIMDRAM.cfg', 'vgg2'),
+  #('../configs/SIMDRAM.cfg', 'vgg3'),
+  #('../configs/SIMDRAM.cfg', 'vgg4'),
+  #('../configs/SIMDRAM.cfg', 'vgg5'),
+
+  # dc
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_65536_16'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gausselim_256'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'dwt_1024'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot_1024_1024'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot3d_512_8'),
 ]
 
 for cfg, wl in to_sim:
