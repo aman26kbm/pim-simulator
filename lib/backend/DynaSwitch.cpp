@@ -440,8 +440,8 @@ int DynaSwitch::get_dest_index(Request req){
         if(!cfg->_dramDistributed)
             return cfg->_dramTile;
         else{
-            return get_addr0_index(req)%cfg->_meshWidth;
-            //return get_closest_dram_index(get_addr0_index(req));
+            //return get_addr0_index(req)%cfg->_meshWidth;
+            return get_closest_dram_index(get_addr0_index(req));
         }
     }
     else if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowLoad){
@@ -450,8 +450,8 @@ int DynaSwitch::get_dest_index(Request req){
             if(!cfg->_dramDistributed)
                 return cfg->_dramTile;
             else{
-                return get_addr0_index(req)%cfg->_meshWidth;
-                //return get_closest_dram_index(get_addr0_index(req));
+                //return get_addr0_index(req)%cfg->_meshWidth;
+                return get_closest_dram_index(get_addr0_index(req));
             }
         }
         else
