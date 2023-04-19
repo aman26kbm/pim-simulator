@@ -128,7 +128,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
                 int powi2 = pow(i-1,2);
                 int cycles_to_add = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
                 clocks += cycles_to_add; //add
-                clocks += cycles_to_add * powi2; //shift
+                //clocks += cycles_to_add * powi2; //shift
             }
         }
         else {
@@ -137,7 +137,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
                 int powi2 = pow(i-1,2);
                 int cycles_to_add = mantissa + i;
                 clocks += cycles_to_add; //add
-                clocks += cycles_to_add * powi2; //shift
+                //clocks += cycles_to_add * powi2; //shift
             }
         }
     
@@ -179,7 +179,7 @@ int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, s
         clocks = -1;
     }
 
-    return clocks*10;
+    return clocks*1;
 }
 
 int MemoryCharacteristics::getPrecisionBits(Request req) {

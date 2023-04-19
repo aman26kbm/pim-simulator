@@ -100,33 +100,33 @@ int32_t conv2d_ocvec(System* sys)
     // Results for n * oh * ow are in other cores
 
     //Parameters:
-    int n = 2;
-    int ih = 9;
-    int iw = 9;
+    int n = 1;
+    int ih = 58;
+    int iw = 58;
     int ic = 256;
     int stride = 1; //not used below; so if you want a different stride, change the code below first.
     int rh = 3;
     int rw = 3;
     int rc = 256;
     int oc = 256;
-    int oh = 7;
-    int ow = 7;
+    int oh =56;
+    int ow = 56;
 
     //We need to load filters only once and then we can broadcast them to other cores
-    for(int i=0; i<rh*rw; i++){
-        for (int j=0; j<(ceil((float)(oc*rc)/(float)(cfg->_ncols*cfg->_nblocks))); j++) {
-            request = new Request(Request::Type::RowLoad);
-            request->addOperand(sys->getAddress(0,0,i*precision_input.bits()),0, precision_input); //cram addr
-            request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
-            requests.push_back(*request);
+    // for(int i=0; i<rh*rw; i++){
+    //     for (int j=0; j<(ceil((float)(oc*rc)/(float)(cfg->_ncols*cfg->_nblocks))); j++) {
+    //         request = new Request(Request::Type::RowLoad);
+    //         request->addOperand(sys->getAddress(0,0,i*precision_input.bits()),0, precision_input); //cram addr
+    //         request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
+    //         requests.push_back(*request);
         
-            //broadcast_conv2d(sys,cfg,precision_input);
+    //         //broadcast_conv2d(sys,cfg,precision_input);
 
-            std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
-            std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
-            sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, cfg->_nblocks*cfg->_ncols, requests);
-        }
-    }
+    //         std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
+    //         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
+    //         sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, cfg->_nblocks*cfg->_ncols, requests);
+    //     }
+    // }
 
     //We assume that DRAM has the data present in the layout we expect
     for (int i = 0; i < ceil((float)(n * oh * ow)/(float)use_tiles); i++) {
