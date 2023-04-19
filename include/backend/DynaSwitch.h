@@ -108,13 +108,19 @@ public:
 
     bool is_finished();
 
+    std::vector<std::pair<int,int>> dramIndex;
+
     //utils
 private:
     int get_addr0_index(Request req);
     int get_addr1_index(Request req);
     int get_source_index(Request req);
     int get_dest_index(Request req);
+    //assume all edge tile has a dram channel
     int get_closest_dram_index(int index);
+    //assume user specified _dramTileNum in config
+    int get_closest_dram_index_2(int index);
+
     Direction decode(Request req);
     void setupConnection(Direction in,int channelIn, Direction out, int channelOut, int packets);
     void setupConnectionForInputChannel(Direction in,int channelIn, Direction out, int packets);
@@ -125,6 +131,7 @@ private:
     void inputSend(Direction in, int c_in);
     bool isMatch(Request bufferedReq, Request ReceiveReq);
     void tick_dram_phase();
+    void setDramTiles();
     
 
 };

@@ -71,6 +71,8 @@ void Config::parse(const string& fname) {
         } else if (tokens[0] == "dram_distributed") {
             if (tokens[1] == "true")
             _dramDistributed = true;
+        } else if (tokens[0] == "dramTileNum") {
+            _dramTileNum = atoi(tokens[1].c_str());
         } else if (tokens[0] == "wordsize_block2block") {
             _wordsize_block2block = atoi(tokens[1].c_str());
         } else if (tokens[0] == "router_channel_number") {

@@ -42,7 +42,7 @@ DynaSwitch::DynaSwitch(int index, Config* cfg){
     //this->receiveQueues[D] = FixedQueue<Request>(INT32_MAX);
 
     this->dramReceiveBuffer = FixedQueue<Request>(2);
-
+    setDramTiles();
     // this->next = (DynaSwitch*)malloc(sizeof(DynaSwitch));
     // memcpy(next, this, sizeof(DynaSwitch));
     this->next = new DynaSwitch();
@@ -80,6 +80,7 @@ void DynaSwitch::copy_content(const DynaSwitch* src, DynaSwitch* tgt){
     tgt->numHopsSouth = src->numHopsSouth;
     tgt->numHopsEast = src->numHopsEast;
     tgt->numHopsWest = src->numHopsWest;
+    tgt->dramIndex = src->dramIndex;
 }
 
 bool DynaSwitch::inject(Request req){
@@ -435,13 +436,57 @@ int DynaSwitch::get_closest_dram_index(int index){
     return dram_row * cfg->_meshWidth + dram_col;
 }
 
+int DynaSwitch::get_closest_dram_index_2(int index){
+    int dist_up = index/cfg->_meshWidth;
+    int dist_left = index%cfg->_meshWidth;
+    int min_dist = cfg->_meshHeight + cfg->_meshWidth;
+    int closest_dram = 0;
+    for(std::pair<int,int> thisDramIndex : dramIndex){
+        //std::cout<<thisDramIndex.first<<" "<<thisDramIndex.second<<std::endl;
+        if(std::abs(thisDramIndex.first - dist_up) + std::abs(thisDramIndex.second - dist_left)< min_dist){
+            min_dist = std::abs(thisDramIndex.first - dist_up) + std::abs(thisDramIndex.second - dist_left);
+            closest_dram = thisDramIndex.first * cfg->_meshWidth + thisDramIndex.second;
+        }
+    }
+
+
+    //std::cout<<"closest dram is "<<closest_dram<<std::endl;
+    return closest_dram;
+}
+
+void DynaSwitch::setDramTiles(){
+    int perimeter = (cfg->_meshHeight+cfg->_meshWidth-2)*2;
+    int numDram = cfg->_dramTileNum;
+
+    int gap = (int)floor(perimeter /(double) numDram);
+    for(int i=0; i<numDram; i++){
+        if(gap*i<cfg->_meshWidth){
+            dramIndex.push_back(std::pair<int,int>(0,gap*i));
+        }
+        else if(gap*i<cfg->_meshWidth+cfg->_meshHeight -1){
+            dramIndex.push_back(std::pair<int,int>(gap*i-cfg->_meshWidth+1,cfg->_meshWidth-1));
+        }
+        else if(gap*i<cfg->_meshWidth+cfg->_meshHeight -1 + cfg->_meshWidth-1){
+            dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight -1 , cfg->_meshWidth-1 + cfg->_meshHeight-1 + cfg->_meshWidth - gap*i - 1 ));
+        }
+        else if(gap*i<perimeter-1){
+            dramIndex.push_back(std::pair<int,int>(perimeter-gap*i, 0));
+        }
+        else{
+            std::cout<<"dramTile out of bound!"<<std::endl;
+            assert(false);
+        }
+    }
+}
+
+
 int DynaSwitch::get_dest_index(Request req){
     if(req.type == Request::Type::RowStore_RF || req.type == Request::Type::RowStore) {
         if(!cfg->_dramDistributed)
             return cfg->_dramTile;
         else{
             //return get_addr0_index(req)%cfg->_meshWidth;
-            return get_closest_dram_index(get_addr0_index(req));
+            return get_closest_dram_index_2(get_addr0_index(req));
         }
     }
     else if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowLoad){
@@ -451,7 +496,7 @@ int DynaSwitch::get_dest_index(Request req){
                 return cfg->_dramTile;
             else{
                 //return get_addr0_index(req)%cfg->_meshWidth;
-                return get_closest_dram_index(get_addr0_index(req));
+                return get_closest_dram_index_2(get_addr0_index(req));
             }
         }
         else
