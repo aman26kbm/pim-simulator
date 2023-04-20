@@ -73,6 +73,14 @@ void Config::parse(const string& fname) {
             _dramDistributed = true;
         } else if (tokens[0] == "dramTileNum") {
             _dramTileNum = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "dramTileNumTop") {
+             _dramTileNumTop = atoi(tokens[1].c_str());  
+        } else if (tokens[0] == "dramTileNumDown") {
+             _dramTileNumDown = atoi(tokens[1].c_str());  
+        } else if (tokens[0] == "dramTileNumLeft") {
+             _dramTileNumLeft = atoi(tokens[1].c_str());  
+        } else if (tokens[0] == "dramTileNumRight") {
+             _dramTileNumRight = atoi(tokens[1].c_str());  
         } else if (tokens[0] == "wordsize_block2block") {
             _wordsize_block2block = atoi(tokens[1].c_str());
         } else if (tokens[0] == "router_channel_number") {

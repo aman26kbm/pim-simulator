@@ -455,26 +455,58 @@ int DynaSwitch::get_closest_dram_index_2(int index){
 }
 
 void DynaSwitch::setDramTiles(){
-    int perimeter = (cfg->_meshHeight+cfg->_meshWidth-2)*2;
-    int numDram = cfg->_dramTileNum;
+    if(cfg->_dramTileNum!=0){
+        int perimeter = (cfg->_meshHeight+cfg->_meshWidth-2)*2;
+        int numDram = cfg->_dramTileNum;
 
-    int gap = (int)floor(perimeter /(double) numDram);
-    for(int i=0; i<numDram; i++){
-        if(gap*i<cfg->_meshWidth){
-            dramIndex.push_back(std::pair<int,int>(0,gap*i));
+        int gap = (int)floor(perimeter /(double) numDram);
+        for(int i=0; i<numDram; i++){
+            if(gap*i<cfg->_meshWidth){
+                dramIndex.push_back(std::pair<int,int>(0,gap*i));
+            }
+            else if(gap*i<cfg->_meshWidth+cfg->_meshHeight -1){
+                dramIndex.push_back(std::pair<int,int>(gap*i-cfg->_meshWidth+1,cfg->_meshWidth-1));
+            }
+            else if(gap*i<cfg->_meshWidth+cfg->_meshHeight -1 + cfg->_meshWidth-1){
+                dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight -1 , cfg->_meshWidth-1 + cfg->_meshHeight-1 + cfg->_meshWidth - gap*i - 1 ));
+            }
+            else if(gap*i<perimeter-1){
+                dramIndex.push_back(std::pair<int,int>(perimeter-gap*i, 0));
+            }
+            else{
+                std::cout<<"dramTile out of bound!"<<std::endl;
+                assert(false);
+            }
         }
-        else if(gap*i<cfg->_meshWidth+cfg->_meshHeight -1){
-            dramIndex.push_back(std::pair<int,int>(gap*i-cfg->_meshWidth+1,cfg->_meshWidth-1));
+    }
+    else {
+        if(cfg->_dramTileNumTop!=0){
+            //top edge start from left side
+            int gap_top = (int)floor((cfg->_meshWidth-2) /(double) cfg->_dramTileNumTop);
+            for(int i=0; i<cfg->_dramTileNumTop; i++){
+                dramIndex.push_back(std::pair<int,int>(0, 1+gap_top*i));
+            }
         }
-        else if(gap*i<cfg->_meshWidth+cfg->_meshHeight -1 + cfg->_meshWidth-1){
-            dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight -1 , cfg->_meshWidth-1 + cfg->_meshHeight-1 + cfg->_meshWidth - gap*i - 1 ));
+        if(cfg->_dramTileNumDown!=0){
+            //bottom edge start from right side
+            int gap_down = (int)floor((cfg->_meshWidth-2) /(double) cfg->_dramTileNumDown);
+            for(int i=0; i<cfg->_dramTileNumDown; i++){
+                dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight-1, cfg->_meshWidth-2-gap_down*i));
+            }
         }
-        else if(gap*i<perimeter-1){
-            dramIndex.push_back(std::pair<int,int>(perimeter-gap*i, 0));
+        if(cfg->_dramTileNumLeft!=0){
+            //left edge start from bottom side
+            int gap_left = (int)floor((cfg->_meshHeight-2) /(double) cfg->_dramTileNumLeft);
+            for(int i=0; i<cfg->_dramTileNumLeft; i++){
+                dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight-2-gap_left*i, 0));
+            }
         }
-        else{
-            std::cout<<"dramTile out of bound!"<<std::endl;
-            assert(false);
+        if(cfg->_dramTileNumRight!=0){
+            //right edge start from top side
+            int gap_right = (int)floor((cfg->_meshHeight-2) /(double) cfg->_dramTileNumRight);
+            for(int i=0; i<cfg->_dramTileNumRight; i++){
+                dramIndex.push_back(std::pair<int,int>(1+gap_right*i, cfg->_meshWidth-1));
+            }
         }
     }
 }

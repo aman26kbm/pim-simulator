@@ -20,7 +20,11 @@ public:
     std::string _tile_interconnect = "ideal";
     int _htreeTileDepth;
     int _dramTile;
-    int _dramTileNum;
+    int _dramTileNum=0;
+    int _dramTileNumTop=0;
+    int _dramTileNumLeft=0;
+    int _dramTileNumDown=0;
+    int _dramTileNumRight=0;
     bool _dramDistributed=false;
     int _ntiles_used;
 
