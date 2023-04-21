@@ -221,12 +221,13 @@ std::string Request::print_name(Type type) {
             case Type::RowSearch:
             case Type::ColSearch:
             case Type::RowReduce:
-            case Type::RowReduce_WithinTile:
             case Type::RowShift:
             case Type::PopCountReduce_RF: 
                 return "Compute";
+            case Type::RowReduce_WithinTile:
             case Type::BlockSend_Receive:
             case Type::BlockBroadCast:
+                return "StaticNetwork";
             case Type::TileSend:
             case Type::TileReceive:
             case Type::TileSend_BroadCast:
@@ -234,7 +235,7 @@ std::string Request::print_name(Type type) {
             case Type::Signal:
             case Type::Wait:
             case Type::Barrier:
-                return "Network";
+                return "DynamicNetwork";
             case Type::RowLoad:
             case Type::RowStore:
             case Type::RowLoad_RF:
