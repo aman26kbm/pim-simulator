@@ -109,7 +109,9 @@ public:
     bool is_finished();
 
     std::vector<std::pair<int,int>> dramIndex;
-
+    int get_closest_dram_index(int index);
+    //assume user specified _dramTileNum in config
+    int get_closest_dram_index_2(int index);
     //utils
 private:
     int get_addr0_index(Request req);
@@ -117,9 +119,7 @@ private:
     int get_source_index(Request req);
     int get_dest_index(Request req);
     //assume all edge tile has a dram channel
-    int get_closest_dram_index(int index);
-    //assume user specified _dramTileNum in config
-    int get_closest_dram_index_2(int index);
+
 
     Direction decode(Request req);
     void setupConnection(Direction in,int channelIn, Direction out, int channelOut, int packets);

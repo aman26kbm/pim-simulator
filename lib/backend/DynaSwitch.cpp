@@ -441,8 +441,10 @@ int DynaSwitch::get_closest_dram_index_2(int index){
     int dist_left = index%cfg->_meshWidth;
     int min_dist = cfg->_meshHeight + cfg->_meshWidth;
     int closest_dram = 0;
+
     for(std::pair<int,int> thisDramIndex : dramIndex){
-        //std::cout<<thisDramIndex.first<<" "<<thisDramIndex.second<<std::endl;
+        
+
         if(std::abs(thisDramIndex.first - dist_up) + std::abs(thisDramIndex.second - dist_left)< min_dist){
             min_dist = std::abs(thisDramIndex.first - dist_up) + std::abs(thisDramIndex.second - dist_left);
             closest_dram = thisDramIndex.first * cfg->_meshWidth + thisDramIndex.second;
@@ -482,33 +484,35 @@ void DynaSwitch::setDramTiles(){
     else {
         if(cfg->_dramTileNumTop!=0){
             //top edge start from left side
-            int gap_top = (int)floor((cfg->_meshWidth-2) /(double) cfg->_dramTileNumTop);
+            double gap_top = (cfg->_meshWidth-1) /(double) (cfg->_dramTileNumTop+1);
             for(int i=0; i<cfg->_dramTileNumTop; i++){
-                dramIndex.push_back(std::pair<int,int>(0, 1+gap_top*i));
+                dramIndex.push_back(std::pair<int,int>(0, 0+(int)round(gap_top*(i+1))));
             }
         }
         if(cfg->_dramTileNumDown!=0){
             //bottom edge start from right side
-            int gap_down = (int)floor((cfg->_meshWidth-2) /(double) cfg->_dramTileNumDown);
+            double gap_down = (cfg->_meshWidth-1) /(double) (cfg->_dramTileNumDown+1);
             for(int i=0; i<cfg->_dramTileNumDown; i++){
-                dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight-1, cfg->_meshWidth-2-gap_down*i));
+                dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight-1, (int)round(cfg->_meshWidth-1-gap_down*(i+1))));
+                //std::cout<<gap_down<<" "<<i+1<<std::endl;
             }
         }
         if(cfg->_dramTileNumLeft!=0){
             //left edge start from bottom side
-            int gap_left = (int)floor((cfg->_meshHeight-2) /(double) cfg->_dramTileNumLeft);
+            double gap_left = (cfg->_meshHeight-1) /(double) (cfg->_dramTileNumLeft+1);
             for(int i=0; i<cfg->_dramTileNumLeft; i++){
-                dramIndex.push_back(std::pair<int,int>(cfg->_meshHeight-2-gap_left*i, 0));
+                dramIndex.push_back(std::pair<int,int>((int)round(cfg->_meshHeight-1-gap_left*(i+1)), 0));
             }
         }
         if(cfg->_dramTileNumRight!=0){
             //right edge start from top side
-            int gap_right = (int)floor((cfg->_meshHeight-2) /(double) cfg->_dramTileNumRight);
+            double gap_right = (cfg->_meshHeight-1) /(double) (cfg->_dramTileNumRight+1);
             for(int i=0; i<cfg->_dramTileNumRight; i++){
-                dramIndex.push_back(std::pair<int,int>(1+gap_right*i, cfg->_meshWidth-1));
+                dramIndex.push_back(std::pair<int,int>((int)round(0+gap_right*(i+1)), cfg->_meshWidth-1));
             }
         }
     }
+
 }
 
 
@@ -516,8 +520,10 @@ int DynaSwitch::get_dest_index(Request req){
     if(req.type == Request::Type::RowStore_RF || req.type == Request::Type::RowStore) {
         if(!cfg->_dramDistributed)
             return cfg->_dramTile;
+        else if(cfg->_dramTileNum==0 && cfg->_dramTileNumTop==0 && cfg->_dramTileNumLeft==0 && cfg->_dramTileNumDown==0 && cfg->_dramTileNumRight==0){
+            return get_addr0_index(req)%cfg->_meshWidth;
+        }
         else{
-            //return get_addr0_index(req)%cfg->_meshWidth;
             return get_closest_dram_index_2(get_addr0_index(req));
         }
     }
@@ -526,8 +532,10 @@ int DynaSwitch::get_dest_index(Request req){
             
             if(!cfg->_dramDistributed)
                 return cfg->_dramTile;
+            else if(cfg->_dramTileNum==0 && cfg->_dramTileNumTop==0 && cfg->_dramTileNumLeft==0 && cfg->_dramTileNumDown==0 && cfg->_dramTileNumRight==0){
+                return get_addr0_index(req)%cfg->_meshWidth;
+            }
             else{
-                //return get_addr0_index(req)%cfg->_meshWidth;
                 return get_closest_dram_index_2(get_addr0_index(req));
             }
         }

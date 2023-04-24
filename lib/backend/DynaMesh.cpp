@@ -27,6 +27,28 @@ DynaMesh::DynaMesh(Config* cfg){
             switch_list.push_back(DynaSwitch(index, cfg));
         }
     }
+    std::cout<<"dram tiles:"<<std::endl;
+    // for(std::pair<int,int> thisDramIndex : switch_list[0].dramIndex){    
+    //     std::cout<<thisDramIndex.first<<" "<<thisDramIndex.second<<std::endl;
+    // }
+    for(std::pair<int,int> thisDramIndex : switch_list[0].dramIndex){ 
+        std::vector<int> tiles; 
+        for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
+            int dram_index = switch_list[0].get_closest_dram_index_2(index);
+            if(dram_index == thisDramIndex.first*cfg->_meshWidth + thisDramIndex.second){
+                tiles.push_back(index);
+            }
+        }  
+        std::cout<<thisDramIndex.first<<" "<<thisDramIndex.second<<" <-> ";
+        for(int tile : tiles){
+            std::cout<<tile<<" ";
+        }
+        std::cout<<std::endl;
+    }
+    // for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
+    //     int dram_index = switch_list[0].get_closest_dram_index_2(index);
+    //     std::cout<<"tile "<<index<<" <-> dram "<<dram_index/cfg->_meshWidth<<" "<<dram_index%cfg->_meshWidth<<std::endl;
+    // }
     //set neighbors
     for(int index=0; index<cfg->_meshHeight * cfg->_meshWidth; index++){
         setSwitchNeighbors(index);
