@@ -112,21 +112,23 @@ int32_t conv2d_ocvec(System* sys)
     int oh = 7;
     int ow = 7;
 
+    PrecisionT::Precision precision_temp = PrecisionT::INT1;
+
     //We need to load filters only once and then we can broadcast them to other cores
-    for(int i=0; i<rh*rw; i++){
+    for(int i=0; i<rh*rw*precision_input.bits(); i++){
         for (int j=0; j<(ceil((float)(oc*rc)/(float)(cfg->_ncols*cfg->_nblocks))); j++) {
             request = new Request(Request::Type::RowLoad);
-            request->addOperand(sys->getAddress(0,0,i*precision_input.bits()),0, precision_input); //cram addr
-            request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
+            request->addOperand(sys->getAddress(0,0,i*precision_temp.bits()),0, precision_temp); //cram addr
+            request->addOperand(sys->DRAM_ADDR, 0, precision_temp); //dram addr
             requests.push_back(*request);
         
-            //broadcast_conv2d(sys,cfg,precision_input);
+            //broadcast_conv2d(sys,cfg,precision_temp);
 
             //std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
             std::vector<int> v(n*oh*ow);
             std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
             // v.erase(v.begin(), v.begin() + 22);
-            sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, cfg->_nblocks*cfg->_ncols, requests);
+            sys->broadcast_p2p(sys->getAddress(0,0,0),precision_temp, v, cfg->_nblocks*cfg->_ncols, requests);
         }
     }
 
