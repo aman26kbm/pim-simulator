@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t vgg_mv_4096_4096(System *sys) {
+int32_t vgg_mv_store_4096_4096(System *sys) {
   void* _1 = nullptr;
   // int1 b_local[0], 0
   // int8 c_rf[65536], 4096
@@ -64,11 +64,17 @@ int32_t vgg_mv_4096_4096(System *sys) {
         sys->sendRequest(request);
       }
     }
+    {
+      Request request(Request::Type::RowStore);
+      request.addOperand(sys->getAddress(0, 0, 0), 0, PrecisionT::Precision{0, 8, 0} /*DRAM*/);
+      request.addOperand(sys->getAddress(0, 0, 2192), 0, PrecisionT::Precision{0, 8, 0} /*CRAM*/);
+      sys->sendRequest(request);
+    }
   }
   // freed c_rf
   // freed b_local
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &_vgg_mv_4096_4096__ = pimsim::registerFunc("vgg_mv_4096_4096", vgg_mv_4096_4096);
+static __attribute__((unused)) Registry::Entry &_vgg_mv_store_4096_4096__ = pimsim::registerFunc("vgg_mv_store_4096_4096", vgg_mv_store_4096_4096);
 

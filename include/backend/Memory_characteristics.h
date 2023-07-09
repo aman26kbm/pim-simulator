@@ -92,12 +92,12 @@ public:
     double rfStaticEnergy = 0;
     double popcountStaticEnergy = 0;
 
-    int bitsReadFromDram = 0;
-    int bitsWrittenToDram = 0;
+    int64_t bitsReadFromDram = 0;
+    int64_t bitsWrittenToDram = 0;
 
-	double getTiming(Request req);
-	double getDynamicEnergy(Request req);
-	double getStaticEnergy();
+    double getTiming(Request req);
+    double getDynamicEnergy(Request req);
+    double getStaticEnergy();
     int getPrecisionBits(Request req);
 
 };

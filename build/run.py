@@ -101,11 +101,33 @@ to_sim = [
   #('../configs/SIMDRAM.cfg', 'vgg5'),
 
   # dc
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_65536_16'),
-  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gausselim_256'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_forward_65536_16'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_backward_65536_16'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gausselim_256'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'dwt_1024'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot_1024_1024'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot3d_512_8'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'dwt_4096'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot_4096_4096'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot3d_1024_8'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gausselim_512'),
+
+  # SIMDRAM VGG-13/16
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_bnn_13_1'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_bnn_13_2'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_bnn_13_3'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_bnn_13_256_512'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_bnn_13_512_512'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_bnn_13_512_256'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_mv_store_4096_4096'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_mv_4096_4096'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_mv_4096_256'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'len_bnn_1'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'lenet_bnn_2'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'len_bnn_3'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'lenet_4'),
+  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_mv_256_256'),
+
 ]
 
 for cfg, wl in to_sim:
