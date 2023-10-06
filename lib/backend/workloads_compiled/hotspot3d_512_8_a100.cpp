@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t hotspot3d_512_8(System *sys) {
+int32_t hotspot3d_512_8_a100(System *sys) {
   void* _1 = nullptr;
   // float32 in_global[370080], 0
   for (int32_t x_outer_outer = 0; x_outer_outer < 32; ++x_outer_outer) {
@@ -145,5 +145,5 @@ int32_t hotspot3d_512_8(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &_hotspot3d_512_8__ = pimsim::registerFunc("hotspot3d_512_8_a100", hotspot3d_512_8);
+static __attribute__((unused)) Registry::Entry &_hotspot3d_512_8__ = pimsim::registerFunc("hotspot3d_512_8_a100", hotspot3d_512_8_a100);
 

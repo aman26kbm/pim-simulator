@@ -140,6 +140,8 @@ bool MemoryChip::isFinished(){
             return false;
         }
     }
+    //dram finish?
+    // if(_Dram->)
     
     return true;
 }

@@ -17,7 +17,7 @@ public:
     std::map<std::string, std::string> options;
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _meshHeight, _meshWidth;
-    std::string _tile_interconnect = "ideal";
+    std::string _tile_interconnect = "ideal";//can be "ideal", "htree", "bus"
     int _htreeTileDepth;
     int _dramTile;
     bool _dramDistributed=false;
@@ -41,6 +41,12 @@ public:
     std::string _net_configuration, _mem_configuration;
     int _dataflow;
     int _popcount_pipeline_stages;
+    //for ablation study of hardware features:
+    bool _const_op_on = true; //whether hardware supports constant operations. by default this is true.
+    bool _shuffle_on = true; //whether hardware supports shuffle. by default this is true.
+    bool _cross_cram_shift_on = true; //whether hardware supports cross cram shift operations. by default this is true.
+    std::string _broadcast_type = "systolic"; //can be "systolic" or "one_to_all"
+
     
 //public:
     Config() {}

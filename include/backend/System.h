@@ -151,7 +151,8 @@ public:
                        bool men=false,
                        int samt=0,
                        int bcnt=0);
-
+  //broadcast wrapper. Should be the only method called. Although its name is p2p, it actually determines the broadcast type based on config file. The reason for this inconsistency is to keep the compiler unchanged.
+    // make sure compiler only calls this!
     void broadcast_p2p(int addr, 
                        PrecisionT::Precision precision_input, 
                        std::vector<int> receivers, 

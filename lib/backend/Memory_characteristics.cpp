@@ -304,6 +304,8 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowStore: 
             if(config->_tile_interconnect == "htree")
                 time = hTreeTile::getCycles(req, config);
+            else if(config->_tile_interconnect == "bus")
+                time = 1;//only need 1 extra cycle for pipelined load store
             else
                 time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
@@ -314,30 +316,78 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::RowLoad_RF: 
         case Request::Type::RowStore_RF: 
+        //time to load and transfer to this tile is already modeled in the interconnect model. Only need to add cycles of populating to and from htree root.
             if(config->_tile_interconnect == "htree")
                 time = hTreeTile::getCycles(req, config);
+            else if(config->_tile_interconnect == "bus")
+                time = 1;//only need 1 extra cycle for pipelined load store
             else
                 time = T_CLK * (int)ceil(config->_num_regs_per_rf * config->_num_bits_per_reg / (double)config->_wordsize_dram);
             break;
         case Request::Type::RowMul_CRAM_RF: 
-           //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
-           //number of cycles consumed.
-           //Number of src bits gives the right value for multiplication cycles.
-            time = getClocksForReq(req.precision_list, "mul_cram_rf") * T_CLK;
-            break;
+            if(config->_const_op_on){
+            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
+            //number of cycles consumed.
+            //Number of src bits gives the right value for multiplication cycles.
+                time = getClocksForReq(req.precision_list, "mul_cram_rf") * T_CLK;
+                break;
+            }
+            else{
+                //hardware ablation study
+                //models the clock cycles assuming hardware does not support const op
+                if(config->_tile_interconnect == "htree")
+                    time = hTreeTile::getCycles(req, config) + req.precision_list[1].bits();//tree height + precition
+                else if(config->_tile_interconnect == "bus")
+                    time = 1 + req.precision_list[1].bits();//only need 1 cycle to drive the bus, then precition cycles to store in cram rows.
+                else if(config->_tile_interconnect == "ideal")
+                    time = req.precision_list[1].bits();//only need precition cycles to store in cram rows.
+                //then some cycles to actually do row wise computation
+                time += getClocksForReq(req.precision_list, "mul_cram_rf") * T_CLK;
+                break;
+            }
         case Request::Type::RowAdd_CRAM_RF: 
-           //Looking the precision of the second item in the list (the destination) for calculating the
-           //number of cycles consumed.
-           //Number of destination bits tells the right value for addition because it could be more
-           //than the operands. (Eg. in case where accumulator is wider)
-            time = getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
-            break;
+            if(config->_const_op_on){
+            //Looking the precision of the second item in the list (the destination) for calculating the
+            //number of cycles consumed.
+            //Number of destination bits tells the right value for addition because it could be more
+            //than the operands. (Eg. in case where accumulator is wider)
+                time = getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
+                break;
+            }
+            else{
+                //hardware ablation study
+                //models the clock cycles assuming hardware does not support const op
+                if(config->_tile_interconnect == "htree")
+                    time = hTreeTile::getCycles(req, config) + req.precision_list[1].bits();//tree height + precition
+                else if(config->_tile_interconnect == "bus")
+                    time = 1 + req.precision_list[1].bits();//only need 1 cycle to drive the bus, then precition cycles to store in cram rows.
+                else if(config->_tile_interconnect == "ideal")
+                    time = req.precision_list[1].bits();//only need precition cycles to store in cram rows.
+                //then some cycles to actually do row wise computation
+                time += getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
+                break;
+            }
         case Request::Type::RowDotProduct_CRAM_RF: 
-           //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
-           //number of cycles consumed.
-           //Number of src bits gives the right value for multiplication cycles.
-            time = getClocksForReq(req.precision_list, "dp_cram_rf") * T_CLK;
-            break;
+            if(config->_const_op_on){
+            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
+            //number of cycles consumed.
+            //Number of src bits gives the right value for multiplication cycles.
+                time = getClocksForReq(req.precision_list, "dp_cram_rf") * T_CLK;
+                break;
+            }
+            else{
+                //hardware ablation study
+                //models the clock cycles assuming const op is off
+                if(config->_tile_interconnect == "htree")
+                    time = hTreeTile::getCycles(req, config) + req.precision_list[2].bits() + req.precision_list[3].bits();//tree height + precition of rf1 + precition of rf2
+                else if(config->_tile_interconnect == "bus")
+                    time = 1 + req.precision_list[2].bits() + req.precision_list[3].bits();//only need 1 cycle to drive the bus, then some cycles to store in cram rows.
+                else if(config->_tile_interconnect == "ideal")
+                    time = req.precision_list[2].bits() + req.precision_list[3].bits();//only need precition cycles to store in cram rows.
+                //then some cycles to actually do row wise computation
+                time += getClocksForReq(req.precision_list, "dp_cram_rf") * T_CLK;
+                break;
+            }
         case Request::Type::PopCountReduce_RF:
         //TODO: how to calculate cycles?
             time = T_CLK*(req.precision_list[0].bits()+config->_popcount_pipeline_stages);//assumes the popcount hardware is a pipeline with 5 stages

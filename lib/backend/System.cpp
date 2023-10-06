@@ -75,7 +75,7 @@ System::~System()
 
 //Form an address for the given tile, block, row
 //Chip and row numbers are assumed to be 0.
-
+//tile, block, row
 AddrT System::getAddress(int tile, int block, int row)
 {
     AddrT addr = 0;
@@ -95,7 +95,7 @@ AddrT System::getRFAddress(int tile, int rf_index){
 }
 
 //Form an address for the given chip, tile, block, row, column
-
+//chip, tile, block, row, col
 AddrT System::getAddress(int chip, int tile, int block, int row, int col)
 {
     AddrT addr = chip;
@@ -563,6 +563,44 @@ bool System::sendRequest(Request& req)
         }
       }
     }
+    // for hardware ablation study: if shuffle is off, convert this request to a simple load/store of size ncol*nblock
+    if(!_config->_shuffle_on && 
+        (req.type == Request::Type::RowLoad ||
+        req.type == Request::Type::RowStore)){
+            if(req.broadcast_en || req.multicast_en){
+                req.broadcast_en = false;
+                req.multicast_en = false;
+                req.size_list[0] = _config->_ncols*_config->_nblocks;
+                req.size_list[1] = _config->_ncols*_config->_nblocks;
+            }
+    }
+    // for hardware ablation study: if cross_cram_shift is off, convert this request to store + load
+    if(!_config->_cross_cram_shift_on && req.type == Request::Type::RowShift){
+        decode(req, chip, tile);
+        int temp_chip=0;
+        int temp_tile=0;
+
+        bool success = true;
+
+        Request loadReq = Request(Request::Type::RowLoad);
+        loadReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, req.precision_list[0]);//cram
+        loadReq.addOperand(DRAM_ADDR,0, req.precision_list[0]);//dram
+        decode(loadReq, temp_chip, temp_tile);
+        loadReq.reqNo = currReqNo;
+        success = success && _chips[chip]->receiveReq(loadReq);
+        currReqNo++;
+        totalReqNo++;
+
+        Request storeReq = Request(Request::Type::RowStore);
+        storeReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, req.precision_list[0]);//cram
+        storeReq.addOperand(DRAM_ADDR,0, req.precision_list[0]);//dram
+        decode(storeReq, temp_chip, temp_tile);
+        storeReq.reqNo = currReqNo;
+        success = success && _chips[chip]->receiveReq(storeReq);
+        currReqNo++;
+        totalReqNo++;
+        return success;
+    }
     decode(req, chip, tile);
     req.reqNo = currReqNo;
     bool success = _chips[chip]->receiveReq(req);
@@ -987,7 +1025,14 @@ void System::broadcast_p2p(int addr,
                            int size, 
                            bool ben, bool men, int samt, int bcnt) {
   std::vector<Request> reqs;
-  broadcast_p2p(addr, precision_input, receivers, size, reqs, ben, men, samt, bcnt);
+  if(_config->_broadcast_type == "systolic")
+    broadcast_p2p(addr, precision_input, receivers, size, reqs, ben, men, samt, bcnt);
+  else if(_config->_broadcast_type == "one_to_all")
+    broadcast(addr, precision_input, receivers, size, reqs, ben, men, samt, bcnt);
+  else{
+    std::cout<<"broadcast type not set. using p2p systolic broadcast by default"<<std::endl;
+    broadcast_p2p(addr, precision_input, receivers, size, reqs, ben, men, samt, bcnt);
+  }
   for (auto &elem : reqs)
     sendRequest(elem);
 }

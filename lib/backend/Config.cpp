@@ -121,7 +121,25 @@ void Config::parse(const string& fname) {
             _net_configuration = tokens[1];
         }else if (tokens[0] == "popcount_pipeline_stages") {
             _popcount_pipeline_stages = atoi(tokens[1].c_str());
-        }
+        } else if (tokens[0] == "const_op") {
+            if (tokens[1] == "on")
+                _const_op_on = true;
+            else if(tokens[1] == "off")
+                _const_op_on = false;
+
+        } else if (tokens[0] == "shuffle") {
+            if (tokens[1] == "on")
+                _shuffle_on = true;
+            else if(tokens[1] == "off")
+               _shuffle_on = false;
+        } else if (tokens[0] == "cross_cram_shift") {
+            if (tokens[1] == "on")
+                _cross_cram_shift_on = true;
+            else if(tokens[1] == "off")
+                _cross_cram_shift_on = false;
+        } else if (tokens[0] == "broadcast_type") {
+            _broadcast_type = tokens[1];
+        } 
     }
     file.close();
 }
