@@ -96,6 +96,7 @@ public:
     int64_t bitsWrittenToDram = 0;
 
     double getTiming(Request req);
+    int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, std::string op, int levels=0);
     double getDynamicEnergy(Request req);
     double getStaticEnergy();
     int getPrecisionBits(Request req);

@@ -78,8 +78,24 @@ int32_t ablation_broadcast(System* sys){
     return 0;
 }
 
+int32_t ablation_reduce(System* sys){
+    std::vector<Request> requests;
+    Request *request;
+
+    PrecisionT::Precision precision_input = PrecisionT::INT8;
+    request = new Request(Request::Type::RowReduce_WithinTile);
+    request->addOperand(sys->getAddress(0,0,0), 8, precision_input); //src
+    request->addOperand(sys->getAddress(0,0,0), 8, precision_input); //dst
+    requests.push_back(*request);
+    for (unsigned int i = 0; i < requests.size(); i++)
+        sys->sendRequest(requests[i]);
+    return 0;
+}
+
+
 
 static __attribute__((unused)) Registry::Entry &__vadd_norf__ = pimsim::registerFunc("vadd_norf", vadd_norf);
 static __attribute__((unused)) Registry::Entry &__rowload_shuffle___ = pimsim::registerFunc("rowload_shuffle", rowload_shuffle);
 static __attribute__((unused)) Registry::Entry &__shift___ = pimsim::registerFunc("shift", shift);
 static __attribute__((unused)) Registry::Entry &__ablation_broadcast___ = pimsim::registerFunc("ablation_broadcast", ablation_broadcast);
+static __attribute__((unused)) Registry::Entry &__ablation_reduce___ = pimsim::registerFunc("ablation_reduce", ablation_reduce);
