@@ -49,6 +49,9 @@ public:
     const double E_NoC = 4.33e-13;
     //Energy in J spent in tranfering a bit from one port of switch to another
     const double E_HTree = 4.98e-15;
+    //Energy in J spent in tranfering a bit on bus
+    //needs to be adjusted
+    const double E_Bus = 4.98e-15;
     //Energy in J spent in tranfering a bit from one port of switch to another
     const double E_HTreeRoot = 5.04e-15; //Same as HTree so not used in calculations
     //Energy in J spent in transposing data per bit (average)
@@ -65,6 +68,7 @@ public:
     //const double SE_HTreeRoot = 1.5e-13; //We don't need separate energy for the root H-tree. It's the same as the others.
     const double SE_HTreeRoot = 3.64e-14;
     const double SE_HTree = 3.64e-14;
+    const double SE_Bus = 3.64e-14;// ablation: static energy of bus. Need to be adjusted
     const double SE_InstrCtrl = 5.86e-14; 
     const double SE_Transpose = 3.39e-12; 
     const double SE_Popcount = 2.19e-15; 
@@ -75,6 +79,7 @@ public:
     //Energy stats
     double shuffleDynEnergy = 0;
     double hTreeDynEnergy = 0;
+    double busDynEnergy = 0; //for ablation: bus interconnect
     double arrayDynEnergy = 0;
     double transposeDynEnergy = 0;
     double nocDynEnergy = 0; //Not populated in MemoryCharacteristics
@@ -85,6 +90,7 @@ public:
 
     double shuffleStaticEnergy = 0;
     double hTreeStaticEnergy = 0;
+    double busStaticEnergy = 0; //for ablation: bus interconnect
     double arrayStaticEnergy = 0;
     double transposeStaticEnergy = 0;
     double nocStaticEnergy = 0;
@@ -96,7 +102,7 @@ public:
     int64_t bitsWrittenToDram = 0;
 
     double getTiming(Request req);
-    int getClocksForReq(std::vector<pimsim::PrecisionT::Precision> precision_list, std::string op, int levels=0);
+    int getClocksForReq(Request& req, std::string op, int levels=0);
     double getDynamicEnergy(Request req);
     double getStaticEnergy();
     int getPrecisionBits(Request req);

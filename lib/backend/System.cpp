@@ -827,7 +827,7 @@ void System::broadcast(int addr,
                        bool ben, bool men, int samt, int bcnt){
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
-    assert(tile<_config->_meshWidth);
+    //assert(tile<_config->_meshWidth);
     int block =  (addr%(_config->_nblocks*_config->_nrows*_config->_ncols))/(_config->_nrows*_config->_ncols);
     assert(block==0);
     int row = ((addr%(_config->_nblocks*_config->_nrows*_config->_ncols))%(_config->_nrows*_config->_ncols))/_config->_ncols;
@@ -841,39 +841,43 @@ void System::broadcast(int addr,
     }
 
     for(int col=0; col<_config->_meshWidth; col++){
-        if(col==tile) continue;
+        int destRow = tile/_config->_meshWidth;
+        int destTile = destRow*_config->_meshWidth + col;
+        if(destTile==tile) continue;
         bool isReceiver = false;
         for(int i:receivers){
-            if (col==i) isReceiver = true;
+            if (destTile==i) isReceiver = true;
         }
         if(isReceiver){
             request = new Request(Request::Type::TileSend);
             request->addOperand(getAddress(tile,0,row), size, precision_input); //src
-            request->addOperand(getAddress(col,0,row), size, precision_input); //dst
+            request->addOperand(getAddress(destTile,0,row), size, precision_input); //dst
             requests.push_back(*request);
 
             request = new Request(Request::Type::TileReceive);
             request->addOperand(getAddress(tile,0,row), size, precision_input); //src
-            request->addOperand(getAddress(col,0,row), size, precision_input); //dst
+            request->addOperand(getAddress(destTile,0,row), size, precision_input); //dst
             request->setShuffle(ben, men, samt, bcnt);
             requests.push_back(*request);
         }
     }
 
+    int srcRow = tile/_config->_meshWidth;
     for(int col=0; col<_config->_meshWidth; col++){
-        for(int row=1; row<_config->_meshHeight; row++){
+        for(int row=0; row<_config->_meshHeight; row++){
+            if(row == srcRow) continue;
             bool isReceiver = false;
             for(int i:receivers){
                 if (row*_config->_meshWidth+col==i) isReceiver = true;
             }
             if(isReceiver){
                 request = new Request(Request::Type::TileSend);
-                request->addOperand(getAddress(col,0,row), size, precision_input); //src
+                request->addOperand(getAddress(srcRow * _config->_meshWidth + col,0,row), size, precision_input); //src
                 request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
                 requests.push_back(*request);
 
                 request = new Request(Request::Type::TileReceive);
-                request->addOperand(getAddress(col,0,row), size, precision_input); //src
+                request->addOperand(getAddress(srcRow * _config->_meshWidth + col,0,row), size, precision_input); //src
                 request->addOperand(getAddress(row * _config->_meshWidth + col,0,row), size, precision_input); //dst
                 request->setShuffle(ben, men, samt, bcnt);
                 requests.push_back(*request);      
@@ -905,6 +909,14 @@ void System::broadcast_p2p(int addr,
                            int size, 
                            std::vector<Request>& requests,
                            bool ben, bool men, int samt, int bcnt){
+    if(_config->_broadcast_type == "one_to_all"){
+        broadcast(addr, precision_input, receivers, size, requests, ben, men, samt, bcnt);
+        return;
+    }
+    else if(_config->_broadcast_type == "systolic"){}
+    else{
+        std::cout<<"broadcast type not set. using p2p systolic broadcast by default"<<std::endl;
+    }
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
     assert(tile<_config->_meshWidth * _config->_meshHeight);

@@ -49,22 +49,22 @@ double MemoryCharacteristics::getTiming(Request req) {
             break;
         case Request::Type::RowAdd:  
         case Request::Type::RowSub: 
-            time = getClocksForReq(req.precision_list, "add") * T_CLK;
+            time = getClocksForReq(req, "add") * T_CLK;
             break;
         case Request::Type::RowCompare:
-            time = getClocksForReq(req.precision_list, "compare") * T_CLK;
+            time = getClocksForReq(req, "compare") * T_CLK;
             break;
         case Request::Type::RowMul: 
            //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
            //number of cycles consumed.
            //Number of src bits gives the right value for multiplication cycles.
-            time = getClocksForReq(req.precision_list, "mul") * T_CLK;
+            time = getClocksForReq(req, "mul") * T_CLK;
             break;
 
         case Request::Type::RowReduce: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
-            time = getClocksForReq(req.precision_list, "reduce", req.size_list[0]) * T_CLK;
+            time = getClocksForReq(req, "reduce", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowReduce_WithinTile: 
             // precision_list[0] tells the number of bits in the operand
@@ -106,7 +106,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 }
             }
             else
-                time = getClocksForReq(req.precision_list, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
+                time = getClocksForReq(req, "RowReduce_WithinTile", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad: 
         case Request::Type::RowStore: 
@@ -120,7 +120,7 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowShift: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of shifts
-            time = getClocksForReq(req.precision_list, "read", req.size_list[0]) * T_CLK;
+            time = getClocksForReq(req, "read", req.size_list[0]) * T_CLK;
             break;
         case Request::Type::RowLoad_RF: 
         case Request::Type::RowStore_RF: 
@@ -137,7 +137,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
             //number of cycles consumed.
             //Number of src bits gives the right value for multiplication cycles.
-                time = getClocksForReq(req.precision_list, "mul_cram_rf") * T_CLK;
+                time = getClocksForReq(req, "mul_cram_rf") * T_CLK;
                 break;
             }
             else{
@@ -150,7 +150,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 else if(config->_tile_interconnect == "ideal")
                     time = req.precision_list[1].bits();//only need precition cycles to store in cram rows.
                 //then some cycles to actually do row wise computation
-                time += getClocksForReq(req.precision_list, "mul_cram_rf") * T_CLK;
+                time += getClocksForReq(req, "mul_cram_rf") * T_CLK;
                 break;
             }
         case Request::Type::RowAdd_CRAM_RF: 
@@ -159,7 +159,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             //number of cycles consumed.
             //Number of destination bits tells the right value for addition because it could be more
             //than the operands. (Eg. in case where accumulator is wider)
-                time = getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
+                time = getClocksForReq(req, "add_cram_rf") * T_CLK;
                 break;
             }
             else{
@@ -172,7 +172,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 else if(config->_tile_interconnect == "ideal")
                     time = req.precision_list[1].bits();//only need precition cycles to store in cram rows.
                 //then some cycles to actually do row wise computation
-                time += getClocksForReq(req.precision_list, "add_cram_rf") * T_CLK;
+                time += getClocksForReq(req, "add_cram_rf") * T_CLK;
                 break;
             }
         case Request::Type::RowDotProduct_CRAM_RF: 
@@ -180,7 +180,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             //Looking the precision of the first item in the list (the source with the larger precision) for calculating the
             //number of cycles consumed.
             //Number of src bits gives the right value for multiplication cycles.
-                time = getClocksForReq(req.precision_list, "dp_cram_rf") * T_CLK;
+                time = getClocksForReq(req, "dp_cram_rf") * T_CLK;
                 break;
             }
             else{
@@ -193,7 +193,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 else if(config->_tile_interconnect == "ideal")
                     time = req.precision_list[2].bits() + req.precision_list[3].bits();//only need precition cycles to store in cram rows.
                 //then some cycles to actually do row wise computation
-                time += getClocksForReq(req.precision_list, "dp_cram_rf") * T_CLK;
+                time += getClocksForReq(req, "dp_cram_rf") * T_CLK;
                 break;
             }
         case Request::Type::PopCountReduce_RF:

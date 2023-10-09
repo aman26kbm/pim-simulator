@@ -27,7 +27,7 @@ int MemoryCharacteristics::getPrecisionBits(Request req) {
     if(req.type == Request::Type::RowLoad_RF || req.type == Request::Type::RowStore_RF){
         return (int)ceil(config->_num_bits_per_reg * config->_num_regs_per_rf / (double)config->_wordsize_dram);
     }
-    return getClocksForReq(req.precision_list, "read");
+    return getClocksForReq(req, "read");
 }
 
 //double MemoryCharacteristics::getTiming(int idx, PrecisionT precision) {

@@ -73,7 +73,7 @@ int32_t ablation_broadcast(System* sys){
     std::vector<int> v(sys->_config->_meshHeight*sys->_config->_meshWidth);
         std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ...
         //sys->broadcast_p2p(sys->getAddress(0,0,0),PrecisionT::INT8, v, sys->_config->_nblocks*sys->_config->_ncols);
-        sys->broadcast_p2p(sys->getAddress(0,0,0),PrecisionT::INT8, v,1024);        
+        sys->broadcast_p2p(sys->getAddress(14,0,0),PrecisionT::INT8, v,1024);        
 
     return 0;
 }

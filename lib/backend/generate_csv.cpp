@@ -428,13 +428,21 @@ void System::generate_energy_csv(){
                 _chips[i]->_values->transposeDynEnergy +
                 _chips[i]->_values->dramDynEnergy;
                 
-        tot_network_dynamic_energy =
-                _chips[i]->_values->shuffleDynEnergy +
-                _chips[i]->_values->hTreeDynEnergy +
-                _chips[i]->_values->nocDynEnergy;
+        if(_config->_tile_interconnect == "htree"){
+            tot_network_dynamic_energy =
+                    _chips[i]->_values->shuffleDynEnergy +
+                    _chips[i]->_values->hTreeDynEnergy +
+                    _chips[i]->_values->nocDynEnergy;
+        }
+        else if(_config->_tile_interconnect == "bus"){
+            tot_network_dynamic_energy =
+                    _chips[i]->_values->shuffleDynEnergy +
+                    _chips[i]->_values->busDynEnergy +
+                    _chips[i]->_values->nocDynEnergy;
+        }
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 46;
+        const int NUM_CSV_COLUMNS = 48;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "RowAdd_Energy",
@@ -463,6 +471,7 @@ void System::generate_energy_csv(){
                           "Block_SendReceive_Energy",
                           "Shuffle_Dynamic_Energy",
                           "HTree_Dynamic_Energy",
+                          "Bus_Dynamic_Energy",
                           "CRAM_Dynamic_Energy",
                           "Transpose_Dynamic_Energy",
                           "Dram_Dynamic_Energy",
@@ -472,6 +481,7 @@ void System::generate_energy_csv(){
                           "Popcount_Dynamic_Energy",
                           "Shuffle_Static_Energy",
                           "HTree_Static_Energy",
+                          "Bus_Static_Energy",
                           "CRAM_Static_Energy",
                           "Transpose_Static_Energy",
                           "NoC_Static_Energy",
@@ -519,6 +529,7 @@ void System::generate_energy_csv(){
                 tot_block_sendreceive_energy,
                 _chips[i]->_values->shuffleDynEnergy,
                 _chips[i]->_values->hTreeDynEnergy,
+                _chips[i]->_values->busDynEnergy,
                 _chips[i]->_values->arrayDynEnergy,
                 _chips[i]->_values->transposeDynEnergy,
                 _chips[i]->_values->dramDynEnergy,
@@ -528,6 +539,7 @@ void System::generate_energy_csv(){
                 _chips[i]->_values->popcountDynEnergy,
                 _chips[i]->_values->shuffleStaticEnergy,
                 _chips[i]->_values->hTreeStaticEnergy,
+                _chips[i]->_values->busStaticEnergy,
                 _chips[i]->_values->arrayStaticEnergy,
                 _chips[i]->_values->transposeStaticEnergy,
                 _chips[i]->_values->nocStaticEnergy,

@@ -16,6 +16,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
 
     double R_shuffleDynEnergy = 0;
     double R_hTreeDynEnergy = 0;
+    double R_busDynEnergy = 0; //ablation: bus interconnect
     double R_arrayDynEnergy = 0;
     double R_transposeDynEnergy = 0;
     double R_instCtrlDynEnergy = 0;
@@ -60,7 +61,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowAdd: 
             //Instruction controller + Array compute 
-            cycles = getClocksForReq(req.precision_list, "add");
+            cycles = getClocksForReq(req, "add");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
@@ -69,7 +70,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowCompare: 
             //Instruction controller + Array compute 
-            cycles = getClocksForReq(req.precision_list, "compare");
+            cycles = getClocksForReq(req, "compare");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
@@ -78,7 +79,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowMul: 
             //Instruction controller + Array compute 
-            cycles = getClocksForReq(req.precision_list, "mul");
+            cycles = getClocksForReq(req, "mul");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy =  E_ArrayCompute * cycles * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
@@ -96,7 +97,7 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowReduce: 
             //Instruction controller + Array compute across all arrays in a tile
-            compute_cycles = getClocksForReq(req.precision_list, "reduce", req.size_list[0]);
+            compute_cycles = getClocksForReq(req, "reduce", req.size_list[0]);
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = compute_cycles * E_ArrayCompute * config->get_nblocks(); //TODO: There is no way to specify how many crams are involved currently. So assume all CRAMs in a core are involved.
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
@@ -110,7 +111,15 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             int ops_done = 0;
             int N = config->get_nblocks();
             int P = req.precision_list[0].bits();
-            
+            //htree bits moved
+            //Siyuan:  Why this does not count htree hops?
+            for (int i=1; i<levels; i++) {
+                N = N/2;
+                bits_moved += N * P * config->get_ncols();
+                P = P+1;
+                ops_done += N * P;
+            }
+            //bus bits moved
             for (int i=1; i<levels; i++) {
                 N = N/2;
                 bits_moved += N * P * config->get_ncols();
@@ -121,16 +130,23 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //If we want to further reduce, call RowReduce separately
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = ops_done * E_ArrayCompute;
-            R_hTreeDynEnergy = bits_moved * E_HTree;
-            energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
+            if(config->_tile_interconnect=="htree"){
+                R_hTreeDynEnergy = bits_moved * E_HTree;
+                energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
+            }
+            else if(config->_tile_interconnect=="bus"){
+                R_busDynEnergy = bits_moved * E_Bus;
+                energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_busDynEnergy;
+            }
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
             hTreeDynEnergy += R_hTreeDynEnergy;
+            busDynEnergy += R_busDynEnergy;
             break;
         }
         case Request::Type::RowShift: 
             //Instruction controller + Array compute across all arrays in a tile
-            cycles = getClocksForReq(req.precision_list, "read", req.size_list[0]);
+            cycles = getClocksForReq(req, "read", req.size_list[0]);
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
@@ -139,9 +155,13 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowMul_CRAM_RF: 
             //Instruction controller + RF read + Array compute 
-            cycles = getClocksForReq(req.precision_list, "mul_cram_rf");
+            cycles = getClocksForReq(req, "mul_cram_rf");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
+            //ablation: extra array write if const op is off
+            if(!config->_const_op_on){
+                R_arrayDynEnergy += req.precision_list[1].bits() * E_ArrayWr * (config->get_nblocks());
+            }
             R_rfDynEnergy = E_RfRd;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
@@ -150,9 +170,13 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowAdd_CRAM_RF: 
             //Instruction controller + RF read + Array compute 
-            cycles = getClocksForReq(req.precision_list, "add_cram_rf");
+            cycles = getClocksForReq(req, "add_cram_rf");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
+            //ablation: extra array write if const op is off
+            if(!config->_const_op_on){
+                R_arrayDynEnergy += req.precision_list[1].bits() * E_ArrayWr * (config->get_nblocks());
+            }
             R_rfDynEnergy = E_RfRd;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
@@ -161,9 +185,13 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             break;
         case Request::Type::RowDotProduct_CRAM_RF: 
             //Instruction controller + RF read + Array compute 
-            cycles = getClocksForReq(req.precision_list, "dp_cram_rf");
+            cycles = getClocksForReq(req, "dp_cram_rf");
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = cycles * E_ArrayCompute * num_crams_involved;
+            //ablation: extra array write if const op is off
+            if(!config->_const_op_on){
+                R_arrayDynEnergy += (req.precision_list[1].bits()+req.precision_list[2].bits()) * E_ArrayWr * (config->get_nblocks());
+            }
             R_rfDynEnergy = E_RfRd;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_rfDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
@@ -208,10 +236,16 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             R_arrayDynEnergy = rows * E_ArrayRd + 
                                rows * E_ArrayWr * (config->get_nblocks()-1);
             R_hTreeDynEnergy = rows * config->_ncols * numHtreeSwitchesInTile * E_HTree;
+            R_busDynEnergy = rows * config->_ncols * E_Bus;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
-            hTreeDynEnergy += R_hTreeDynEnergy;
+            if(config->_tile_interconnect == "htree"){
+                hTreeDynEnergy += R_hTreeDynEnergy;
+            }
+            else if(config->_tile_interconnect == "bus"){
+                busDynEnergy += R_busDynEnergy;
+            }
             break;
         case Request::Type::TileSend_BroadCast: 
             std::cout<<"TileSend_BroadCast and TileReceive_BroadCast are not supported."<<std::endl;
@@ -248,11 +282,17 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = rows * E_ArrayRd + 
                                rows * E_ArrayWr;
-            R_hTreeDynEnergy = rows * config->get_nblocks() * E_HTree;
+            R_hTreeDynEnergy = rows * config->get_nblocks() * E_HTree;//Siyuan: why nblocks? should it not be rows * config->_ncols * hops * E_Bus?
+            R_busDynEnergy = rows * config->_ncols * E_Bus;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
-            hTreeDynEnergy += R_hTreeDynEnergy;
+            if(config->_tile_interconnect == "htree"){
+                hTreeDynEnergy += R_hTreeDynEnergy;
+            }
+            else if(config->_tile_interconnect == "bus"){
+                busDynEnergy += R_busDynEnergy;
+            }
             break;
         case Request::Type::TileSend: 
             //Instruction controller + Array Read + H-tree + NoC + H-tree 
@@ -265,10 +305,16 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             R_arrayDynEnergy = rows * E_ArrayRd * num_crams_involved;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree + 
                                config->_htreeTileDepth * rows * cols * E_HTree;
+            R_busDynEnergy = rows * cols * E_Bus;
             energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
             instCtrlDynEnergy += R_instCtrlDynEnergy;
             arrayDynEnergy += R_arrayDynEnergy;
-            hTreeDynEnergy += R_hTreeDynEnergy;
+            if(config->_tile_interconnect == "htree"){
+                hTreeDynEnergy += R_hTreeDynEnergy;
+            }
+            else if(config->_tile_interconnect == "bus"){
+                busDynEnergy += R_busDynEnergy;
+            }
             break;
         case Request::Type::TileReceive: {
             //Instruction ontroller + Shuffle + Array Write (rest of the stuff is counted in TileSend)
@@ -315,10 +361,18 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //req.dynaMeshHops * req.packets2Mesh * config->get_wordsize_tile2tile() * E_NoC + 
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree;
+            R_busDynEnergy = rows * cols * E_Bus;
             R_arrayDynEnergy = rows * E_ArrayWr * num_crams_involved;
-            energy = R_instCtrlDynEnergy + R_hTreeDynEnergy + R_dramDynEnergy + R_transposeDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
+            if(config->_tile_interconnect == "htree"){
+                energy = R_instCtrlDynEnergy + R_hTreeDynEnergy + R_dramDynEnergy + R_transposeDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
+                hTreeDynEnergy += R_hTreeDynEnergy;
+            }
+            else if(config->_tile_interconnect == "bus"){
+                energy = R_instCtrlDynEnergy + R_busDynEnergy + R_dramDynEnergy + R_transposeDynEnergy + R_shuffleDynEnergy + R_arrayDynEnergy;
+                busDynEnergy += R_busDynEnergy;
+            }
             instCtrlDynEnergy += R_instCtrlDynEnergy;
-            hTreeDynEnergy += R_hTreeDynEnergy;
+            
             arrayDynEnergy += R_arrayDynEnergy;
             transposeDynEnergy += R_transposeDynEnergy;
             shuffleDynEnergy += R_shuffleDynEnergy;
@@ -341,9 +395,17 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             R_instCtrlDynEnergy = E_InstrCtrl;
             R_arrayDynEnergy = rows * E_ArrayRd * num_crams_involved;
             R_hTreeDynEnergy = config->_htreeTileDepth * rows * cols * E_HTree;
-            energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy + R_transposeDynEnergy + R_dramDynEnergy;
+            R_busDynEnergy = rows * cols * E_Bus;
+            if(config->_tile_interconnect == "htree"){
+                energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy + R_transposeDynEnergy + R_dramDynEnergy;
+                hTreeDynEnergy += R_hTreeDynEnergy;
+            }
+            else if(config->_tile_interconnect == "bus"){
+                energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_busDynEnergy + R_transposeDynEnergy + R_dramDynEnergy;
+                busDynEnergy += R_busDynEnergy;
+            }
             instCtrlDynEnergy += R_instCtrlDynEnergy;
-            hTreeDynEnergy += R_hTreeDynEnergy;
+            
             arrayDynEnergy += R_arrayDynEnergy;
             transposeDynEnergy += R_transposeDynEnergy;
             dramDynEnergy += R_dramDynEnergy;
@@ -420,8 +482,13 @@ double MemoryCharacteristics::getStaticEnergy() {
     TimeT final_sim_time = _time;
     //cout<<"Last time is:"<<final_sim_time<<endl;
     nocStaticEnergy       = SE_NoC * config->get_ntiles_used() * final_sim_time;
-    hTreeStaticEnergy     = SE_HTreeRoot * config->get_ntiles_used() * final_sim_time +
-                            SE_HTree * (numHtreeSwitchesInTile-1) * config->get_ntiles_used() * final_sim_time;
+    if(config->_tile_interconnect == "htree"){
+        hTreeStaticEnergy     = SE_HTreeRoot * config->get_ntiles_used() * final_sim_time +
+                                SE_HTree * (numHtreeSwitchesInTile-1) * config->get_ntiles_used() * final_sim_time;
+    }
+    else if(config->_tile_interconnect == "bus"){
+        busStaticEnergy       = SE_Bus * config->get_ntiles_used() * final_sim_time;
+    }
     instCtrlStaticEnergy  = SE_InstrCtrl * config->get_ntiles_used() * final_sim_time;
                             //multiplying by wordsize_dram/256 because the SE_Transpose is for one 256 wide transpose unit
     transposeStaticEnergy = SE_Transpose * config->_meshWidth * final_sim_time * (config->_wordsize_dram/256);
@@ -430,9 +497,16 @@ double MemoryCharacteristics::getStaticEnergy() {
     arrayStaticEnergy     = SE_Array * config->get_ntiles_used() * config->get_nblocks() * final_sim_time;
     shuffleStaticEnergy   = SE_Shuffle * config->get_ntiles_used() * config->get_nblocks() * final_sim_time;
 
-    static_energy = nocStaticEnergy + hTreeStaticEnergy + instCtrlStaticEnergy + 
-                    transposeStaticEnergy + popcountStaticEnergy + rfStaticEnergy +
-                    arrayStaticEnergy + shuffleStaticEnergy;
+    if(config->_tile_interconnect == "htree"){
+        static_energy = nocStaticEnergy + hTreeStaticEnergy + instCtrlStaticEnergy + 
+                        transposeStaticEnergy + popcountStaticEnergy + rfStaticEnergy +
+                        arrayStaticEnergy + shuffleStaticEnergy;
+    }
+    else if(config->_tile_interconnect == "bus"){
+        static_energy = nocStaticEnergy + busStaticEnergy + instCtrlStaticEnergy + 
+                        transposeStaticEnergy + popcountStaticEnergy + rfStaticEnergy +
+                        arrayStaticEnergy + shuffleStaticEnergy;
+    }
 
     //Add 4% energy for DRAM controller
     //static_energy *= 1.04;
