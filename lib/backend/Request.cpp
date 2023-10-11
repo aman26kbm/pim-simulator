@@ -103,6 +103,8 @@ std::string Request::print_name(Type type) {
         packets2Mesh = req.packets2Mesh;
         requesting_load = req.requesting_load;
         requesting_store = req.requesting_store;
+        second_time_issued = req.second_time_issued;
+        bypass_dram = req.bypass_dram;
         mesh_transfer_time = req.mesh_transfer_time;
         DynaMesh_transfer_time = req.DynaMesh_transfer_time;
         send_receive_finished = req.send_receive_finished;

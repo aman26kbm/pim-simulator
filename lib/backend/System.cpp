@@ -582,7 +582,20 @@ bool System::sendRequest(Request& req)
 
         bool success = true;
 
+        Request storeReq = Request(Request::Type::RowStore);
+        if(_config->_bypass_dram)
+            storeReq.bypass_dram = true;
+        storeReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, req.precision_list[0]);//cram
+        storeReq.addOperand(DRAM_ADDR,0, req.precision_list[0]);//dram
+        decode(storeReq, temp_chip, temp_tile);
+        storeReq.reqNo = currReqNo;
+        success = success && _chips[chip]->receiveReq(storeReq);
+        currReqNo++;
+        totalReqNo++;
+
         Request loadReq = Request(Request::Type::RowLoad);
+        if(_config->_bypass_dram)
+            loadReq.bypass_dram = true;
         loadReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, req.precision_list[0]);//cram
         loadReq.addOperand(DRAM_ADDR,0, req.precision_list[0]);//dram
         decode(loadReq, temp_chip, temp_tile);
@@ -591,14 +604,7 @@ bool System::sendRequest(Request& req)
         currReqNo++;
         totalReqNo++;
 
-        Request storeReq = Request(Request::Type::RowStore);
-        storeReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, req.precision_list[0]);//cram
-        storeReq.addOperand(DRAM_ADDR,0, req.precision_list[0]);//dram
-        decode(storeReq, temp_chip, temp_tile);
-        storeReq.reqNo = currReqNo;
-        success = success && _chips[chip]->receiveReq(storeReq);
-        currReqNo++;
-        totalReqNo++;
+        
         return success;
     }
     decode(req, chip, tile);

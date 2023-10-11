@@ -137,6 +137,11 @@ void Config::parse(const string& fname) {
                 _cross_cram_shift_on = true;
             else if(tokens[1] == "off")
                 _cross_cram_shift_on = false;
+        } else if (tokens[0] == "bypass_dram") {
+            if (tokens[1] == "on")
+                _bypass_dram = true;
+            else if(tokens[1] == "off")
+                _bypass_dram = false;
         } else if (tokens[0] == "broadcast_type") {
             _broadcast_type = tokens[1];
         } 

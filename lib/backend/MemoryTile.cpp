@@ -59,7 +59,13 @@ MemoryTile::issueReq(Request& req)
             req.finish_time = cur_time + getReqTiming(req) + req.mesh_transfer_time;
         }
         else if (_values->_configuration == MemoryCharacteristics::Configuration::DynaMesh){
-            req.finish_time = cur_time + getReqTiming(req);
+            if((req.type==Request::Type::RowLoad || req.type==Request::Type::RowLoad_RF) && !req.second_time_issued){
+                req.finish_time = cur_time + 1;
+                req.second_time_issued = true;
+            }
+            else{
+                req.finish_time = cur_time + getReqTiming(req);
+            }
         }
         else { //ideal
             req.finish_time = cur_time + 0;
@@ -426,7 +432,18 @@ void MemoryTile::update_next(){
                         else if((req.type == Request::Type::RowLoad
                         || req.type == Request::Type::RowLoad_RF)
                         && req.requesting_load == false){
+                            // //for ablation. if this is a shuffle request, all data need to be send to dram and immediately come back.
+                            // if(req.bypass_dram){
+                            //    if(req.size_list[0]==0){
+                            //         req.packets2Mesh =  ceil(req.bits * _values->config->_ncols * _values->config->_nblocks / (float)_values->config->_wordsize_tile2tile);
+                            //     }
+                            //     else{
+                            //         req.packets2Mesh =  ceil(req.bits * req.size_list[0] / (float)_values->config->_wordsize_tile2tile);
+                            //     }
+                            // }
+                            // else{
                             req.packets2Mesh = 1;// * _values->config->_ncols * _values->config->_nblocks / _values->config->_wordsize_tile2tile;
+                            //}
                             req.requesting_load = true;
                             next_state.status = status_t::SEND_WAIT;   
                         }

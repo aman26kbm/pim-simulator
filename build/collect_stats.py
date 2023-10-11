@@ -7,15 +7,43 @@ print('Argument List:', str(sys.argv))
 
 path = str(sys.argv[1])
 
-for filename in sorted(glob.glob(os.path.join(path, '*.log'))):
-    cycle=0
-    with open(os.path.join(os.getcwd(), filename), 'r') as f:
-       for line in f:
-           if "clocks" in line:
-               words = line.split()
-               cycle = int(words[4])
-               break
-    print(filename+": total cycles: "+str(cycle))
+import csv
+
+header = ['name', 'cycle', 'dynamic_energy']
+data = ['', 0, 0]
+
+
+with open('stats.csv', 'w', encoding='UTF8', newline='') as f_stats:
+    writer = csv.writer(f_stats)
+
+    # write the header
+    writer.writerow(header)
+    for filename in sorted(glob.glob(os.path.join(path, '*.log'))):
+        #cycles
+        cycle=0
+        with open(os.path.join(os.getcwd(), filename), 'r') as f:
+            for line in f:
+                if "clocks" in line:
+                    words = line.split()
+                    cycle = int(words[4])
+                    break
+        print(filename+": total cycles: "+str(cycle))
+        #energy
+        energy = 0
+        with open(os.path.join(os.getcwd(), filename+'.energy.csv'), 'r') as f:
+            csv_reader = csv.DictReader(f)
+            for row in csv_reader:
+                #print(f'file {filename}:')
+                energy = row["Total_Dynamic_Energy"]
+                print(f'\t{row["WorkloadName"]} has total dynamic energy = {row["Total_Dynamic_Energy"]}, and total static energy = {row["Total_Static_Energy"]}.')
+        data = [filename, cycle, energy]
+        # write the data
+        writer.writerow(data)
+        
+
+    
+
+
 
 # fout = open(dir+"/dma_extracted.txt", "w")
 # if os.path.isfile(dir+"stdout"):
@@ -44,9 +72,5 @@ for filename in sorted(glob.glob(os.path.join(path, '*.log'))):
 # fout.close()
 
 import csv
-for filename in sorted(glob.glob(os.path.join(path, '*.energy.csv'))):
-    with open(os.path.join(os.getcwd(), filename), 'r') as f:
-        csv_reader = csv.DictReader(f)
-        for row in csv_reader:
-            print(f'file {filename}:')
-            print(f'\t{row["WorkloadName"]} has total dynamic energy = {row["Total_Dynamic_Energy"]}, and total static energy = {row["Total_Static_Energy"]}.')
+
+

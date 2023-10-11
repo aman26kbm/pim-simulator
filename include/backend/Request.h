@@ -341,6 +341,8 @@ public:
     int packets2Mesh = 0;  //number of flits
     bool requesting_load = false;
     bool requesting_store = false;
+    bool second_time_issued = false; //load and loadRF req need to be issued twice in state machine.
+    bool bypass_dram = false; //for ablation study, only apply to load/store: if true, this load/store request does not actually go through dram, but immediately returns.
     //indicates if a tileSend/blockSend is finished. hTree will check this value at each cycle. When it is true, hTree will disconfigure for this request.
     int mesh_transfer_time=0;//only used for mesh. Indicates transfer time of a request
     int DynaMesh_transfer_time=0; //Not populated in the simulator

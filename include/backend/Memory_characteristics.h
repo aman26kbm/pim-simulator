@@ -51,7 +51,7 @@ public:
     const double E_HTree = 4.98e-15;
     //Energy in J spent in tranfering a bit on bus
     //needs to be adjusted
-    const double E_Bus = 4.98e-15;
+    const double E_Bus = 2.88e-14;
     //Energy in J spent in tranfering a bit from one port of switch to another
     const double E_HTreeRoot = 5.04e-15; //Same as HTree so not used in calculations
     //Energy in J spent in transposing data per bit (average)

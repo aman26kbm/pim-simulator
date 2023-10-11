@@ -45,6 +45,7 @@ public:
     bool _const_op_on = true; //whether hardware supports constant operations. by default this is true.
     bool _shuffle_on = true; //whether hardware supports shuffle. by default this is true.
     bool _cross_cram_shift_on = true; //whether hardware supports cross cram shift operations. by default this is true.
+    bool _bypass_dram = false; // only apply to cross_cram_shift_off: shift generated load and store will go to transpose unit but bypass dram.
     std::string _broadcast_type = "systolic"; //can be "systolic" or "one_to_all"
 
     
