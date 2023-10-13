@@ -17,15 +17,15 @@ int32_t vadd_norf(System* sys){
     //     request->addOperand(sys->getAddress(0,0,0), 0, precision_input);//dst
     //     request->addOperand(sys->DRAM_ADDR,0, precision_input);//src
     //     requests.push_back(*request);
-    request = new Request(Request::Type::RowLoad_RF);
-        request->addOperand(sys->_config->_num_regs_per_rf * 0, 4,PrecisionT::INT8); //RF addr
-        request->addOperand(sys->DRAM_ADDR, 4, PrecisionT::INT8); //dram addr
-        requests.push_back(*request);
-    // request = new Request(Request::Type::RowAdd_CRAM_RF);
-    //     request->addOperand(sys->getAddress(0,0,0), 0, precision_input); //src
-    //     request->addOperand(sys->_config->_num_regs_per_rf * 0, 0, precision_input);//rf
-    //     request->addOperand(sys->getAddress(0,0,0), 0, precision_output); //dst
+    // request = new Request(Request::Type::RowLoad_RF);
+    //     request->addOperand(sys->_config->_num_regs_per_rf * 0, 4,PrecisionT::INT8); //RF addr
+    //     request->addOperand(sys->DRAM_ADDR, 4, PrecisionT::INT8); //dram addr
     //     requests.push_back(*request);
+    request = new Request(Request::Type::RowAdd_CRAM_RF);
+        request->addOperand(sys->getAddress(0,0,0), 0, precision_input); //src
+        request->addOperand(sys->_config->_num_regs_per_rf * 0, 0, precision_input);//rf
+        request->addOperand(sys->getAddress(0,0,0), 0, precision_output); //dst
+        requests.push_back(*request);
 
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);

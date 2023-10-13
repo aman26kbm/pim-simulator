@@ -119,15 +119,23 @@ void Config::parse(const string& fname) {
             _mem_configuration = tokens[1];
         } else if (tokens[0] == "net_configuration") {
             _net_configuration = tokens[1];
-        }else if (tokens[0] == "popcount_pipeline_stages") {
+        } else if (tokens[0] == "popcount_pipeline_stages") {
             _popcount_pipeline_stages = atoi(tokens[1].c_str());
+        } else if (tokens[0] == "bus_hops") {
+            _bus_hops = atoi(tokens[1].c_str());
         } else if (tokens[0] == "const_op") {
             if (tokens[1] == "on")
                 _const_op_on = true;
             else if(tokens[1] == "off")
                 _const_op_on = false;
 
-        } else if (tokens[0] == "shuffle") {
+        } else if (tokens[0] == "const_op_kick_out_1_row") {
+            if (tokens[1] == "on")
+                _const_op_kick_out_1_row = true;
+            else if(tokens[1] == "off")
+                _const_op_kick_out_1_row = false;
+
+        }else if (tokens[0] == "shuffle") {
             if (tokens[1] == "on")
                 _shuffle_on = true;
             else if(tokens[1] == "off")

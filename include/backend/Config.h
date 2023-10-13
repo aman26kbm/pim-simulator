@@ -18,6 +18,7 @@ public:
     int _nchips, _ntiles, _nblocks, _blocksize, _nrows, _ncols;
     int _meshHeight, _meshWidth;
     std::string _tile_interconnect = "ideal";//can be "ideal", "htree", "bus"
+    int _bus_hops = 8;
     int _htreeTileDepth;
     int _dramTile;
     bool _dramDistributed=false;
@@ -43,6 +44,7 @@ public:
     int _popcount_pipeline_stages;
     //for ablation study of hardware features:
     bool _const_op_on = true; //whether hardware supports constant operations. by default this is true.
+    bool _const_op_kick_out_1_row = false; //only apply to _const_op_off: store 1 row back to dram to reserve space and load back in later.
     bool _shuffle_on = true; //whether hardware supports shuffle. by default this is true.
     bool _cross_cram_shift_on = true; //whether hardware supports cross cram shift operations. by default this is true.
     bool _bypass_dram = false; // only apply to cross_cram_shift_off: shift generated load and store will go to transpose unit but bypass dram.

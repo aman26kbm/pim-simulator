@@ -574,6 +574,44 @@ bool System::sendRequest(Request& req)
                 req.size_list[1] = _config->_ncols*_config->_nblocks;
             }
     }
+    if(!_config->_const_op_on &&
+         _config->_const_op_kick_out_1_row && 
+        (req.type == Request::Type::RowAdd_CRAM_RF || req.type == Request::Type::RowMul_CRAM_RF || req.type == Request::Type::RowDotProduct_CRAM_RF))
+    {
+        decode(req, chip, tile);
+        int temp_chip=0;
+        int temp_tile=0;
+
+        bool success = true;
+        //store request
+        Request storeReq = Request(Request::Type::RowStore);
+        storeReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, PrecisionT::INT1);//cram
+        storeReq.addOperand(DRAM_ADDR,0, PrecisionT::INT1);//dram
+        decode(storeReq, temp_chip, temp_tile);
+        storeReq.reqNo = currReqNo;
+        success = success && _chips[chip]->receiveReq(storeReq);
+        currReqNo++;
+        totalReqNo++;
+
+        //compute request
+        req.reqNo = currReqNo;
+        success = success && _chips[chip]->receiveReq(req);
+        currReqNo++;
+        totalReqNo++;
+
+        //load request
+        Request loadReq = Request(Request::Type::RowLoad);
+        loadReq.addOperand(getAddress(tile,0,0), _config->_ncols*_config->_nblocks, PrecisionT::INT1);//cram
+        loadReq.addOperand(DRAM_ADDR,0, PrecisionT::INT1);//dram
+        decode(loadReq, temp_chip, temp_tile);
+        loadReq.reqNo = currReqNo;
+        success = success && _chips[chip]->receiveReq(loadReq);
+        currReqNo++;
+        totalReqNo++;
+
+        
+        return success;      
+    }
     // for hardware ablation study: if cross_cram_shift is off, convert this request to store + load
     if(!_config->_cross_cram_shift_on && req.type == Request::Type::RowShift){
         decode(req, chip, tile);

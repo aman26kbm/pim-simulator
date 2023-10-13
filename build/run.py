@@ -129,51 +129,61 @@ to_sim = [
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_mv_256_256'),
 ]
 
-cfg = '../configs/DMesh12x10_TileSize256_CramSize256x256.cfg'
+# cfg_list = ['../configs/DMesh12x10_TileSize256_CramSize256x256.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_bus.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff_bypassDram.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_oneToAllBroadcast.cfg',
+#             '../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg']
 
-to_sim = [
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast_3"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_max_pool2d"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_6"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_contrib_dense_pack_add_cast_multiply"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_1"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_divide_round_cast_clip_cast_cast_layout_transform"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_add_clip_cast_1"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_5"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_add_clip_cast_2"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast_1"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_softmax"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast_2"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_5603799462163545803_"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_2"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776__3"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_3"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_4"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776__1"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_add_clip_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776_"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_global_avg_pool2d_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_layout_transform_nn_batch_flatten_cast"),
-  (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776__2"),
-]
+cfg_list = ['../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg',]
+
+for cfg in cfg_list:
+  to_sim = [
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast_3"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_max_pool2d"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_6"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_contrib_dense_pack_add_cast_multiply"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_1"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_1"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_divide_round_cast_clip_cast_cast_layout_transform"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_add_clip_cast_1"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_5"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_2"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_add_clip_cast_2"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast_1"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_softmax"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast_2"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_5603799462163545803_"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_2"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776__3"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_3"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast_cast_4"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_clip_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776__1"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_add_clip_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776_"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_global_avg_pool2d_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_layout_transform_nn_batch_flatten_cast"),
+    (cfg, "resnet18_v1__quantized_tvmgen_default_fused_nn_conv2d_add_cast_multiply_add_right_shift_cast_cast_fixed_point_multiply_2938127200454701776__2"),
+  ]
 
 
-for cfg, wl in to_sim:
-    cmd = f'./PIM_simulator --cfg {cfg} --sim {wl}'
-    dirname = (cfg.split('/')[-1])[:-4]
-    subprocess.check_output(f'mkdir -p {dirname}', shell=True)
-    dirname = dirname + '/' + wl
-    subprocess.check_output(f'mkdir -p {dirname}', shell=True)
-    print(f'running {cmd}')
-    raw_log = subprocess.check_output(cmd, shell=True).decode('utf-8')
-    with open(f'{dirname}/wl.dump', 'w') as f:
-        f.write(raw_log)
-    subprocess.check_output(f'mv pimsim.* ./{dirname}', shell=True)
+  for cfg, wl in to_sim:
+      cmd = f'./PIM_simulator --cfg {cfg} --sim {wl}'
+      dirname = (cfg.split('/')[-1])[:-4]
+      subprocess.check_output(f'mkdir -p {dirname}', shell=True)
+      dirname = dirname + '/' + wl
+      subprocess.check_output(f'mkdir -p {dirname}', shell=True)
+      print(f'running {cmd}')
+      raw_log = subprocess.check_output(cmd, shell=True).decode('utf-8')
+      with open(f'{dirname}/wl.dump', 'w') as f:
+          f.write(raw_log)
+      subprocess.check_output(f'mv pimsim.* ./{dirname}', shell=True)
 
 

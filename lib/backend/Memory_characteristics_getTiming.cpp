@@ -30,7 +30,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             if(config->_tile_interconnect == "htree")
                 time = hTreeTile::getCycles(req, config);
             else if(config->_tile_interconnect == "bus")
-                time = 1; //1 extra cycle to drive the bus.
+                time = config->_bus_hops; // extra cycle to drive the bus.
             else
                 time = T_CLK * getPrecisionBits(req);
             break;
@@ -113,7 +113,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             if(config->_tile_interconnect == "htree")
                 time = hTreeTile::getCycles(req, config);
             else if(config->_tile_interconnect == "bus")
-                time = 1;//only need 1 extra cycle for pipelined load store
+                time = config->_bus_hops;//extra cycle for pipelined load store
             else
                 time = getPrecisionBits(req) * T_CLK * (int)ceil(config->_nblocks*config->_ncols/(double)config->_wordsize_dram);
             break;
@@ -128,7 +128,7 @@ double MemoryCharacteristics::getTiming(Request req) {
             if(config->_tile_interconnect == "htree")
                 time = hTreeTile::getCycles(req, config);
             else if(config->_tile_interconnect == "bus")
-                time = 1;//only need 1 extra cycle for pipelined load store
+                time = config->_bus_hops;//extra cycle for pipelined load store
             else
                 time = T_CLK * (int)ceil(config->_num_regs_per_rf * config->_num_bits_per_reg / (double)config->_wordsize_dram);
             break;
@@ -146,7 +146,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 if(config->_tile_interconnect == "htree")
                     time = hTreeTile::getCycles(req, config) + req.precision_list[1].bits();//tree height + precition
                 else if(config->_tile_interconnect == "bus")
-                    time = 1 + req.precision_list[1].bits();//only need 1 cycle to drive the bus, then precition cycles to store in cram rows.
+                    time = config->_bus_hops + req.precision_list[1].bits();//only need config->_bus_hops cycle to drive the bus, then precition cycles to store in cram rows.
                 else if(config->_tile_interconnect == "ideal")
                     time = req.precision_list[1].bits();//only need precition cycles to store in cram rows.
                 //then some cycles to actually do row wise computation
@@ -168,7 +168,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 if(config->_tile_interconnect == "htree")
                     time = hTreeTile::getCycles(req, config) + req.precision_list[1].bits();//tree height + precition
                 else if(config->_tile_interconnect == "bus")
-                    time = 1 + req.precision_list[1].bits();//only need 1 cycle to drive the bus, then precition cycles to store in cram rows.
+                    time = config->_bus_hops + req.precision_list[1].bits();//only need config->_bus_hops cycle to drive the bus, then precition cycles to store in cram rows.
                 else if(config->_tile_interconnect == "ideal")
                     time = req.precision_list[1].bits();//only need precition cycles to store in cram rows.
                 //then some cycles to actually do row wise computation
@@ -189,7 +189,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 if(config->_tile_interconnect == "htree")
                     time = hTreeTile::getCycles(req, config) + req.precision_list[2].bits() + req.precision_list[3].bits();//tree height + precition of rf1 + precition of rf2
                 else if(config->_tile_interconnect == "bus")
-                    time = 1 + req.precision_list[2].bits() + req.precision_list[3].bits();//only need 1 cycle to drive the bus, then some cycles to store in cram rows.
+                    time = config->_bus_hops + req.precision_list[2].bits() + req.precision_list[3].bits();//only need config->_bus_hops cycle to drive the bus, then some cycles to store in cram rows.
                 else if(config->_tile_interconnect == "ideal")
                     time = req.precision_list[2].bits() + req.precision_list[3].bits();//only need precition cycles to store in cram rows.
                 //then some cycles to actually do row wise computation

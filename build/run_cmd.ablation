@@ -16,6 +16,12 @@
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff.log
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff.log
 
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg -m gemm_systolic -l gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg -m gemv_new -l gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg -m fir_med_inp_256bit_loads -l fir_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.log
+
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg -m gemm_systolic -l gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256.shuffleOff.log
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg -m gemv_new -l gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.shuffleOff.log
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg -m fir_med_inp_256bit_loads -l fir_handcoded.DMesh12x10_TileSize256_CramSize256x256.shuffleOff.log
@@ -46,6 +52,11 @@
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_bus.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.bus.log
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_bus.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.bus.log
 
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m gemm_systolic -l gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m gemv_new -l gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m fir_med_inp_256bit_loads -l fir_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
 
 ############################
 # Concatenate csv files
