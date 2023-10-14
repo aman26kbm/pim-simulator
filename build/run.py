@@ -129,16 +129,17 @@ to_sim = [
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'vgg_mv_256_256'),
 ]
 
-# cfg_list = ['../configs/DMesh12x10_TileSize256_CramSize256x256.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_bus.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff_bypassDram.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_oneToAllBroadcast.cfg',
-#             '../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg']
+cfg_list = ['../configs/DMesh12x10_TileSize256_CramSize256x256.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_bus.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff_bypassDram.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_oneToAllBroadcast.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg',
+            '../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg']
 
-cfg_list = ['../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg',]
+# cfg_list = ['../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg',]
 
 for cfg in cfg_list:
   to_sim = [
