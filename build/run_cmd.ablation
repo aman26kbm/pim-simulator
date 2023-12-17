@@ -58,6 +58,19 @@
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
 ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.everythingOff.log
 
+#load store
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_bus.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_bus.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_constOpOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_constOpOff_kickoutRow.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff_bypassDram.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_crossCramShiftOff_bypassDram.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_everythingOff.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_everythingOff.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_oneToAllBroadcast.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_oneToAllBroadcast.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256_shuffleOff.cfg -m conv_3x3_weight_load_10_12_256_256_8 -l conv_3x3_weight_load_10_12_256_256_8.DMesh12x10_TileSize256_CramSize256x256_shuffleOff.log
+
+
+
 ############################
 # Concatenate csv files
 ############################
