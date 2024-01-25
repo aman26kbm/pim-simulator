@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t gemm_120_256_256_int4_int16(System *sys) {
+int32_t gemm_120_256_256_int4_int16(System *sys,std::string param_file) {
   void* _1 = nullptr;
   // int16_t compute_global_rf[4096], 0
   // int16_t compute_global[4096], 4096
@@ -26,15 +26,15 @@ int32_t gemm_120_256_256_int4_int16(System *sys) {
               for (int32_t y_c = 0; y_c < 8; ++y_c) {
                 {
                   Request request(Request::Type::RowMul);
-                  request.addOperand(sys->getAddress(xo_outer, 0, 264), 65536, PrecisionT::Precision{0, 8, 0} /**/);
+                  request.addOperand(sys->getAddress(xo_outer, 0, 264), 256, PrecisionT::Precision{0, 8, 0} /**/);
                   request.addOperand(sys->getAddress(xo_outer, 0, 256), 32768, PrecisionT::Precision{0, 4, 0} /*a[ramp(((((xo.outer*1048576) + (xo.inner*524288)) + (rv.outer*4096)) + (rv.inner*256)), 1, 256)]*/);
-                  request.addOperand(sys->getAddress(xo_outer, 0, 0), 256, PrecisionT::Precision{0, 4, 0} /*b[(((((y.outer*32768) + (y.inner.outer*16384)) + (y.c*2048)) + (rv.outer*16)) + rv.inner)]*/);
+                  request.addOperand(sys->getAddress(xo_outer, 0, 0), 2, PrecisionT::Precision{0, 4, 0} /*b[(((((y.outer*32768) + (y.inner.outer*16384)) + (y.c*2048)) + (rv.outer*16)) + rv.inner)]*/);
                   sys->sendRequest(request);
                 }
                 {
                   Request request(Request::Type::RowAdd);
-                  request.addOperand(sys->getAddress(xo_outer, 0, 0), 65536, PrecisionT::Precision{0, 16, 0} /**/);
-                  request.addOperand(sys->getAddress(xo_outer, 0, 264), 65536, PrecisionT::Precision{0, 16, 0} /**/);
+                  request.addOperand(sys->getAddress(xo_outer, 0, 0), 256, PrecisionT::Precision{0, 16, 0} /**/);
+                  request.addOperand(sys->getAddress(xo_outer, 0, 264), 256, PrecisionT::Precision{0, 16, 0} /**/);
                   request.addOperand(sys->getAddress(xo_outer, 0, 0), 32768, PrecisionT::Precision{0, 16, 0} /*compute.global.rf[ramp(((rv.outer*2048) + (y.c*256)), 1, 256)]*/);
                   sys->sendRequest(request);
                 }
@@ -56,7 +56,7 @@ int32_t gemm_120_256_256_int4_int16(System *sys) {
               }
               {
                 Request request(Request::Type::RowAdd);
-                request.addOperand(sys->getAddress(xo_outer, 0, 128), 512, PrecisionT::Precision{0, 16, 0} /**/);
+                request.addOperand(sys->getAddress(xo_outer, 0, 128), 256, PrecisionT::Precision{0, 16, 0} /**/);
                 request.addOperand(sys->getAddress(xo_outer, 0, 128), 256, PrecisionT::Precision{0, 16, 0} /*compute.global[ramp((ax1*256), 1, 256)]*/);
                 request.addOperand(sys->getAddress(xo_outer, 0, 0), 256, PrecisionT::Precision{0, 16, 0} /*compute.global.rf[ramp(((rv.outer.v*2048) + (ax1*256)), 1, 256)]*/);
                 sys->sendRequest(request);

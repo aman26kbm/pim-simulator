@@ -15,6 +15,7 @@ using namespace pimsim;
 int main(int argc, char *argv[]) {
 
     string config_file;
+    string param_file;
     string log_file;
     string workload;
 
@@ -34,6 +35,9 @@ int main(int argc, char *argv[]) {
         TCLAP::ValueArg<string> simulate_arg("m", "sim", "workload to simulate", false, "simulated", "string");
         cmd.add(simulate_arg);
 
+        TCLAP::ValueArg<string> param_file_arg("p", "param", "parameters of the workload", false, "", "string");
+        cmd.add(param_file_arg);
+
         TCLAP::ValueArg<string> log_file_arg("l", "log", "logfile to generate", false, "pimsim.log", "string");
         cmd.add(log_file_arg);
 
@@ -42,6 +46,7 @@ int main(int argc, char *argv[]) {
 
         // Get the value parsed by each arg.
         config_file = config_file_arg.getValue();
+        param_file = param_file_arg.getValue();
         log_file = log_file_arg.getValue();
 
         config = new Config(config_file, log_file);
@@ -53,7 +58,7 @@ int main(int argc, char *argv[]) {
             std::cerr << "cannot simulate " << workload << std::endl;
             return 1;
           } else {
-            Registry::registeredSimulation()[workload].f(system);
+            Registry::registeredSimulation()[workload].f(system, param_file);
           }
         } catch (TCLAP::ArgException &e) {
           std::cout << "It is ok to not have " << e.argId() << std::endl;

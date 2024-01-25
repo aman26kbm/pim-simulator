@@ -4,7 +4,7 @@
 
 #include "backend/System.h"
 
-int32_t reduce(System *sys) {
+int32_t reduce(System *sys, std::string param_file) {
   void* _1 = nullptr;
   // int8_t b_global[256], 0
   // int8_t a_global[4096], 256

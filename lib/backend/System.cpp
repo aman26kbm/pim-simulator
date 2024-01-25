@@ -4,6 +4,8 @@
 #include <algorithm>
 //#include <thread>
 #include <array>
+#include <sstream>
+#include <iterator>
 
 #define SEND 0
 #define RECEIVE 1
@@ -29,6 +31,13 @@ System::System(Config* config) : _config(config)
     energy_csv_file.open(csv_filename.c_str(),ios::out);
     csv_filename = config->get_rstfile() + ".router_hops.csv";
     router_hops_csv_file.open(csv_filename.c_str(),ios::out);
+    csv_filename = config->get_rstfile() + ".hdw_config.csv";
+    hdw_config_file.open(csv_filename.c_str(),ios::out);
+    //hdw_config_file<<"hdw configs"<<std::endl;
+    csv_filename = config->get_rstfile() + ".app_param";
+    app_param_file.open(csv_filename.c_str(),ios::out);
+    csv_filename = config->get_rstfile() + ".alloc_log";
+    alloc_log_file.open(csv_filename.c_str(),ios::out);
 
     if (config->get_mem_configuration() == "htree") {
         _values = new MemoryCharacteristics(MemoryCharacteristics::Configuration::HTree, _config);
@@ -59,6 +68,8 @@ System::System(Config* config) : _config(config)
     m1 = new Mailbox();  //use as a semaphore
     m2 = new Mailbox(config->_ntiles);  //use as a barrier for all tiles
     m3 = new Mailbox();
+
+    mapper = Mapper(config);
 }
 
 System::~System()
@@ -70,6 +81,9 @@ System::~System()
     reqs_csv_file.close();
     energy_csv_file.close();
     router_hops_csv_file.close();
+    hdw_config_file.close();
+    app_param_file.close();
+    alloc_log_file.close();
 }
 
 
@@ -548,6 +562,8 @@ void System::decode(Request& req, int& chip, int& tile){
     }
 }
 
+//This is the main API using which an application program will queue
+//requests to be executed on the pimra accelerator
 bool System::sendRequest(Request& req)
 {
     int chip = 0;
@@ -654,100 +670,15 @@ bool System::sendRequest(Request& req)
 }
 #endif
 
-//This is the main API using which an application program will queue
-//requests to be executed on the pimra accelerator
 
-#ifdef OLD
-int System::sendRequest(Request& req)
-{
-#ifdef DEBUG_OUTPUT
-    // std::cout << "The system is sending a request - " ;
-#endif
-    int ticks = 0;
-    tot_reqs++;
-    switch (req.type) {
-        case Request::Type::RowSet:
-        case Request::Type::RowReset:
-        case Request::Type::RowRead:
-        case Request::Type::RowWrite:
-        case Request::Type::RowAdd:
-        case Request::Type::RowAdd_CRAM_RF:
-        case Request::Type::RowSub:
-        case Request::Type::RowCompare:
-        case Request::Type::RowMul:
-        case Request::Type::RowMul_CRAM_RF:
-        case Request::Type::RowBitwise:
-        case Request::Type::RowReduce:
-        case Request::Type::RowReduce_WithinTile:
-        case Request::Type::RowShift:
-            ticks = sendPimReq(req);
-            break;
-        case Request::Type::BlockSend_Receive:
-        case Request::Type::BlockBroadCast:
-            ticks = sendTileReq(req, SEND_RECEIVE);
-            break;
-        case Request::Type::TileSend:
-        case Request::Type::TileSend_BroadCast:
-            ticks = sendChipReq(req, SEND);
-            break;
-        case Request::Type::TileReceive:
-        case Request::Type::TileReceive_BroadCast:
-            ticks = sendChipReq(req, RECEIVE);
-            break;
-        case Request::Type::Signal:
-            ticks = sendSyncReq(req);
-            break;
-        case Request::Type::Wait:
-            ticks = sendSyncReq(req);
-            break;
-        case Request::Type::Barrier:
-            ticks = sendSyncReq(req);
-            break;
-        case Request::Type::ResetSync:
-            ticks = sendSyncReq(req);
-            break;
-        case Request::Type::RowStore:
-            ticks = sendChipReq(req, SEND);
-            break;
-        case Request::Type::RowStore_RF:
-            ticks = sendChipReq(req, SEND);
-            break;
-        case Request::Type::RowLoad:
-            ticks = sendChipReq(req, SEND);
-            break;
-        case Request::Type::RowLoad_RF:
-            ticks = sendChipReq(req, SEND);
-            break;
-        case Request::Type::RowRead_RF:
-            ticks = sendRFReq(req);
-            break;
-        case Request::Type::PopCountReduce_RF:
-            ticks = sendRFReq(req);
-            break;
-        default:
-            cout << "[Error] unrecognized request!\n";
-            break;
-    }
-#ifdef SCHED_DEBUG_OUTPUT
-    printf("The system receives a Request#%lu: %s, ticks: %d\n",
-            tot_reqs, req.reqToStr().c_str(), ticks);
-#endif
-#ifdef DEBUG_OUTPUT
-    // std::cout << req.reqToStr() << std::endl;
-#endif
-    if (ticks < 0) {
-        std::cout << "Wrong Address!" << std::endl;
-        exit(1);
-    }
 
-    return ticks;
-}
-#endif
 
 
 
 void System::run(std::string workload)
 {
+    generate_hdw_config_file();
+    
     this->workload = workload;
     int finished = false;
     
@@ -835,12 +766,12 @@ std::map<std::string, Registry::Entry> & Registry::registeredSimulation() {
 
 Registry::Entry::Entry(const Registry::Entry &re) : name(re.name), f(re.f) {}
 
-Registry::Entry::Entry(const std::string &s, std::function<int32_t(System*)> f) :
+Registry::Entry::Entry(const std::string &s, std::function<int32_t(System*, std::string)> f) :
  name(s), f(f) {}
 
 namespace pimsim {
 
-Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System *)> func) {
+Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System *, std::string)> func) {
   Registry::Entry entry(ky, func);
   Registry::registeredSimulation()[ky] = entry;
   return Registry::registeredSimulation()[ky];
@@ -1091,4 +1022,106 @@ void System::broadcast_p2p(int addr,
   }
   for (auto &elem : reqs)
     sendRequest(elem);
+}
+
+void System::map_vec_to_tile(std::vector<Request>& requests, int tile, const std::string &origVecName, int offset, int partition_size, int bits, int length, int ben, int men, int samt, int bcnt){
+    //no tile to tile transfer implementation
+    // if(mapper.isVecAllocatedAtTile(tile, origVecName, offset, bits, length, ben, men,samt, bcnt)){
+    //     std::cout<<"vector "<<origVecName<< "with offset"<<offset<<" is already allocated at tile "<<tile<<std::endl;
+    //     return;
+    // }
+    // else{
+    //     std::cout<<"allocate vector "<<origVecName<< "with offset"<<offset<<" at tile "<<tile<<std::endl;
+    //     mapper.allocVecAtTile(tile, origVecName, offset, bits, length, ben, men,samt, bcnt);
+    //     Request *request;
+    //     request = new Request(Request::Type::RowLoad);
+    //     request->addOperand(getAddress(tile,0,0), length, PrecisionT::Precision{0, bits, 0});//cram
+    //     request->addOperand(DRAM_ADDR, length, PrecisionT::Precision{0, bits, 0}); //dram addr
+    //     request->setShuffle(ben,men, samt, bcnt);
+    //     requests.push_back(*request);   
+    // }
+
+    //assuming tile-to-tile transfer
+    //TODO: rewrite the following code:
+    //assume all vectors have aligned offset. 
+    //calculate aligned offset
+    //check allocation based on aligned offset instead of original offset.
+    
+    if(mapper.isVecAllocated(origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt)){
+        //already allocated somewhere
+        if(!mapper.isVecAllocatedAtTile(tile, origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt)){
+            std::stringstream result;
+            std::vector<int> tiles = mapper.getTileOfVec(origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt);
+            std::copy(tiles.begin(), tiles.end(), std::ostream_iterator<int>(result, " "));
+            alloc_log_file<<"transfer: "<<origVecName<< " offset "<<offset<<" from tile "<< result.str()<<" to tile "<<tile<<std::endl;
+            mapper.allocVecAtTile(tile, origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt);
+        }
+        else{
+            alloc_log_file<<"present: "<<origVecName<< " offset "<<offset<<" at tile "<<tile<<std::endl;
+        }
+        total_bits_accessed_data += length*bits;
+        total_num_access_request += 1;
+        return;
+    }
+    else{
+        
+        int aligned_offset =offset/partition_size*partition_size;
+        if(ben==0 && men==0 && samt==0 && bcnt==0 && mapper.isVecAllocated(origVecName, aligned_offset, partition_size, bits, length, ben, men,samt, bcnt)){
+            //if vector can be shifted from an existing one
+            //shift the existing vector instead of loading it from dram
+            if(!mapper.isVecAllocatedAtTile(tile, origVecName, aligned_offset, partition_size, bits, length, ben, men,samt, bcnt)){
+                std::stringstream result;
+                std::vector<int> tiles = mapper.getTileOfVec(origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt);
+                std::copy(tiles.begin(), tiles.end(), std::ostream_iterator<int>(result, " "));
+                alloc_log_file<<"transfer: "<<origVecName<<" offset "<<offset <<" aligned_offset "<<aligned_offset<<" from tile "<< result.str()<<" to tile "<<tile<<std::endl;
+                mapper.allocVecAtTile(tile, origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt);
+            }
+            else{
+                alloc_log_file<<"present: "<<origVecName<<" offset "<<offset<< " aligned_offset "<<aligned_offset<<" at tile "<<tile<<std::endl;
+            }
+            total_bits_accessed_data += length*bits;
+            total_num_access_request += 1;
+            return;
+            
+        }
+        else{
+            //even aligned offset is not allocated anywhere
+            alloc_log_file<<"allocate: "<<origVecName<< " offset "<<offset<<" at tile "<<tile<<std::endl;
+            mapper.allocVecAtTile(tile, origVecName, offset, partition_size, bits, length, ben, men,samt, bcnt);
+            Request *request;
+            request = new Request(Request::Type::RowLoad);
+            request->addOperand(getAddress(tile,0,0), length, PrecisionT::Precision{0, bits, 0});//cram
+            request->addOperand(DRAM_ADDR, length, PrecisionT::Precision{0, bits, 0}); //dram addr
+            request->setShuffle(ben,men, samt, bcnt);
+            requests.push_back(*request);  
+            
+            total_bits_missed_data += length*bits;
+            total_num_missed_request += 1;
+
+            //std::cout<<"load "<<length*bits<<" bits, "<<"total load bits: "<<total_bits_missed_data<<std::endl;
+        } 
+    }
+    total_bits_accessed_data += length*bits;
+    total_num_access_request += 1;
+    //std::cout<<"access "<<length*bits<<" bits, "<<"total access bits: "<<total_bits_accessed_data<<std::endl;
+}
+
+void System::print_data_hit_rate(){
+    if(total_bits_accessed_data==0){
+        alloc_log_file<<"0 bits of data accessed, data hit rate omitted"<<std::endl;
+        return;
+    }
+    alloc_log_file<<"data hit rate: "<<1-total_bits_missed_data/(double)total_bits_accessed_data\
+    <<", hit: "<<total_bits_accessed_data-total_bits_missed_data\
+    <<", accessed: "<<total_bits_accessed_data<<std::endl;
+}
+
+void System::print_req_hit_rate(){
+    if(total_num_access_request==0){
+        alloc_log_file<<"0 request accessed data, req hit rate omitted"<<std::endl;
+        return;
+    }
+    alloc_log_file<<"req hit rate: "<<1-total_num_missed_request/(double)total_num_access_request\
+    <<", "<<total_num_access_request-total_num_missed_request\
+    <<" out of "<<total_num_access_request<<" requests hit their data"<<std::endl;
 }

@@ -24,6 +24,7 @@
 #include "Message.h"
 #include "Request.h"
 #include "Memory_characteristics.h"
+#include "Mapper.h" 
 //#include "global.h"
 
 using namespace std;
@@ -54,6 +55,9 @@ public:
     std::ofstream reqs_csv_file;
     std::ofstream energy_csv_file;
     std::ofstream router_hops_csv_file;
+    std::ofstream hdw_config_file;
+    std::ofstream app_param_file;
+    std::ofstream alloc_log_file;
 
     std::string workload;
     uint64_t tot_reqs = 0;
@@ -61,9 +65,14 @@ public:
     Config* _config;
     MemoryCharacteristics* _values;
     std::vector<MemoryChip*> _chips;
+    Mapper mapper;
     int currReqNo = 0;
     int totalReqNo = 0;
     int finishedReqNo = 0;
+    int total_num_access_request = 0;//total number of data access request
+    int total_num_missed_request = 0;//total number of data access request that requires load
+    int total_bits_accessed_data = 0;//total bits of data accessed
+    int total_bits_missed_data = 0;//total bits of accessed data that missed in sram arrays and loaded from dram
     // int _nchips, _ntiles, _ntiles_used, _nblocks, _nrows, _ncols;
     // int _wordsize_block2block, _wordsize_tile2tile; 
     // //should match with hTree
@@ -110,9 +119,7 @@ public:
     int sendSyncReq(Request& req);
 
     
-    #ifdef OLD
-    int sendRequest(Request& req);
-    #endif
+
     #ifdef NEW
     void decode(Request& req, int& chip, int& tile);
     bool sendRequest(Request& req);
@@ -126,6 +133,7 @@ public:
     void generate_req_states_csv();
     void generate_energy_csv();
     void generate_router_hops_csv();
+    void generate_hdw_config_file();
 
     //DRAM addresses don't matter. We just define 1 address
     //and use it everywhere.
@@ -162,23 +170,26 @@ public:
                        int samt=0,
                        int bcnt=0);
 
+    void map_vec_to_tile(std::vector<Request>& requests, int tile, const std::string &origVecName, int offset, int partition_size, int bits, int length, int ben=0, int men=0, int samt=0, int bcnt=0);
+    void print_data_hit_rate();
+    void print_req_hit_rate();
 };
 
 struct Registry {
 
   struct Entry {
     std::string name;
-    std::function<int32_t(System*)> f;
+    std::function<int32_t(System*, std::string)> f;
 
     Entry() {}
     Entry(const Entry &re);
-    Entry(const std::string &name, std::function<int32_t(System*)> f);
+    Entry(const std::string &name, std::function<int32_t(System*, std::string)> f);
   };
 
-  static std::map<std::string, Entry> &registeredSimulation();
+  static std::map<std::string, Entry> &registeredSimulation();//need some polymorphism here
 };
 
-Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System*)> func);
+Registry::Entry &registerFunc(const std::string &ky, std::function<int32_t(System*, std::string)> func);
 
 
 }

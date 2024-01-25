@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t conv_120_256_256_int8_int32(System *sys) {
+int32_t conv_120_256_256_int8_int32(System *sys,std::string param_file) {
   void* _1 = nullptr;
   // int32_t Conv2dOutput_rf[1024], 0
   // int32_t Conv2dOutput_repl_global[1024], 1024
@@ -25,15 +25,15 @@ int32_t conv_120_256_256_int8_int32(System *sys) {
           }
           {
             Request request(Request::Type::RowMul);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 65536, PrecisionT::Precision{0, 16, 0} /**/);
+            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 16, 0} /**/);
             request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 8, 0} /*x[(((((((ax0.ax1.fused.ax2.fused/49)*20736) + (((ax0.ax1.fused.ax2.fused % 49)/7)*2304)) + (ry*2304)) + (rx*256)) + ((ax0.ax1.fused.ax2.fused % 7)*256)) + rc.outer)]*/);
             request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 64), 65536, PrecisionT::Precision{0, 8, 0} /*w[ramp((((ry*196608) + (rx*65536)) + (rc.outer*256)), 1, 256)]*/);
             sys->sendRequest(request);
           }
           {
             Request request(Request::Type::RowAdd);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 65536, PrecisionT::Precision{0, 32, 0} /**/);
-            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 65536, PrecisionT::Precision{0, 32, 0} /**/);
+            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 256, PrecisionT::Precision{0, 32, 0} /**/);
+            request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 72), 256, PrecisionT::Precision{0, 32, 0} /**/);
             request.addOperand(sys->getAddress(ax0_ax1_fused_ax2_fused, 0, 0), 65536, PrecisionT::Precision{0, 32, 0} /*Conv2dOutput.rf[ramp((rc.outer*256), 1, 256)]*/);
             sys->sendRequest(request);
           }

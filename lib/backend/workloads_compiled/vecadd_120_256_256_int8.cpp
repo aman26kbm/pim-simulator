@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t vecadd_120_256_256_int8(System *sys) {
+int32_t vecadd_120_256_256_int8(System *sys,std::string param_file) {
   void* _1 = nullptr;
   for (int32_t x_outer = 0; x_outer < 120; ++x_outer) {
     // cram-array axis

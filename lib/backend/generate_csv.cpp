@@ -228,6 +228,49 @@ void System::generate_cycle_csv(){
 }
 */
 
+void System::generate_hdw_config_file(){
+    ///////////////////////////////
+    //Generating config file
+    ///////////////////////////////
+
+    for (int i = 0; i < _config->_nchips; i++) {
+        //header first
+        std::array<std::string,13> header_row = {
+            "ntiles",
+            "mesh_height",
+            "mesh_width",
+            "nrows",
+            "ncols",
+            "block_size",
+            "tile_interconnect",
+            "const_op_on",
+            "const_op_kick_out_1_row",
+            "shuffle_on",
+            "cross_cram_shift_on",
+            "bypass_dram",
+            "broadcast_type"
+        };
+        for (int i=0; i<header_row.size(); i++) {
+            hdw_config_file << header_row[i] << "," ;
+        }
+        hdw_config_file << std::endl;
+        hdw_config_file << _config->_ntiles << "," ;
+        hdw_config_file << _config->_meshHeight << "," ;
+        hdw_config_file << _config->_meshWidth << "," ;
+        hdw_config_file << _config->_nrows << "," ;
+        hdw_config_file << _config->_ncols << "," ;
+        hdw_config_file << _config->_blocksize << "," ;
+        hdw_config_file << _config->_tile_interconnect << "," ;
+        hdw_config_file << _config->_const_op_on << "," ;
+        hdw_config_file << _config->_const_op_kick_out_1_row << "," ;
+        hdw_config_file << _config->_shuffle_on << "," ;
+        hdw_config_file << _config->_cross_cram_shift_on << "," ;
+        hdw_config_file << _config->_bypass_dram << "," ;
+        hdw_config_file << _config->_broadcast_type << "," ;
+        hdw_config_file << std::endl;
+    }
+}
+
 void System::generate_states_csv(){
     ///////////////////////////////
     //Generating csv file

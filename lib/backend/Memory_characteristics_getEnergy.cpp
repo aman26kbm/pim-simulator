@@ -342,7 +342,10 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             //DRAM related stuff is not accounted for
             //NoC energy is not accounted for here
             rows = getPrecisionBits(req);
-            int bitsToFromDram = rows * cols;
+            int cols_read = req.size_list[0]==0?cols:req.size_list[0];
+            
+            int bitsToFromDram = rows * cols_read;
+            //std::cout<<"read "<<bitsToFromDram<<"bits"<<std::endl;
             if (req.enableTransposeUnit) {
                 R_transposeDynEnergy = E_Transpose * bitsToFromDram;
             }

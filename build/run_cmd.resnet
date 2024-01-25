@@ -1,0 +1,10 @@
+############################
+# Run the workloads
+############################
+#Handcoded multi core
+
+output_file='resnet18'_$(date +%Y%m%d_%H%M%S)
+mkdir $output_file
+echo $output_file
+#./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m gemv_vectorized_const_op -p ../params/gemv.param -l ${output_file}/gemv_DMesh12x10_TileSize256_CramSize256x256.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/conv2d_7x7.param -l ${output_file}/conv2d_7x7.log
