@@ -71,8 +71,8 @@ public:
     int finishedReqNo = 0;
     int total_num_access_request = 0;//total number of data access request
     int total_num_missed_request = 0;//total number of data access request that requires load
-    int total_bits_accessed_data = 0;//total bits of data accessed
-    int total_bits_missed_data = 0;//total bits of accessed data that missed in sram arrays and loaded from dram
+    long int total_bits_accessed_data = 0;//total bits of data accessed
+    long int total_bits_missed_data = 0;//total bits of accessed data that missed in sram arrays and loaded from dram
     // int _nchips, _ntiles, _ntiles_used, _nblocks, _nrows, _ncols;
     // int _wordsize_block2block, _wordsize_tile2tile; 
     // //should match with hTree

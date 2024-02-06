@@ -3,8 +3,15 @@
 ############################
 #Handcoded multi core
 
-output_file='resnet18'_$(date +%Y%m%d_%H%M%S)
+output_file='output_resnet18'_$(date +%Y%m%d_%H%M%S)
 mkdir $output_file
 echo $output_file
 #./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m gemv_vectorized_const_op -p ../params/gemv.param -l ${output_file}/gemv_DMesh12x10_TileSize256_CramSize256x256.log
-./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/conv2d_7x7.param -l ${output_file}/conv2d_7x7.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv1.param -l ${output_file}/resnet_conv1.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv2_1_1.param -l ${output_file}/resnet_conv2_1_1.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv3_1_1.param -l ${output_file}/resnet_conv3_1_1.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv3_1_2.param -l ${output_file}/resnet_conv3_1_2.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv4_1_1.param -l ${output_file}/resnet_conv4_1_1.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv4_1_2.param -l ${output_file}/resnet_conv4_1_2.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv5_1_1.param -l ${output_file}/resnet_conv5_1_1.log
+./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_vectorized_delay_reduce -p ../params/resnet_conv5_1_2.param -l ${output_file}/resnet_conv5_1_2.log
