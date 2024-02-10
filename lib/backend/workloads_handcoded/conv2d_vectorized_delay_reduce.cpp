@@ -130,8 +130,9 @@ int32_t conv2d_vectorized_delay_reduce(System* sys, std::string param_file)
 
     //print loop info
     sys->app_param_file<<"loop info:"<<std::endl;
-    sys->app_param_file<<"N: "<<N<<std::endl;
+    
     sys->app_param_file<<"m_:"<<ceil(M/(float)numColPerArray)<<std::endl;
+    sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"e_:"<<E/H_Yp<<std::endl;
     sys->app_param_file<<"f_:"<<F/W_Yp<<std::endl;
     sys->app_param_file<<"e__:"<<H_Yp<<std::endl;
@@ -141,10 +142,10 @@ int32_t conv2d_vectorized_delay_reduce(System* sys, std::string param_file)
     sys->app_param_file<<"s: "<<S<<std::endl;
     sys->app_param_file<<"num tiles involved:"<< (E/H_Yp)*(F/W_Yp)<<std::endl;
     sys->app_param_file<<"per tile serial pass:"<<N * M/numColPerArray * H_Yp * W_Yp * C/numArrayPerTile * R * S<<std::endl;
-    for(int n=0; n<N; n++){//serial
+   
     
-        for(int m_=0; m_<ceil(M/(float)numColPerArray); m_++){//serial
-
+    for(int m_=0; m_<ceil(M/(float)numColPerArray); m_++){//serial
+        for(int n=0; n<N; n++){//serial
             for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
                 for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
                 int tile = e_*F/W_Yp + f_;
