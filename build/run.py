@@ -101,12 +101,12 @@ to_sim = [
   #('../configs/SIMDRAM.cfg', 'vgg5'),
 
   # dc
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_forward_65536_16'),
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_backward_65536_16'),
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gausselim_256'),
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'dwt_1024'),
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot_1024_1024'),
-  #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot3d_512_8'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_forward_65536_16'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'backprop_backward_65536_16'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'gausselim_256'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'dwt_1024'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot_1024_1024'),
+  ('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot3d_512_8_a100'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'dwt_4096'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot_4096_4096'),
   #('../configs/DMesh12x10_TileSize256_CramSize256x256.cfg', 'hotspot3d_1024_8'),

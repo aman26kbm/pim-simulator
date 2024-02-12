@@ -145,5 +145,5 @@ int32_t hotspot3d_512_8_a100(System *sys) {
   return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &_hotspot3d_512_8__ = pimsim::registerFunc("hotspot3d_512_8_a100", hotspot3d_512_8_a100);
+static __attribute__((unused)) Registry::Entry &_hotspot3d_512_8_a100 = pimsim::registerFunc("hotspot3d_512_8_a100", hotspot3d_512_8_a100);
 
