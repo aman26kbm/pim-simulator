@@ -133,6 +133,14 @@ public:
                     // request->addOperand(sys->cram_addr_tile0_block2_row8, 0, PrecisionT::INT4); //dst
                     // requests.push_back(*request);
         BlockBroadCast,//broadcast a few rows of #size arrays starting from array0 into all other arrays
+        ColBroadcast, //Broadcast a value from 1 column to all columns in its block
+                    //The "addr" argument specifies the location of the operand to be broadcasted
+                    //The "size" argument should be 0
+                    //The "precision" argument specifies the precision of the operand
+                    //example:
+                    // request = new Request(Request::Type::ColBroadcast);
+                    // request->addOperand(sys->cram_addr, 0, PrecisionT::INT4); //src
+                    // requests.push_back(*request);    
         TileSend, //Doesn't mean send a whole tile from one place to another.
                   //Doesn't mean send some bits from a block in one tile to another block in another tile.
                   //This only accounts for transfer between tiles (transfer from block to tile and tile to block is not included).
@@ -316,6 +324,8 @@ public:
                         // request->addOperand(sys->cram_addr_tile1_block0_row0, 0, PrecisionT::INT4); //src
                         // request->addOperand(sys->rf_base_addr_tile1, 0, PrecisionT::INT4); //dst
                         // requests.push_back(*request);
+
+
         MAX
     } type;
 

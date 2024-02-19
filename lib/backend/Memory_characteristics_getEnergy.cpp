@@ -247,6 +247,19 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
                 busDynEnergy += R_busDynEnergy;
             }
             break;
+        case Request::Type::ColBroadcast:
+            //Send N cols from one block to all others within a tile
+            //Instruction controller + Array read + H-tree + multiple Array writes
+            //On average, each H-tree switch will send out the packet in 4 directions
+            rows = getPrecisionBits(req);
+            R_instCtrlDynEnergy = E_InstrCtrl;
+            R_arrayDynEnergy = rows * E_ArrayRd * (config->get_nblocks())+ 
+                               rows * E_ArrayWr * (config->get_nblocks());
+           
+            energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
+            instCtrlDynEnergy += R_instCtrlDynEnergy;
+            arrayDynEnergy += R_arrayDynEnergy;
+            break;
         case Request::Type::TileSend_BroadCast: 
             std::cout<<"TileSend_BroadCast and TileReceive_BroadCast are not supported."<<std::endl;
             assert(0);

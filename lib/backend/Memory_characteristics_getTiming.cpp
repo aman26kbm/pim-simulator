@@ -42,6 +42,9 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::ChipSend_Receive: 
             time = T_CLK * getPrecisionBits(req);
             break;
+        case Request::Type::ColBroadcast:
+            time = T_CLK * getPrecisionBits(req) * 3;//3 cycles for broadcasting each bit
+            break;
         case Request::Type::TileSend_BroadCast:
         case Request::Type::TileReceive_BroadCast: 
             std::cout<<"TileSend_BroadCast and TileReceive_BroadCast are not supported."<<std::endl;

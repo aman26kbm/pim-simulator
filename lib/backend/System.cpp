@@ -486,6 +486,7 @@ int System::sendPimReq(Request& req)
         case Request::Type::RowReduce:
         case Request::Type::RowReduce_WithinTile:
         case Request::Type::RowShift:
+        case Request::Type::ColBroadcast:
             return_value =  sendPIM_one_operand(req);
             break;
         case Request::Type::RowAdd:

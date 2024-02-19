@@ -243,7 +243,10 @@ int32_t conv2d_in_out_stationary(System* sys, std::string param_file)
                                 
                                 for(int r=0; r<R; r++){//serial
                                     for(int s=0; s<S; s++){//serial
-                                        
+                                        request = new Request(Request::Type::ColBroadcast);
+                                        request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
+                                        requests.push_back(*request);
+
 
                                         request = new Request(Request::Type::RowMul);
                                         request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src

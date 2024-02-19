@@ -55,6 +55,7 @@ std::string Request::print_name(Type type) {
             case Type::RowAdd_RF: return        "RowAdd_RF";
             case Type::RowSub_RF: return        "RowSub_RF";
             case Type::PopCountReduce_RF: return  "PopCountReduce_RF";
+            case Type::ColBroadcast: return "Col_Broadcast";
             default: return        "None";
         };
     }
@@ -196,6 +197,7 @@ std::string Request::print_name(Type type) {
             case Type::RowReduce_WithinTile:
             case Type::RowShift:
             case Type::PopCountReduce_RF: 
+            case Type::ColBroadcast:
                 return true;
             default:
                 return false;
@@ -225,6 +227,7 @@ std::string Request::print_name(Type type) {
             case Type::RowReduce:
             case Type::RowShift:
             case Type::PopCountReduce_RF: 
+            case Type::ColBroadcast:
                 return "Compute";
             case Type::RowReduce_WithinTile:
             case Type::BlockSend_Receive:

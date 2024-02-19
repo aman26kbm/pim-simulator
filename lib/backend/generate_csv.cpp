@@ -401,6 +401,7 @@ void System::generate_energy_csv(){
     double tot_row_store_energy = 0;
     double tot_popcount_energy = 0;
     double tot_block_broadcast_energy = 0;
+    double tot_col_broadcast_energy = 0;
     double tot_block_sendreceive_energy = 0;
     double tot_noc_dynamic_energy = 0;
     double tot_compute_dynamic_energy = 0;
@@ -432,6 +433,7 @@ void System::generate_energy_csv(){
             tot_row_reduce_within_tile_energy += cur_tile->req_energy[int(Request::Type::RowReduce_WithinTile)];
             tot_popcount_energy += cur_tile->req_energy[int(Request::Type::PopCountReduce_RF)];
             tot_block_broadcast_energy += cur_tile->req_energy[int(Request::Type::BlockBroadCast)];
+            tot_col_broadcast_energy += cur_tile->req_energy[int(Request::Type::ColBroadcast)];
             tot_block_sendreceive_energy += cur_tile->req_energy[int(Request::Type::BlockSend_Receive)];
             tot_row_read_rf_energy += cur_tile->req_energy[int(Request::Type::RowRead_RF)];
             tot_row_write_rf_energy += cur_tile->req_energy[int(Request::Type::RowWrite_RF)];
@@ -485,7 +487,7 @@ void System::generate_energy_csv(){
         }
         
         //now print the csv
-        const int NUM_CSV_COLUMNS = 48;
+        const int NUM_CSV_COLUMNS = 49;
         //header first
         std::array<std::string, NUM_CSV_COLUMNS> header_row = {
                           "RowAdd_Energy",
@@ -511,6 +513,7 @@ void System::generate_energy_csv(){
                           "RowStore_Energy",
                           "Popcount_Energy",
                           "Block_Broadcast_Energy",
+                          "Col_Broadcast_Energy",
                           "Block_SendReceive_Energy",
                           "Shuffle_Dynamic_Energy",
                           "HTree_Dynamic_Energy",
@@ -569,6 +572,7 @@ void System::generate_energy_csv(){
                 tot_row_store_energy,
                 tot_popcount_energy,
                 tot_block_broadcast_energy,
+                tot_col_broadcast_energy,
                 tot_block_sendreceive_energy,
                 _chips[i]->_values->shuffleDynEnergy,
                 _chips[i]->_values->hTreeDynEnergy,
