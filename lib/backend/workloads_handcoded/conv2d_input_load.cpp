@@ -81,12 +81,14 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
             std::cout<<"unknown parameter: "<<name<<std::endl;
         }
     }
+    int H_I = (H-1)*stride+R;
+    int W_I = (W-1)*stride+S;
 
     
 
 
 
-    sys->app_param_file<<"original conv parameters:"<<std::endl;
+    sys->app_param_file<<"\noriginal conv parameters:"<<std::endl;
     sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"H: "<<H<<std::endl;
     sys->app_param_file<<"W: "<<W<<std::endl;
@@ -97,6 +99,8 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
     sys->app_param_file<<"M: "<<M<<std::endl;
     sys->app_param_file<<"E: "<<E<<std::endl;
     sys->app_param_file<<"F: "<<F<<std::endl;   
+    sys->app_param_file<<"H_I: "<<H_I<<std::endl;
+    sys->app_param_file<<"W_I: "<<W_I<<std::endl;
 
     
     //hdw parameters
@@ -122,7 +126,7 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
     M = ceil(M/(float)numColPerArray) * numColPerArray;
     C = ceil(C/(float)numArrayPerTile) * numArrayPerTile;
 
-    sys->app_param_file<<"padded conv parameters"<<std::endl;
+    sys->app_param_file<<"\npadded conv parameters"<<std::endl;
     sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"H: "<<H<<std::endl;
     sys->app_param_file<<"W: "<<W<<std::endl;
@@ -132,11 +136,14 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
     sys->app_param_file<<"S: "<<S<<std::endl;
     sys->app_param_file<<"M: "<<M<<std::endl;
     sys->app_param_file<<"E: "<<E<<std::endl;
-    sys->app_param_file<<"F: "<<F<<std::endl;   
+    sys->app_param_file<<"F: "<<F<<std::endl;  
+    sys->app_param_file<<"H_I: "<<H_I<<std::endl;
+    sys->app_param_file<<"W_I: "<<W_I<<std::endl; 
 
     //partition parameters
     int H_Yp = ceil(E/(float)meshHeight);
     int W_Yp = ceil(F/(float)meshWidth);
+    sys->app_param_file<<"\npartition parameters"<<std::endl;
     sys->app_param_file<<"H_Yp: "<<H_Yp<<std::endl;
     sys->app_param_file<<"W_Yp: "<<W_Yp<<std::endl;
     int M_p = M;
@@ -147,10 +154,11 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
     PrecisionT::Precision precision_temp = PrecisionT::INT8;
 
     //print loop info
-    sys->app_param_file<<"loop info:"<<std::endl;
+    sys->app_param_file<<"\nloop info:"<<std::endl;
     
+    sys->app_param_file<<"n_:"<<ceil(N/(float)N_p)<<std::endl;
+    sys->app_param_file<<"n__"<<N_p<<std::endl;
     sys->app_param_file<<"m_:"<<ceil(M/(float)numColPerArray)<<std::endl;
-    sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"e_:"<<ceil(E/(float)H_Yp)<<std::endl;
     sys->app_param_file<<"f_:"<<ceil(F/(float)W_Yp)<<std::endl;
     sys->app_param_file<<"e__:"<<H_Yp<<std::endl;
@@ -158,41 +166,40 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
     sys->app_param_file<<"c_: "<<ceil(C/(float)numArrayPerTile)<<std::endl;
     sys->app_param_file<<"r: "<<R<<std::endl;
     sys->app_param_file<<"s: "<<S<<std::endl;
-    sys->app_param_file<<"num tiles involved:"<< ceil(E/(float)H_Yp)*ceil(F/(float)W_Yp)<<std::endl;
-    sys->app_param_file<<"per tile serial pass:"<<N * M/numColPerArray * H_Yp * W_Yp * C/numArrayPerTile * R * S<<std::endl;
-   
     
 
     //load input
-    int H_I = (H-1)*stride+R;
-    int W_I = (W-1)*stride+S;
-    //int counter = 0;
-    for(int n=0; n<N_p; n++){//serial
-        for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
-            for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
-            int tile = e_*ceil(F/(float)W_Yp) + f_;
-                int H_Ip = (H_Yp-1)*stride+R;
-                int H_Wp = (W_Yp-1)*stride+S;
-                for(int e__=0; e__<H_Ip; e__+=stride){//serial
-                    for(int f__=0; f__<H_Wp; f__+=stride){//serial
-                        
-                        for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
+    for(int n_=0; n_<ceil(N/(float)N_p); n_++){//serial
+        //Load input
+        for(int n__=0; n__<N_p && n_*N_p+n__<N; n__++){//serial
+            int n = n_*N_p+n__;
+            for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
+                for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
+                    int numTilesEachInputMappedTo = ceil(E/(float)H_Yp)*ceil(F/(float)W_Yp);
+                    int tile = int(numTilesEachInputMappedTo*n + e_*ceil(F/(float)W_Yp) + f_)%numTile;
+                    int H_Ip = (H_Yp-1)*stride+R;
+                    int W_Ip = (W_Yp-1)*stride+S;
+                    for(int e__=0; e__<H_Ip; e__+=stride){//serial
+                        for(int f__=0; f__<W_Ip; f__+=stride){//serial
+                            
+                            for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
 
-                            //load numColPerArray vectors from I at one load request
-                            // if(counter==numArrayPerTile-1){
-                                //offset of the reorganized I matrix. This matrix does not neet to be reorganized, since it is in NHWC, and vectorization happens at the last dimension C.
-                                int I_offset = n*H_I*W_I*C + (e_*H_Yp*stride+e__)*W*C + (f_*W_Yp*stride+f__)*C + c_*numArrayPerTile;
-                                request = new Request(Request::Type::RowLoad);
-                                request->addOperand(sys->getAddress(tile,0,0), numArrayPerTile, precision_input); //cram addr
-                                request->addOperand(sys->DRAM_ADDR, numArrayPerTile, precision_input); //dram addr
-                                request->setShuffle(0,0, 0, 0);
-                                requests.push_back(*request);  
-                                // counter=0;
-                            //}
-                            // else{
-                            //     counter++;
-                            // }
-                        } 
+                                //load numColPerArray vectors from I at one load request
+                                // if(counter==numArrayPerTile-1){
+                                    //offset of the reorganized I matrix. This matrix does not neet to be reorganized, since it is in NHWC, and vectorization happens at the last dimension C.
+                                    int I_offset = n*H_I*W_I*C + (e_*H_Yp*stride+e__)*W*C + (f_*W_Yp*stride+f__)*C + c_*numArrayPerTile;
+                                    request = new Request(Request::Type::RowLoad);
+                                    request->addOperand(sys->getAddress(tile,0,0), numArrayPerTile, precision_input); //cram addr
+                                    request->addOperand(sys->DRAM_ADDR, numArrayPerTile, precision_input); //dram addr
+                                    request->setShuffle(0,0, 0, 0);
+                                    requests.push_back(*request);  
+                                    // counter=0;
+                                //}
+                                // else{
+                                //     counter++;
+                                // }
+                            } 
+                        }
                     }
                 }
             }

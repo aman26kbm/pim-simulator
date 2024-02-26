@@ -81,12 +81,14 @@ int32_t conv2d_weight_load(System* sys, std::string param_file)
             std::cout<<"unknown parameter: "<<name<<std::endl;
         }
     }
+    int H_I = (H-1)*stride+R;
+    int W_I = (W-1)*stride+S;
 
     
 
 
 
-    sys->app_param_file<<"original conv parameters:"<<std::endl;
+    sys->app_param_file<<"\noriginal conv parameters:"<<std::endl;
     sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"H: "<<H<<std::endl;
     sys->app_param_file<<"W: "<<W<<std::endl;
@@ -97,6 +99,8 @@ int32_t conv2d_weight_load(System* sys, std::string param_file)
     sys->app_param_file<<"M: "<<M<<std::endl;
     sys->app_param_file<<"E: "<<E<<std::endl;
     sys->app_param_file<<"F: "<<F<<std::endl;   
+    sys->app_param_file<<"H_I: "<<H_I<<std::endl;
+    sys->app_param_file<<"W_I: "<<W_I<<std::endl;
 
     
     //hdw parameters
@@ -122,7 +126,7 @@ int32_t conv2d_weight_load(System* sys, std::string param_file)
     M = ceil(M/(float)numColPerArray) * numColPerArray;
     C = ceil(C/(float)numArrayPerTile) * numArrayPerTile;
 
-    sys->app_param_file<<"padded conv parameters"<<std::endl;
+    sys->app_param_file<<"\npadded conv parameters"<<std::endl;
     sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"H: "<<H<<std::endl;
     sys->app_param_file<<"W: "<<W<<std::endl;
@@ -132,11 +136,14 @@ int32_t conv2d_weight_load(System* sys, std::string param_file)
     sys->app_param_file<<"S: "<<S<<std::endl;
     sys->app_param_file<<"M: "<<M<<std::endl;
     sys->app_param_file<<"E: "<<E<<std::endl;
-    sys->app_param_file<<"F: "<<F<<std::endl;   
+    sys->app_param_file<<"F: "<<F<<std::endl;  
+    sys->app_param_file<<"H_I: "<<H_I<<std::endl;
+    sys->app_param_file<<"W_I: "<<W_I<<std::endl; 
 
     //partition parameters
     int H_Yp = ceil(E/(float)meshHeight);
     int W_Yp = ceil(F/(float)meshWidth);
+    sys->app_param_file<<"\npartition parameters"<<std::endl;
     sys->app_param_file<<"H_Yp: "<<H_Yp<<std::endl;
     sys->app_param_file<<"W_Yp: "<<W_Yp<<std::endl;
     int M_p = M;
@@ -147,10 +154,11 @@ int32_t conv2d_weight_load(System* sys, std::string param_file)
     PrecisionT::Precision precision_temp = PrecisionT::INT8;
 
     //print loop info
-    sys->app_param_file<<"loop info:"<<std::endl;
+    sys->app_param_file<<"\nloop info:"<<std::endl;
     
+    sys->app_param_file<<"n_:"<<ceil(N/(float)N_p)<<std::endl;
+    sys->app_param_file<<"n__"<<N_p<<std::endl;
     sys->app_param_file<<"m_:"<<ceil(M/(float)numColPerArray)<<std::endl;
-    sys->app_param_file<<"N: "<<N<<std::endl;
     sys->app_param_file<<"e_:"<<ceil(E/(float)H_Yp)<<std::endl;
     sys->app_param_file<<"f_:"<<ceil(F/(float)W_Yp)<<std::endl;
     sys->app_param_file<<"e__:"<<H_Yp<<std::endl;
@@ -158,10 +166,8 @@ int32_t conv2d_weight_load(System* sys, std::string param_file)
     sys->app_param_file<<"c_: "<<ceil(C/(float)numArrayPerTile)<<std::endl;
     sys->app_param_file<<"r: "<<R<<std::endl;
     sys->app_param_file<<"s: "<<S<<std::endl;
-    sys->app_param_file<<"num tiles involved:"<< ceil(E/(float)H_Yp)*ceil(F/(float)W_Yp)<<std::endl;
-    sys->app_param_file<<"per tile serial pass:"<<N * M/numColPerArray * H_Yp * W_Yp * C/numArrayPerTile * R * S<<std::endl;
    
-    //first load some Input batches and a partition of weights (need to tradeoff between batch number and weight partition size)
+    //Load Weights
     for(int m_=0; m_<ceil(M_p/(float)numColPerArray); m_++){//serial                  
         for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
             for(int r=0; r<R; r++){//serial
