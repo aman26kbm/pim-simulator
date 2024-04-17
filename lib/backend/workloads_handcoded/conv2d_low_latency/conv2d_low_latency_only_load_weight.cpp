@@ -127,6 +127,7 @@ int32_t conv2d_low_latency_only_weight_load(System* sys, std::string param_file)
 
     
     //Load weights
+    std::cout<<"Load weights"<<std::endl;
     conv2d_low_latency_load_weight(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
     
 
