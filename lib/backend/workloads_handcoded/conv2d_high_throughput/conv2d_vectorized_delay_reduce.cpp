@@ -59,7 +59,7 @@ int32_t conv2d_vectorized_delay_reduce(System* sys, std::string param_file)
         else if(name == "C"){
             C = value;
         }
-        else if(name == "stride"){
+        else if(name == "Stride"){
             stride = value;
         }
         else if(name == "R"){

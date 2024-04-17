@@ -59,7 +59,7 @@ int32_t conv2d_in_out_stationary(System* sys, std::string param_file)
         else if(name == "C"){
             C = value;
         }
-        else if(name == "stride"){
+        else if(name == "Stride"){
             stride = value;
         }
         else if(name == "R"){

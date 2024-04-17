@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(PIM_SIM)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(BUILD_SHARED_LIBS ON)
 
 include_directories(include)

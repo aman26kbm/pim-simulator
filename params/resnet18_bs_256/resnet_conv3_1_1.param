@@ -1,8 +1,8 @@
-N  8
+N  256
 H  56
 W  56
 C  64
-stride  2
+Stride  2
 R  3
 S  3
 M  128

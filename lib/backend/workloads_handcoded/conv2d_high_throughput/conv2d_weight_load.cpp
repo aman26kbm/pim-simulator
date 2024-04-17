@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////
 
 
-int32_t conv2d_compute(System* sys, std::string param_file)
+int32_t conv2d_weight_load(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -59,7 +59,7 @@ int32_t conv2d_compute(System* sys, std::string param_file)
         else if(name == "C"){
             C = value;
         }
-        else if(name == "stride"){
+        else if(name == "Stride"){
             stride = value;
         }
         else if(name == "R"){
@@ -83,6 +83,7 @@ int32_t conv2d_compute(System* sys, std::string param_file)
     }
     int H_I = (H-1)*stride+R;
     int W_I = (W-1)*stride+S;
+
     
 
 
@@ -121,6 +122,8 @@ int32_t conv2d_compute(System* sys, std::string param_file)
         
         arrWiseDup = numArrayPerTile/pow(2,ceil(std::log2(C)));
     }
+    int M_weight = M;
+    int C_weight = C;
     N = ceil(N/float(colWiseDup*arrWiseDup));
     M = ceil(M/(float)numColPerArray) * numColPerArray;
     C = ceil(C/(float)numArrayPerTile) * numArrayPerTile;
@@ -135,24 +138,27 @@ int32_t conv2d_compute(System* sys, std::string param_file)
     sys->app_param_file<<"S: "<<S<<std::endl;
     sys->app_param_file<<"M: "<<M<<std::endl;
     sys->app_param_file<<"E: "<<E<<std::endl;
-    sys->app_param_file<<"F: "<<F<<std::endl;   
+    sys->app_param_file<<"F: "<<F<<std::endl;  
     sys->app_param_file<<"H_I: "<<H_I<<std::endl;
     sys->app_param_file<<"W_I: "<<W_I<<std::endl; 
 
     //partition parameters
-    int H_Yp = ceil(E/(float)meshHeight);
-    int W_Yp = ceil(F/(float)meshWidth);
+    // int H_Yp = ceil(E/(float)meshHeight);
+    // int W_Yp = ceil(F/(float)meshWidth);
+
+    int H_Yp = ceil(E/sqrt(meshWidth*meshHeight));
+    int W_Yp = ceil(F/sqrt(meshWidth*meshHeight));
     sys->app_param_file<<"\npartition parameters"<<std::endl;
     sys->app_param_file<<"H_Yp: "<<H_Yp<<std::endl;
     sys->app_param_file<<"W_Yp: "<<W_Yp<<std::endl;
-    int M_p = M;
+    int M_p = M_weight;
     sys->app_param_file<<"M_p: "<<M_p<<std::endl;
     int N_p = N;
     sys->app_param_file<<"N_p: "<<N_p<<std::endl;
 
     PrecisionT::Precision precision_temp = PrecisionT::INT8;
 
-     //print loop info
+    //print loop info
     sys->app_param_file<<"\nloop info:"<<std::endl;
     
     sys->app_param_file<<"n_:"<<ceil(N/(float)N_p)<<std::endl;
@@ -165,69 +171,52 @@ int32_t conv2d_compute(System* sys, std::string param_file)
     sys->app_param_file<<"c_: "<<ceil(C/(float)numArrayPerTile)<<std::endl;
     sys->app_param_file<<"r: "<<R<<std::endl;
     sys->app_param_file<<"s: "<<S<<std::endl;
-
-    //start compute
-    for(int n_=0; n_<ceil(N/(float)N_p); n_++){
-        for(int n__=0; n__<N_p && n_*N_p+n__<N; n__++){//serial
-            int n = n_*N_p+n__;
-            for(int m_=0; m_<ceil(M/(float)numColPerArray); m_++){//serial
-                for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
-                    for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
-                        int numTilesEachInputMappedTo = ceil(E/(float)H_Yp)*ceil(F/(float)W_Yp);
-                        int tile = int(numTilesEachInputMappedTo*n + e_*ceil(F/(float)W_Yp) + f_)%numTile;
-
-                        for(int e__=0; e__<H_Yp; e__++){//serial
-                            for(int f__=0; f__<W_Yp; f__++){//serial
-                                
-                                for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
-
-
-                                    // request = new Request(Request::Type::RowLoad);
-                                    // request->addOperand(sys->getAddress(tile,0,0), numColPerArray*numArrayPerTile, precision_input); //cram addr
-                                    // request->addOperand(sys->DRAM_ADDR, numColPerArray*numArrayPerTile, precision_input); //dram addr
-                                    // request->setShuffle(0,0, 0, 0);
-                                    // requests.push_back(*request);   
-                                    
-                                    
-                                    
-                                    for(int r=0; r<R; r++){//serial
-                                        for(int s=0; s<S; s++){//serial
-                                            request = new Request(Request::Type::ColBroadcast);
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
-                                            requests.push_back(*request);
-
-
-                                            request = new Request(Request::Type::RowMul);
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_input);//src_
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_multiply); //dst
-                                            requests.push_back(*request);
-
-                                            request = new Request(Request::Type::RowAdd);
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_multiply); //src
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate);//src_
-                                            request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate); //dst
-                                            requests.push_back(*request);   
-                                        }
-                                    }  
-                                } 
-                                //reduce can be delayed until all c_ are done
-                                int RowReduce_WithinTile_count = log2(numArrayPerTile);
-                                request = new Request(Request::Type::RowReduce_WithinTile);
-                                request->addOperand(sys->getAddress(tile,0,0), RowReduce_WithinTile_count, precision_accumulate); //src
-                                request->addOperand(sys->getAddress(tile,0,0), RowReduce_WithinTile_count, precision_accumulate); //dst
-                                requests.push_back(*request); 
-                                
-                            }
+   
+    //Load Weights
+    // std::cout<<"M_p: "<<M_p<<std::endl;
+    // std::cout<<"C_weight: "<<C_weight<<std::endl;
+    // std::cout<<"C: "<<C<<std::endl;
+    // std::cout<<"H_Yp: "<<H_Yp<<std::endl;
+    // std::cout<<"W_Yp: "<<W_Yp<<std::endl;
+    for(int m_=0; m_<ceil(M_p/(float)numColPerArray); m_++){//serial                  
+        for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
+            for(int r=0; r<R; r++){//serial
+                for(int s=0; s<S; s++){//serial
+                    //load W matrix
+                    //offset of the original W matrix.
+                    //MRSC order
+                    //int W_offset_initial = (m_*numColPerArray)*R*S*C + (r*S+s)*C + (c_*numArrayPerTile);
+                    //offset of the reorganized W matrix. Vectorizing factors are pushed to latest dimensions.
+                    //The organized W matrix holds vectors to be loaded in consequence.
+                    //Reorganization: MRSC->M_M__RSC_C__->M_C_RSC__M__, currently assume it is done by CPU. (In progress)We want to have a PIM kernel for this.
+                    //Reason: Data reuse happens across R, S dimensions, so they are pushed to just before the vectorized dimensions.
+                    int data_volume = std::min(M_p, numColPerArray)*std::min(C_weight, numArrayPerTile);
+                    // request = new Request(Request::Type::RowLoad);
+                    // request->addOperand(sys->getAddress(0,0,0), data_volume, precision_input); //cram addr
+                    // request->addOperand(sys->DRAM_ADDR, data_volume, precision_input); //dram addr
+                    // request->setShuffle(0,0, 0, 0);
+                    // requests.push_back(*request); 
+                    
+                    std::vector<int> v;
+                    for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
+                        for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
+                            int tile = e_*ceil(F/(float)W_Yp) + f_;
+                            v.push_back(tile);
                         }
                     }
-                }
-                
-            }
-        }
+                    // int data_volume = ceil(M_p/(float)numColPerArray) * ceil(C/(float)numArrayPerTile) * R * S * numArrayPerTile * numColPerArray;
+                    
+                    sys->broadcast_p2p(sys->getAddress(0,0,0),precision_temp, v, data_volume, requests);
 
+                }
+            }  
+        } 
     }
+
+
+
     
+
     sys->print_data_hit_rate();
     sys->print_req_hit_rate();
     
@@ -243,6 +232,6 @@ int32_t conv2d_compute(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__conv2d_compute__ = pimsim::registerFunc("conv2d_compute", conv2d_compute);
+static __attribute__((unused)) Registry::Entry &__conv2d_weight_load__ = pimsim::registerFunc("conv2d_weight_load", conv2d_weight_load);
 
 

@@ -72,19 +72,19 @@ int32_t gemm_vectorized_delay_reduce(System* sys, std::string param_file)
 
     //print loop info
     std::cout<<"loop info:"<<std::endl;
-    std::cout<<"i_: "<<M/H_Cp<<std::endl;
-    std::cout<<"j_:"<<N/W_Cp<<std::endl;
-    std::cout<<"i__"<<H_Cp/numColPerArray<<std::endl;
+    std::cout<<"i_: "<<ceil(M/(float)H_Cp)<<std::endl;
+    std::cout<<"j_:"<<ceil(N/(float)W_Cp)<<std::endl;
+    std::cout<<"i__"<<ceil(H_Cp/(float)numColPerArray)<<std::endl;
     std::cout<<"j__:"<<W_Cp<<std::endl;
-    std::cout<<"k_:"<<K/numArrayPerTile<<std::endl;
-    std::cout<<"num tiles involved:"<< (M/H_Cp)*(N/W_Cp)<<std::endl;
-    std::cout<<"per tile serial pass:"<<H_Cp/numColPerArray * W_Cp * K/numArrayPerTile<<std::endl;
+    std::cout<<"k_:"<<ceil(K/(float)numArrayPerTile)<<std::endl;
+    std::cout<<"num tiles involved:"<< ceil(M/(float)H_Cp)*ceil(N/(float)W_Cp)<<std::endl;
+    std::cout<<"per tile serial pass:"<<ceil(H_Cp/(float)numColPerArray) * W_Cp * ceil(K/(float)numArrayPerTile)<<std::endl;
     for(int i_=0; i_<ceil(M/(float)H_Cp); i_++){
         for(int j_=0; j_<ceil(N/(float)W_Cp); j_++){
-            int tile = i_*N/W_Cp + j_;
-            for(int i__=0; i__<H_Cp/numColPerArray; i__++){
+            int tile = i_*ceil(N/(float)W_Cp) + j_;
+            for(int i__=0; i__<ceil(H_Cp/(float)numColPerArray); i__++){
                 for(int j__=0; j__<W_Cp; j__++){
-                    for(int k_=0; k_<K/numArrayPerTile; k_++){
+                    for(int k_=0; k_<ceil(K/(float)numArrayPerTile); k_++){
                         request = new Request(Request::Type::RowMul);
                         request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
                         request->addOperand(sys->getAddress(tile,0,0), 0, precision_input);//src2

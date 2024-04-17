@@ -907,7 +907,6 @@ void System::broadcast_p2p(int addr,
             assert(0);
         }
     }
-
     int lastTile = tile;
     for(int col=tile+1; col<(tile/_config->_meshWidth +1)*_config->_meshWidth; col++){
         bool isReceiver = false;

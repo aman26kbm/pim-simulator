@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////
 
 
-int32_t conv2d_input_load(System* sys, std::string param_file)
+int32_t conv2d_store(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -59,7 +59,7 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
         else if(name == "C"){
             C = value;
         }
-        else if(name == "stride"){
+        else if(name == "Stride"){
             stride = value;
         }
         else if(name == "R"){
@@ -166,47 +166,66 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
     sys->app_param_file<<"c_: "<<ceil(C/(float)numArrayPerTile)<<std::endl;
     sys->app_param_file<<"r: "<<R<<std::endl;
     sys->app_param_file<<"s: "<<S<<std::endl;
-    
 
-    //load input
-    for(int n_=0; n_<ceil(N/(float)N_p); n_++){//serial
-        //Load input
+    for(int n_=0; n_<ceil(N/(float)N_p); n_++){
+        //start compute
         for(int n__=0; n__<N_p && n_*N_p+n__<N; n__++){//serial
             int n = n_*N_p+n__;
-            for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
-                for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
-                    int numTilesEachInputMappedTo = ceil(E/(float)H_Yp)*ceil(F/(float)W_Yp);
-                    int tile = int(numTilesEachInputMappedTo*n + e_*ceil(F/(float)W_Yp) + f_)%numTile;
-                    int H_Ip = (H_Yp-1)*stride+R;
-                    int W_Ip = (W_Yp-1)*stride+S;
-                    for(int e__=0; e__<H_Ip; e__+=stride){//serial
-                        for(int f__=0; f__<W_Ip; f__+=stride){//serial
-                            
-                            for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
+            for(int m_=0; m_<ceil(M/(float)numColPerArray); m_++){//serial
+                for(int e_=0; e_<ceil(E/(float)H_Yp); e_++){//parallel on tiles
+                    for(int f_=0; f_<ceil(F/(float)W_Yp); f_++){//parallel on tiles
+                        int numTilesEachInputMappedTo = ceil(E/(float)H_Yp)*ceil(F/(float)W_Yp);
+                        int tile = int(numTilesEachInputMappedTo*n + e_*ceil(F/(float)W_Yp) + f_)%numTile;
 
-                                //load numColPerArray vectors from I at one load request
-                                // if(counter==numArrayPerTile-1){
-                                    //offset of the reorganized I matrix. This matrix does not neet to be reorganized, since it is in NHWC, and vectorization happens at the last dimension C.
-                                    int I_offset = n*H_I*W_I*C + (e_*H_Yp*stride+e__)*W*C + (f_*W_Yp*stride+f__)*C + c_*numArrayPerTile;
-                                    request = new Request(Request::Type::RowLoad);
-                                    request->addOperand(sys->getAddress(tile,0,0), numArrayPerTile, precision_input); //cram addr
-                                    request->addOperand(sys->DRAM_ADDR, numArrayPerTile, precision_input); //dram addr
-                                    request->setShuffle(0,0, 0, 0);
-                                    requests.push_back(*request);  
-                                    // counter=0;
-                                //}
-                                // else{
-                                //     counter++;
+                        for(int e__=0; e__<H_Yp; e__++){//serial
+                            for(int f__=0; f__<W_Yp; f__++){//serial
+                                
+                                for(int c_=0; c_<ceil(C/(float)numArrayPerTile); c_++){//serial, for reduction
+ 
+                                    for(int r=0; r<R; r++){//serial
+                                        for(int s=0; s<S; s++){//serial
+                                            // request = new Request(Request::Type::ColBroadcast);
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
+                                            // requests.push_back(*request);
+
+
+                                            // request = new Request(Request::Type::RowMul);
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_input);//src_
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_multiply); //dst
+                                            // requests.push_back(*request);
+
+                                            // request = new Request(Request::Type::RowAdd);
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_multiply); //src
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate);//src_
+                                            // request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate); //dst
+                                            // requests.push_back(*request);   
+                                        }
+                                    }  
+                                } 
+                                // //reduce can be delayed until all c_ are done
+                                // int RowReduce_WithinTile_count = log2(numArrayPerTile);
+                                // request = new Request(Request::Type::RowReduce_WithinTile);
+                                // request->addOperand(sys->getAddress(tile,0,0), RowReduce_WithinTile_count, precision_accumulate); //src
+                                // request->addOperand(sys->getAddress(tile,0,0), RowReduce_WithinTile_count, precision_accumulate); //dst
+                                // requests.push_back(*request); 
+                                
+                                //For output, since vectorization is on the last dimension of NHWC, there is no reorganization needed.
+                                //Only need to calculate the correct Y offset based on n, e, f, m_ and store to the correct address.  
+                                // for(int dup=0; dup<arrWiseDup; dup++){
+                                    request = new Request(Request::Type::RowStore);
+                                    request->addOperand(sys->getAddress(tile,0,0), numColPerArray*arrWiseDup, precision_input); //cram addr
+                                    request->addOperand(sys->DRAM_ADDR, numColPerArray*arrWiseDup, precision_input); //dram addr
+                                    requests.push_back(*request);
                                 // }
-                            } 
+                            }
                         }
                     }
                 }
+                
             }
         }
     }
-
-
     sys->print_data_hit_rate();
     sys->print_req_hit_rate();
     
@@ -222,6 +241,6 @@ int32_t conv2d_input_load(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__conv2d_input_load__ = pimsim::registerFunc("conv2d_input_load", conv2d_input_load);
+static __attribute__((unused)) Registry::Entry &__conv2d_store__ = pimsim::registerFunc("conv2d_store", conv2d_store);
 
 
