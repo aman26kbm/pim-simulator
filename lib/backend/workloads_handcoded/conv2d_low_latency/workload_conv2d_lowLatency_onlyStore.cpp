@@ -12,7 +12,7 @@
 /////////////////////////////////////////////////////////////
 
 
-int32_t conv2d_low_latency_only_compute(System* sys, std::string param_file)
+int32_t conv2d_lowLatency_onlyStore(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -125,10 +125,9 @@ int32_t conv2d_low_latency_only_compute(System* sys, std::string param_file)
     //partition parameters
     
 
-    
-    
-    //start compute
-    conv2d_low_latency_compute(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
+
+    //store output
+    conv2d_low_latency_store(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
     
 
     // sys->print_data_hit_rate();
@@ -146,5 +145,5 @@ int32_t conv2d_low_latency_only_compute(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__conv2d_low_latency_only_compute__ = pimsim::registerFunc("conv2d_low_latency_only_compute", conv2d_low_latency_only_compute);
+static __attribute__((unused)) Registry::Entry &__conv2d_lowLatency_onlyStore__ = pimsim::registerFunc("conv2d_lowLatency_onlyStore", conv2d_lowLatency_onlyStore);
 

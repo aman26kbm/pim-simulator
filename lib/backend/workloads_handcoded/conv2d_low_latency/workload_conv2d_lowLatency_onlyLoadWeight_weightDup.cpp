@@ -12,7 +12,7 @@
 /////////////////////////////////////////////////////////////
 
 
-int32_t conv2d_low_latency_only_store(System* sys, std::string param_file)
+int32_t conv2d_lowLatency_onlyLoadWeight_weightDup(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -125,9 +125,10 @@ int32_t conv2d_low_latency_only_store(System* sys, std::string param_file)
     //partition parameters
     
 
-
-    //store output
-    conv2d_low_latency_store(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
+    
+    //Load weights
+    std::cout<<"Load weights"<<std::endl;
+    conv2d_low_latency_load_weight_dup(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
     
 
     // sys->print_data_hit_rate();
@@ -145,5 +146,5 @@ int32_t conv2d_low_latency_only_store(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__conv2d_low_latency_only_store__ = pimsim::registerFunc("conv2d_low_latency_only_store", conv2d_low_latency_only_store);
+static __attribute__((unused)) Registry::Entry &__conv2d_lowLatency_onlyLoadWeight_weightDup__ = pimsim::registerFunc("conv2d_lowLatency_onlyLoadWeight_weightDup", conv2d_lowLatency_onlyLoadWeight_weightDup);
 

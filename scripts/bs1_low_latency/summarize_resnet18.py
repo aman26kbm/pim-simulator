@@ -52,15 +52,15 @@ for filename in sorted(glob.glob(os.path.join(path, '*.log'))):
                 break
         
         #determine which column to insert the cycles
-        if workload == "param_conv2d_low_latency":
+        if workload == "param_conv2d_lowLatency_inputDup":
             layer_data[2] = cycles
-        elif workload == "param_conv2d_low_latency_only_load_weight":
+        elif workload == "param_conv2d_lowLatency_onlyLoadWeight":
             layer_data[3] = cycles
-        elif workload == "param_conv2d_low_latency_only_load_input":
+        elif workload == "param_conv2d_lowLatency_onlyLoadInput_inputDup":
             layer_data[4] = cycles
-        elif workload == "param_conv2d_low_latency_only_compute":
+        elif workload == "param_conv2d_lowLatency_onlyCompute_inputDup":
             layer_data[5] = cycles
-        elif workload == "param_conv2d_low_latency_only_store":
+        elif workload == "param_conv2d_lowLatency_onlyStore_inputDup":
             layer_data[6] = cycles
         else:
             print("ERROR: unknown workload")
