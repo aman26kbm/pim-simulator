@@ -1,5 +1,5 @@
 #include "conv2d_low_latency.h"
-void conv2d_low_latency_compute(Conv_layer_params conv_layer_params,
+void conv2d_low_latency_compute_weight_dup(Conv_layer_params conv_layer_params,
                                 PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate,
                                 std::vector<Request> &requests, System *sys)
 {
@@ -30,16 +30,16 @@ void conv2d_low_latency_compute(Conv_layer_params conv_layer_params,
 
     Request *request;
 
-    std::cout<<"EF: "   <<EF<<std::endl;
-    std::cout<<"weightDupInArr: " <<weightDupInArr<<std::endl;
-    std::cout<<"weightDupAcrossArr: " <<weightDupAcrossArr<<std::endl;
-    std::cout<<"loop bounds: "<<std::endl;
-    std::cout<<"m_: " << ceil(M / (float)numColPerArray)<<std::endl;
-    std::cout<<"ef_: " << ceil(E * F / (float)EF)<<std::endl;
-    std::cout<<"ef__: " << ceil(EF/(float)(weightDupInArr*weightDupAcrossArr))<<std::endl;
-    std::cout<<"c_: " << ceil(C / (float)numArrayPerTile)<<std::endl;
-    std::cout<<"r: " << R<<std::endl;
-    std::cout<<"s: " << S<<std::endl;
+    sys->app_param_file<<"EF: "   <<EF<<std::endl;
+    sys->app_param_file<<"weightDupInArr: " <<weightDupInArr<<std::endl;
+    sys->app_param_file<<"weightDupAcrossArr: " <<weightDupAcrossArr<<std::endl;
+    sys->app_param_file<<"loop bounds: "<<std::endl;
+    sys->app_param_file<<"m_: " << ceil(M / (float)numColPerArray)<<std::endl;
+    sys->app_param_file<<"ef_: " << ceil(E * F / (float)EF)<<std::endl;
+    sys->app_param_file<<"ef__: " << ceil(EF/(float)(weightDupInArr*weightDupAcrossArr))<<std::endl;
+    sys->app_param_file<<"c_: " << ceil(C / (float)numArrayPerTile)<<std::endl;
+    sys->app_param_file<<"r: " << R<<std::endl;
+    sys->app_param_file<<"s: " << S<<std::endl;
 
 
     for (int m_ = 0; m_ < ceil(M / (float)numColPerArray); m_++)

@@ -12,7 +12,7 @@
 /////////////////////////////////////////////////////////////
 
 
-int32_t conv2d_lowLatency_onlyCompute(System* sys, std::string param_file)
+int32_t conv2d_lowLatency_weightDup(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -126,9 +126,15 @@ int32_t conv2d_lowLatency_onlyCompute(System* sys, std::string param_file)
     
 
     
+    //Load weights
+    conv2d_low_latency_load_weight_dup(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
     
+    //load input
+    conv2d_low_latency_load_input(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
     //start compute
-    conv2d_low_latency_compute(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
+    conv2d_low_latency_compute_weight_dup(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
+    //store output
+    conv2d_low_latency_store_weight_dup(conv_layer_params, precision_input, precision_multiply, precision_accumulate, requests, sys);
     
 
     // sys->print_data_hit_rate();
@@ -146,5 +152,5 @@ int32_t conv2d_lowLatency_onlyCompute(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__conv2d_lowLatency_onlyCompute__ = pimsim::registerFunc("conv2d_lowLatency_onlyCompute", conv2d_lowLatency_onlyCompute);
+static __attribute__((unused)) Registry::Entry &__conv2d_lowLatency_weightDup__ = pimsim::registerFunc("conv2d_lowLatency_weightDup", conv2d_lowLatency_weightDup);
 

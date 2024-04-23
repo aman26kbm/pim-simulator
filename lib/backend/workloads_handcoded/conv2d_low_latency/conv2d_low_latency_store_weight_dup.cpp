@@ -1,6 +1,6 @@
 #include "conv2d_low_latency.h"
 
-void conv2d_low_latency_store(Conv_layer_params conv_layer_params,
+void conv2d_low_latency_store_weight_dup(Conv_layer_params conv_layer_params,
                                 PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate,
                                 std::vector<Request> &requests, System *sys)
 {

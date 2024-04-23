@@ -14,7 +14,7 @@ pathlib.Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True)
 
 for param in ["resnet_conv1.param","resnet_conv2_1_1.param","resnet_conv3_1_1.param","resnet_conv3_1_2.param","resnet_conv4_1_1.param","resnet_conv4_1_2.param","resnet_conv5_1_1.param","resnet_conv5_1_2.param"]:
     PARAM_PATH = f"{ROOT_PATH}/params/resnet18_bs_1/{param}"
-    for task in ["conv2d_lowLatency_inputDup"]:
+    for task in ["conv2d_lowLatency_onlyCompute_inputDup", "conv2d_lowLatency_onlyLoadWeight", "conv2d_lowLatency_onlyLoadInput_inputDup", "conv2d_lowLatency_onlyStore_inputDup", "conv2d_lowLatency_inputDup"]:
     # for task in ["conv2d_low_latency_only_load_weight"]:
         print(f"Running {PARAM_PATH} {task}")
         subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-p", PARAM_PATH, "-l", f"{OUTPUT_PATH}/{param}_{task}.log"])

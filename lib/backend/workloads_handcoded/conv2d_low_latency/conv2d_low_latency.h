@@ -36,7 +36,7 @@ void conv2d_low_latency_load_input_dup(Conv_layer_params conv_layer_params, \
                                     PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate, \
                                     std::vector<Request> &requests, System *sys);
 
-void conv2d_low_latency_compute(Conv_layer_params conv_layer_params,  \
+void conv2d_low_latency_compute_weight_dup(Conv_layer_params conv_layer_params,  \
                                     PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate, \
                                     std::vector<Request> &requests, System* sys);
 
@@ -44,7 +44,7 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,  
                                     PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate, \
                                     std::vector<Request> &requests, System* sys);
 
-void conv2d_low_latency_store(Conv_layer_params conv_layer_params,  \
+void conv2d_low_latency_store_weight_dup(Conv_layer_params conv_layer_params,  \
                                     PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate, \
                                     std::vector<Request> &requests, System* sys);
 

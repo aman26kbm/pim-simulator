@@ -21,6 +21,9 @@ void conv2d_low_latency_load_input_dup(Conv_layer_params conv_layer_params,
     int S = conv_layer_params.S;
     int Stride = conv_layer_params.stride;
 
+    int M_p = ceil(M / (float)numTile);
+    int numTileInvolved = std::min(numTile, (int)ceil(M/(float)M_p));
+
     
     Request *request;
     
@@ -34,11 +37,11 @@ void conv2d_low_latency_load_input_dup(Conv_layer_params conv_layer_params,
     requests.push_back(*request);  
 
     std::vector<int> v;
-    for(int tile_=0; tile_<numTile; tile_++){//parallel on tiles
+    for(int tile_=0; tile_<numTileInvolved; tile_++){//parallel on tiles
         v.push_back(tile_);
     }
     // int data_volume = ceil(M_p/(float)numColPerArray) * ceil(C/(float)numArrayPerTile) * R * S * numArrayPerTile * numColPerArray;
-    std::cout<<"data_volume: "<<input_volume<<std::endl;
+    sys->app_param_file<<"data_volume: "<<input_volume<<std::endl;
     sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, input_volume, requests);
             
                        

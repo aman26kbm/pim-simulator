@@ -21,10 +21,11 @@ void conv2d_low_latency_store_input_dup(Conv_layer_params conv_layer_params,
     int S = conv_layer_params.S;
     int Stride = conv_layer_params.stride;
 
-    int M_p = ceil(M/(float)numTile);
+    int M_p = ceil(M / (float)numTile);
+    int numTileInvolved = std::min(numTile, (int)ceil(M/(float)M_p));
     Request *request;
 
-    for (int tile = 0; tile < numTile; tile++){
+    for (int tile = 0; tile < numTileInvolved; tile++){
         
         int output_volume = E*F * M_p;
         request = new Request(Request::Type::RowStore);

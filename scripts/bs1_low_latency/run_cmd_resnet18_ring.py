@@ -6,10 +6,10 @@ d = os.path.dirname(os.path.abspath(__file__))
 path = Path(d)
 ROOT_PATH = path.parent.parent.absolute()
 
-CFG_PATH = f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256.cfg"
+CFG_PATH = f"{ROOT_PATH}/configs/DMesh120x1_TileSize256_CramSize256x256.cfg"
 EXEC_PATH = f"{ROOT_PATH}/build/PIM_simulator"
 
-OUTPUT_PATH = "output_resnet18"
+OUTPUT_PATH = "output_resnet18_ring"
 pathlib.Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True) 
 
 for param in ["resnet_conv1.param","resnet_conv2_1_1.param","resnet_conv3_1_1.param","resnet_conv3_1_2.param","resnet_conv4_1_1.param"]:

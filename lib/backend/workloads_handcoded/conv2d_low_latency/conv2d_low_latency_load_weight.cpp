@@ -19,11 +19,13 @@ void conv2d_low_latency_load_weight(Conv_layer_params conv_layer_params, \
     int S = conv_layer_params.S;
     int E = conv_layer_params.E;
     int F = conv_layer_params.F;
-    int EF = ceil(E * F / (float)(meshWidth * meshHeight));
-    int numTilesUsed = ceil(E*F/(float)EF);
+    
+    int M_p = ceil(M / (float)numTile);
+    int numTileInvolved = std::min(numTile, (int)ceil(M/(float)M_p));
+
     Request* request;
-    for(int tile=0; tile<numTile; tile++){
-        int data_volume = M * C * R * S/ numTile;
+    for(int tile=0; tile<numTileInvolved; tile++){
+        int data_volume = M * C * R * S/ numTileInvolved;
         request = new Request(Request::Type::RowLoad);
         request->addOperand(sys->getAddress(tile,0,0), data_volume, precision_input); //cram addr
         request->addOperand(sys->DRAM_ADDR, data_volume, precision_input); //dram addr

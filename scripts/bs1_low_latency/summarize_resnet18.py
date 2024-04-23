@@ -52,15 +52,15 @@ for filename in sorted(glob.glob(os.path.join(path, '*.log'))):
                 break
         
         #determine which column to insert the cycles
-        if workload == "param_conv2d_lowLatency_inputDup":
+        if workload == "param_conv2d_lowLatency_inputDup" or workload == "param_conv2d_lowLatency_weightDup":
             layer_data[2] = cycles
-        elif workload == "param_conv2d_lowLatency_onlyLoadWeight":
+        elif workload == "param_conv2d_lowLatency_onlyLoadWeight" or workload == "param_conv2d_lowLatency_onlyLoadWeight_weightDup":
             layer_data[3] = cycles
-        elif workload == "param_conv2d_lowLatency_onlyLoadInput_inputDup":
+        elif workload == "param_conv2d_lowLatency_onlyLoadInput_inputDup" or workload == "param_conv2d_lowLatency_onlyLoadInput":
             layer_data[4] = cycles
-        elif workload == "param_conv2d_lowLatency_onlyCompute_inputDup":
+        elif workload == "param_conv2d_lowLatency_onlyCompute_inputDup" or workload == "param_conv2d_lowLatency_onlyCompute_weightDup":
             layer_data[5] = cycles
-        elif workload == "param_conv2d_lowLatency_onlyStore_inputDup":
+        elif workload == "param_conv2d_lowLatency_onlyStore_inputDup" or workload == "param_conv2d_lowLatency_onlyStore_weightDup":
             layer_data[6] = cycles
         else:
             print("ERROR: unknown workload")

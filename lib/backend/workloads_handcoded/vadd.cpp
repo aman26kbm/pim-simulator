@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////
 
 
-int32_t vadd(System* sys, std::string param_file)
+int32_t vadd_resLayer(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -162,5 +162,5 @@ int32_t vadd(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__vadd__ = pimsim::registerFunc("vadd", vadd);
+static __attribute__((unused)) Registry::Entry &__vadd_resLayer__ = pimsim::registerFunc("vadd_resLayer", vadd_resLayer);
 
