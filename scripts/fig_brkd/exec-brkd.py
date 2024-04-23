@@ -14,6 +14,50 @@ print('Argument List:', str(sys.argv))
 
 input_file_dir = str(sys.argv[1])
 
+processed_lines = []
+with open(os.path.join(os.getcwd(), input_file_dir, '03_chart_breakdown_avg.csv'), 'r') as f:
+    csv_reader = csv.reader(f)
+    for line in csv_reader:
+        workload_name = line[0]
+        if 'resnet' in workload_name:
+            processed_lines.append(line)
+
+processed_lines_full = []
+processed_lines_full.append(processed_lines[0][:])
+processed_lines_full.append(processed_lines[1][:] )
+processed_lines_full.append(processed_lines[1][:] )
+processed_lines_full[-1][0] = "resnet_conv2_1_2"
+processed_lines_full.append(processed_lines[1][:] )
+processed_lines_full[-1][0] = "resnet_conv2_2_1"
+processed_lines_full.append(processed_lines[1][:] )
+processed_lines_full[-1][0] = "resnet_conv2_2_2"
+processed_lines_full.append(processed_lines[2][:] )
+processed_lines_full.append(processed_lines[3][:] )
+processed_lines_full.append(processed_lines[3][:] )
+processed_lines_full[-1][0] = "resnet_conv3_2_1"
+processed_lines_full.append(processed_lines[3][:] )
+processed_lines_full[-1][0] = "resnet_conv3_2_2"
+processed_lines_full.append(processed_lines[4][:] )
+processed_lines_full.append(processed_lines[5][:] )
+processed_lines_full.append(processed_lines[5][:] )
+processed_lines_full[-1][0] = "resnet_conv4_2_1"
+processed_lines_full.append(processed_lines[5][:] )
+processed_lines_full[-1][0] = "resnet_conv4_2_2"
+processed_lines_full.append(processed_lines[6][:] )
+processed_lines_full.append(processed_lines[7][:] )
+processed_lines_full.append(processed_lines[7][:] )
+processed_lines_full[-1][0] = "resnet_conv5_2_1"
+processed_lines_full.append(processed_lines[7][:] )
+processed_lines_full[-1][0] = "resnet_conv5_2_2"
+
+resnet_sum = ['resnet18', 0,0,0,0,0]
+for line in processed_lines_full:
+    for index in range(1,6):
+        resnet_sum[index] += float(line[index])
+# resnet_sum = ['resnet18', sum(float(processed_lines_full[:][1])), sum(float(processed_lines_full[:][2])), sum(float(processed_lines_full[:][3])), sum(float(processed_lines_full[:][4])), sum(float(processed_lines_full[:][4]))]
+
+# print(resnet_sum)
+
 matplotlib.rcParams['lines.linewidth'] = 2.5
 
 plot.style.use('bmh')
@@ -21,7 +65,7 @@ binary = matplotlib.cm.get_cmap('binary')
 
 fig, axes = plot.subplots(1, 1)
 
-data = np.zeros([7,4])
+data = np.zeros([6,4])
 with open(os.path.join(os.getcwd(), input_file_dir, '03_chart_breakdown_avg.csv'), 'r') as f:
     csv_reader = csv.reader(f)
     for line in csv_reader:
@@ -34,7 +78,7 @@ with open(os.path.join(os.getcwd(), input_file_dir, '03_chart_breakdown_avg.csv'
         elif('shuffleOff' in workload_name): continue
         elif('everythingOff' in workload_name): continue
         else:
-            print(line)
+            # print(line)
             row=0
             # ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18']
             if('conv2d' in workload_name): row=4
@@ -42,10 +86,13 @@ with open(os.path.join(os.getcwd(), input_file_dir, '03_chart_breakdown_avg.csv'
             elif('gemm' in workload_name): row=3
             elif('gemv' in workload_name): row=2
             elif('vecadd' in workload_name): row=0
-            elif('resnet' in workload_name): row=6
-            else: row=5
+            print(row)
             data[row]=[float(line[3])/float(line[5]),float(line[2])/float(line[5]),float(line[1])/float(line[5]),float(line[4])/float(line[5])]
-            print(data[row])
+            if('resnet' in workload_name): 
+                row=5
+                data[row] = [float(resnet_sum[3])/float(resnet_sum[5]),float(resnet_sum[2])/float(resnet_sum[5]),float(resnet_sum[1])/float(resnet_sum[5]),float(resnet_sum[4])/float(resnet_sum[5])]
+            # print(data[row])
+    
     print(data)
     data = data.transpose()
     
@@ -54,10 +101,10 @@ with open(os.path.join(os.getcwd(), input_file_dir, '03_chart_breakdown_avg.csv'
     to_gm = []
     to_label = []
     colors = ['w', 'grey', 'w', 'w', '']
-    hatches = ['', '', '////','\\\\\\\\','----']
+    hatches = ['////', '', '','\\\\\\\\','----']
     for i, ty in enumerate(['Comp.', 'Netw.', 'DRAM', 'IDLE']):
         b=data[i]
-        print(b)
+        # print(b)
         #axes.bar(np.arange(0, 5) * 2.5 + 0, a, bottom=a_acc, width=1, edgecolor='k', color=binary(0.3 * i + 0.1), label=ty)
         axes.bar(np.arange(0, 6) * 1.5, b, bottom=b_acc, width=1, edgecolor='k', color=colors[i], label=ty, hatch=hatches[i])
         b_acc += np.array(b)
