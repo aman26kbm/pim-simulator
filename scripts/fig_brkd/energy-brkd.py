@@ -57,31 +57,28 @@ types = {
 
 
 e2e_layers = []
-for i in os.listdir('./e2e-logs/'):
-    if not i.endswith('.dump'):
-        e2e_layers.append('./e2e-logs/' + i + '/pimsim.log.energy.csv')
+# for i in os.listdir('./output_all_kernels/'):
+#     if not i.endswith('.dump'):
+#         e2e_layers.append('./output_all_kernels/' + i + '/pimsim.log.energy.csv')
 
 e2e_layers += [
-        './breakdowns/conv_3x3_weight_load_10_12_4_64/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_64_64/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_64_64/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_64_64/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_64_64/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_64_128/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_128_128/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_128_128/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_128_128/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_128_128/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_128_256/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_256_256/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_256_256/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_256_256/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_256_256/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_256_512/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_512_512/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_512_512/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_512_512/pimsim.log.energy.csv',
-        './breakdowns/conv_3x3_weight_load_10_12_512_512/pimsim.log.energy.csv',
+        './output_all_kernels/resnet_conv1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv3_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv4_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_all_kernels/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_all_kernels/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_all_kernels/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_all_kernels/resnet_conv5_1_1.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_all_kernels/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_all_kernels/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_all_kernels/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv'
 ]
 
 def washdata(raws):
@@ -107,17 +104,18 @@ def washdata(raws):
 
 data = []
 #vecadd
-data.append(washdata(['./output9/vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
+data.append(washdata(['./output_all_kernels/vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
 #fir
-data.append(washdata(['./output9/fir_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
+data.append(washdata(['./output_all_kernels/fir_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
 #gemv
-data.append(washdata(['./output9/gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
+data.append(washdata(['./output_all_kernels/gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
 #gemm
-data.append(washdata(['./output9/gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
+data.append(washdata(['./output_all_kernels/gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
 #conv
-data.append(washdata(['./output9/conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
+data.append(washdata(['./output_all_kernels/conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
 #e2e
-# data.append(washdata(e2e_layers))
+data.append(washdata(e2e_layers))
+
 
 acc = np.zeros((6, ))
 colors = ['w', 'grey', 'w', 'w', 'w']

@@ -1,0 +1,9 @@
+workload_name, time(ns), energy(J)
+vecadd, 78850, 0.012380
+fir, 1831960, 0.227163
+gemv, 138350, 0.029054
+gemm, 82110, 0.014697
+conv2d, 46590, 0.001444
+resnet, 1.0,1.0
+BERT, 1.0,1.0
+MLP, 1.0,1.0
