@@ -132,6 +132,6 @@ with open(os.path.join(os.getcwd(), input_file_dir, '03_chart_breakdown_avg.csv'
 
     fname = 'exec-breakdown'
     fig.savefig(f'{fname}.pdf')
-    # subprocess.check_output(f'pdfcrop {fname}.pdf', shell=True)
-    # subprocess.check_output(f'mv {fname}-crop.pdf {fname}.pdf', shell=True)
+    subprocess.check_output(f'pdfcrop {fname}.pdf', shell=True)
+    subprocess.check_output(f'mv {fname}-crop.pdf {fname}.pdf', shell=True)
 
