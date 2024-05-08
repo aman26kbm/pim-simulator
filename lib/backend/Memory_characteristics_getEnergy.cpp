@@ -105,43 +105,56 @@ double MemoryCharacteristics::getDynamicEnergy(Request req) {
             arrayDynEnergy += R_arrayDynEnergy;
             break;
         case Request::Type::RowReduce_WithinTile: { 
-            //Instruction controller + H-tree + Array compute across all arrays in a tile
-            int levels = req.size_list[0];
-            int bits_moved = 0;
-            int ops_done = 0;
-            int N = config->get_nblocks();
-            int P = req.precision_list[0].bits();
-            //htree bits moved
-            //Siyuan:  Why this does not count htree hops?
-            for (int i=1; i<levels; i++) {
-                N = N/2;
-                bits_moved += N * P * config->get_ncols();
-                P = P+1;
-                ops_done += N * P;
+
+            //Check if reduction is interCRAM and intraCRAM
+            if(config->_reduction == "interCRAM"){
+                //Instruction controller + H-tree + Array compute across all arrays in a tile
+                int levels = req.size_list[0];
+                int bits_moved = 0;
+                int ops_done = 0;
+                int N = config->get_nblocks();
+                int P = req.precision_list[0].bits();
+                //htree bits moved
+                //Siyuan:  Why this does not count htree hops?
+                for (int i=1; i<levels; i++) {
+                    N = N/2;
+                    bits_moved += N * P * config->get_ncols();
+                    P = P+1;
+                    ops_done += N * P;
+                }
+                //bus bits moved
+                for (int i=1; i<levels; i++) {
+                    N = N/2;
+                    bits_moved += N * P * config->get_ncols();
+                    P = P+1;
+                    ops_done += N * P;
+                }
+                //Assume we stop after having gotten all cols of a block populated
+                //If we want to further reduce, call RowReduce separately
+                R_instCtrlDynEnergy = E_InstrCtrl;
+                R_arrayDynEnergy = ops_done * E_ArrayCompute;
+                if(config->_tile_interconnect=="htree"){
+                    R_hTreeDynEnergy = bits_moved * E_HTree;
+                    energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
+                }
+                else if(config->_tile_interconnect=="bus"){
+                    R_busDynEnergy = bits_moved * E_Bus;
+                    energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_busDynEnergy;
+                }
+                instCtrlDynEnergy += R_instCtrlDynEnergy;
+                arrayDynEnergy += R_arrayDynEnergy;
+                hTreeDynEnergy += R_hTreeDynEnergy;
+                busDynEnergy += R_busDynEnergy;
             }
-            //bus bits moved
-            for (int i=1; i<levels; i++) {
-                N = N/2;
-                bits_moved += N * P * config->get_ncols();
-                P = P+1;
-                ops_done += N * P;
+            else if(config->_reduction == "intraCRAM"){
+                //Instruction controller + Array compute across all arrays in a tile
+                compute_cycles = getClocksForReq(req, "reduce", req.size_list[0]);
+                R_instCtrlDynEnergy = E_InstrCtrl;
+                R_arrayDynEnergy = compute_cycles * E_ArrayCompute * config->get_nblocks(); //TODO: There is no way to specify how many crams are involved currently. So assume all CRAMs in a core are involved.
+                energy = R_instCtrlDynEnergy + R_arrayDynEnergy;
+                instCtrlDynEnergy += R_instCtrlDynEnergy;
+                arrayDynEnergy += R_arrayDynEnergy;
             }
-            //Assume we stop after having gotten all cols of a block populated
-            //If we want to further reduce, call RowReduce separately
-            R_instCtrlDynEnergy = E_InstrCtrl;
-            R_arrayDynEnergy = ops_done * E_ArrayCompute;
-            if(config->_tile_interconnect=="htree"){
-                R_hTreeDynEnergy = bits_moved * E_HTree;
-                energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_hTreeDynEnergy;
-            }
-            else if(config->_tile_interconnect=="bus"){
-                R_busDynEnergy = bits_moved * E_Bus;
-                energy = R_instCtrlDynEnergy + R_arrayDynEnergy + R_busDynEnergy;
-            }
-            instCtrlDynEnergy += R_instCtrlDynEnergy;
-            arrayDynEnergy += R_arrayDynEnergy;
-            hTreeDynEnergy += R_hTreeDynEnergy;
-            busDynEnergy += R_busDynEnergy;
             break;
         }
         case Request::Type::RowShift: 

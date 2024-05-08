@@ -152,7 +152,9 @@ void Config::parse(const string& fname) {
                 _bypass_dram = false;
         } else if (tokens[0] == "broadcast_type") {
             _broadcast_type = tokens[1];
-        } 
+        } else if (tokens[0] == "reduction") {
+            _reduction = tokens[1];
+        }  
     }
     file.close();
 }

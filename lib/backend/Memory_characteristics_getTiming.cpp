@@ -72,8 +72,43 @@ double MemoryCharacteristics::getTiming(Request req) {
         case Request::Type::RowReduce_WithinTile: 
             // precision_list[0] tells the number of bits in the operand
             // size_list[0] tells the number of levels
-            if(config->_tile_interconnect == "htree")
-                time = hTreeTile::getCycles(req, config);
+            if(config->_tile_interconnect == "htree"){
+                if(config->_reduction == "interCRAM")
+                    time = hTreeTile::getCycles(req, config);
+                else if(config->_reduction == "intraCRAM"){
+                    int cycles=0;
+                    std::string dtype;
+                    if(req.precision_list[0].isfloat) dtype="float";
+                    else dtype = "int";
+                    PrecisionT::Precision p = req.precision_list[0];//take operand 0 (src)
+                    int mantissa = p.mantissa;
+                    int exponent = p.exponent;
+                    int bits = p.bits();
+                    int levels = req.size_list[0];
+                    if (dtype=="float") {
+                        for (int i=1; i<=levels; i++) {
+                            int powi2 = pow(i-1,2);
+                            int cycles_to_add = 2 * mantissa * exponent + 9 * mantissa + 7 * exponent + 12;
+                            cycles += cycles_to_add; //add
+                            // int distance = (i%2)?(i+1):i;
+                            // cycles += distance + bits - 1; //move bits through distance in htree
+                            cycles += cycles_to_add * powi2; // shift
+                        }
+                    }
+                    else {
+                        for (int i=1; i<=levels; i++) {
+                            int powi2 = pow(i-1,2);
+                            int cycles_to_add = mantissa + i;
+                            cycles += cycles_to_add; //add
+                            // int distance = (i%2)?(i+1):i;
+                            //cycles += distance + bits - 1; //move bits through distance in htree
+                            // cycles += distance; //move bits through distance in htree
+                            cycles += cycles_to_add * powi2; // shift
+                        }
+                    }
+                    time = cycles;
+                }
+            }
             else if(config->_tile_interconnect == "bus"){
                 int clocks=0;
                 string dtype;
