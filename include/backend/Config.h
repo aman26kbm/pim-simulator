@@ -49,6 +49,10 @@ public:
     bool _cross_cram_shift_on = true; //whether hardware supports cross cram shift operations. by default this is true.
     bool _bypass_dram = false; // only apply to cross_cram_shift_off: shift generated load and store will go to transpose unit but bypass dram.
     std::string _broadcast_type = "systolic"; //can be "systolic" or "one_to_all"
+    // _reduction configuration defines the type of reduction to be done. Reduction
+    // can be done inter CRAM ( Across multiple CRAM using the Htree ) or
+    // intra CRAM ( Inside a single CRAM , across bitlines )
+    std::string _reduction = "interCRAM"; // Can be interCRAM ,intraCRAM
 
     
 //public:
