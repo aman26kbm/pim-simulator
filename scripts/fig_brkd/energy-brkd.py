@@ -62,23 +62,71 @@ e2e_layers = []
 #         e2e_layers.append('./output_all_kernels/' + i + '/pimsim.log.energy.csv')
 
 e2e_layers += [
-        './output_all_kernels/resnet_conv1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv3_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv4_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
-        './output_all_kernels/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
-        './output_all_kernels/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
-        './output_all_kernels/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
-        './output_all_kernels/resnet_conv5_1_1.param_conv2d_lowLatency_inputDup.log.energy.csv',
-        './output_all_kernels/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
-        './output_all_kernels/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
-        './output_all_kernels/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv'
+        './output_resnet/resnet_conv1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv2_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv3_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv3_1_2.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv4_1_1.param_conv2d_lowLatency_weightDup.log.energy.csv',
+        './output_resnet/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_resnet/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_resnet/resnet_conv4_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_resnet/resnet_conv5_1_1.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_resnet/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_resnet/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv',
+        './output_resnet/resnet_conv5_1_2.param_conv2d_lowLatency_inputDup.log.energy.csv'
+]
+
+bert_layers = [
+    './output_bert/gemm_tiled_M384_K768_N768.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K768_N768.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K768_N768.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K64_N384.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K384_N64.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K768_N768.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K768_N3072.log.energy.csv',
+    './output_bert/gemm_tiled_M384_K3072_N768.log.energy.csv'
+]
+
+mlp_layers = [
+    './output_mlp_1/gemm_tiled_M1024_K4096_N4096.log.energy.csv',
+    './output_mlp_1/gemm_tiled_M1024_K4096_N2048.log.energy.csv',
+    './output_mlp_1/gemm_tiled_M1024_K2048_N1024.log.energy.csv',
+    './output_mlp_1/gemm_tiled_M1024_K1024_N512.log.energy.csv',
+    './output_mlp_1/gemm_tiled_M1024_K512_N256.log.energy.csv'
+]
+
+mlp_2_layers = [
+    './output_mlp_2/gemm_tiled_M3072_K2048_N4096.log.energy.csv',
+    './output_mlp_2/gemm_tiled_M3072_K4096_N4096.log.energy.csv',
+    './output_mlp_2/gemm_tiled_M3072_K4096_N4096.log.energy.csv',
+    './output_mlp_2/gemm_tiled_M3072_K4096_N1024.log.energy.csv',
 ]
 
 def washdata(raws):
@@ -115,9 +163,13 @@ data.append(washdata(['./output_all_kernels/gemm_handcoded.DMesh12x10_TileSize25
 data.append(washdata(['./output_all_kernels/conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.log.energy.csv']))
 #e2e
 data.append(washdata(e2e_layers))
+# bert
+data.append(washdata(bert_layers))
+# mlp
+data.append(washdata(mlp_2_layers))
 
-
-acc = np.zeros((6, ))
+workloads = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert', 'mlp_charm']
+acc = np.zeros((len(workloads), ))
 colors = ['w', 'grey', 'w', 'w', 'w']
 hatches = ['', '', '////', '----', '++++']
 for i, ky in enumerate(types.keys()):
@@ -125,14 +177,14 @@ for i, ky in enumerate(types.keys()):
     for j in data:
         y.append(j[ky])
     y = np.array(y)
-    ax.bar(np.arange(6), y, bottom=acc, label=ky, color=colors[i], hatch=hatches[i], edgecolor='k', width=0.70)
+    ax.bar(np.arange(len(workloads)), y, bottom=acc, label=ky, color=colors[i], hatch=hatches[i], edgecolor='k', width=0.70)
     acc += y
 
 ax.legend(bbox_to_anchor=(0.3, 1.25), handlelength=0.75, ncol=3, loc='upper center',
           labelspacing=0.2, handletextpad=0.5, columnspacing=0.5, frameon=False,
           fontsize=10)
-ax.set_xticks(np.arange(6))
-ax.set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18'], rotation=90)
+ax.set_xticks(np.arange(len(workloads)))
+ax.set_xticklabels(workloads, rotation=90)
 ax.xaxis.grid(False)
 ax.set_axisbelow(True)
 ax.set_ylim(0, 1)
