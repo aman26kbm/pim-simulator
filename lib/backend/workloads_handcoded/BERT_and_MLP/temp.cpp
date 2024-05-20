@@ -5,7 +5,7 @@
 
 #include "backend/System.h"
 
-int32_t temp_kos(System* sys){
+int32_t temp_kos(System* sys, std::string param_file){
     std::vector<Request> requests;
     Request *request;
     Config* cfg = sys->_config;
