@@ -1,8 +1,8 @@
 N  2
 H  9
 W  9
-C  512
-stride  1
+C  256
+Stride  1
 R  3
 S  3
 M  256

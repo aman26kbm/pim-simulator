@@ -28,10 +28,14 @@ ablations = [
 #     "everythingOff"
 # ]
 
+
+
 for param in ["resnet_conv1.param","resnet_conv2_1_1.param","resnet_conv3_1_1.param","resnet_conv3_1_2.param","resnet_conv4_1_1.param"]:
     PARAM_PATH = f"{ROOT_PATH}/params/resnet18_bs_1/{param}"
-    for task in ["conv2d_lowLatency_onlyLoadWeight_weightDup"]:
+    for task in ["conv2d_lowLatency_weightDup"]:
     # for task in ["conv2d_low_latency_only_load_weight"]:
+        print(f"Running {PARAM_PATH} {task}")
+        subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-p", PARAM_PATH, "-l", f"{OUTPUT_PATH}/{param}_{task}_all.log"])
         for ablation in ablations:
             print(f"Running {PARAM_PATH} {task} with {ablation}")
             subprocess.run([EXEC_PATH, "-c", f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256_{ablation}.cfg", "-m", task, "-p", PARAM_PATH, "-l", f"{OUTPUT_PATH}/{param}_{task}_{ablation}.log"])
@@ -40,6 +44,8 @@ for param in ["resnet_conv4_1_2.param","resnet_conv5_1_1.param","resnet_conv5_1_
     PARAM_PATH = f"{ROOT_PATH}/params/resnet18_bs_1/{param}"
     for task in ["conv2d_lowLatency_inputDup"]:
     # for task in ["conv2d_low_latency_only_load_weight"]:
+        print(f"Running {PARAM_PATH} {task}")
+        subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-p", PARAM_PATH, "-l", f"{OUTPUT_PATH}/{param}_{task}_all.log"])
         for ablation in ablations:
             print(f"Running {PARAM_PATH} {task} with {ablation}")
             subprocess.run([EXEC_PATH, "-c", f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256_{ablation}.cfg", "-m", task, "-p", PARAM_PATH, "-l", f"{OUTPUT_PATH}/{param}_{task}_{ablation}.log"])

@@ -113,7 +113,7 @@ def get_time(workload_name, csv_reader):
     if workload_name == "resnet":
         return sum_network_time(resnet_layers, csv_reader) * scaling_factor
     elif workload_name == "bert":
-        return sum_network_time(bert_layers, csv_reader) * scaling_factor
+        return (sum_network_time(bert_layers, csv_reader)+13136) * scaling_factor#13136 is the time for softmax
     elif workload_name == "mlp":
         return sum_network_time(mlp_2_layers, csv_reader) * scaling_factor
     else:

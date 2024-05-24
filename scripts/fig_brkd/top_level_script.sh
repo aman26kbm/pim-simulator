@@ -5,8 +5,8 @@ python3 run_cmd_bert.py
 python3 run_cmd_mlp_1.py
 python3 run_cmd_mlp_2.py
 
-# python3 collect_stats.py output_all_kernels
-# python3 generate_chart_data.py output_all_kernels
+python3 collect_stats.py output_all_kernels
+python3 generate_chart_data.py output_all_kernels
 # python3 collect_stats.py output_resnet
 # python3 generate_chart_data.py output_resnet
 python3 collect_stats.py output_bert

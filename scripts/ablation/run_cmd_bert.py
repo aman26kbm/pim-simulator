@@ -37,6 +37,7 @@ ablations = [
 
 for task in list:
 # for task in ["conv2d_low_latency_only_load_weight"]:
+    subprocess.run([EXEC_PATH, "-c", f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256.cfg", "-m", task, "-l", f"{OUTPUT_PATH}/{task}_all.log"])
     for ablation in ablations:
         print(f"Running {task} with {ablation}")
         subprocess.run([EXEC_PATH, "-c", f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256_{ablation}.cfg", "-m", task, "-l", f"{OUTPUT_PATH}/{task}_{ablation}.log"])
