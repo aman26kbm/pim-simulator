@@ -25,7 +25,7 @@ pathlib.Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True)
 # ]
 
 ablations = [ 
-    "intraCRAM"
+    "everythingOff"
 ]
 
 

@@ -165,10 +165,10 @@ data.append(washdata(['./output_all_kernels/conv2d_handcoded.DMesh12x10_TileSize
 data.append(washdata(e2e_layers))
 # bert
 data.append(washdata(bert_layers))
-# mlp
-data.append(washdata(mlp_2_layers))
+# # mlp
+# data.append(washdata(mlp_2_layers))
 
-workloads = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert', 'mlp_charm']
+workloads = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert']
 acc = np.zeros((len(workloads), ))
 colors = ['w', 'grey', 'w', 'w', 'w']
 hatches = ['', '', '////', '----', '++++']

@@ -19,11 +19,7 @@ pathlib.Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True)
 # ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
 # ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
 runs = [
-("gemm_systolic", f"{OUTPUT_PATH}/gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256.log"),
-("gemv_new", f"{OUTPUT_PATH}/gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.log"),
-("fir_med_inp_256bit_loads", f"{OUTPUT_PATH}/fir_handcoded.DMesh12x10_TileSize256_CramSize256x256.log"),
-("vadd", f"{OUTPUT_PATH}/vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.log"),
-("conv2d_lowLatency_inputDup", f"{OUTPUT_PATH}/conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.log")
+("conv2d_lowLatency_inputDup", f"{OUTPUT_PATH}/conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256")
 ]
 # runs = [
 # ("conv2d_lowLatency_inputDup", f"{OUTPUT_PATH}/conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256")
@@ -40,7 +36,7 @@ runs = [
 #     "everythingOff"
 # ]
 ablations = [
-    "intraCRAM"
+    "everythingOff"
 ]
 # for (task, log_file) in runs:
 #     print(f"Running {task}")

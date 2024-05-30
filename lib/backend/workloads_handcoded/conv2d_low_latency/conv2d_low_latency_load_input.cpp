@@ -30,7 +30,19 @@ void conv2d_low_latency_load_input(Conv_layer_params conv_layer_params,
         int F_p = (int)sqrt(EF);
         int H_p = (E_p-1)*Stride+R;
         int W_p = (F_p-1)*Stride+S;
-        int input_volume = H_p * W_p * C;
+
+        int weightDupInArr = 1;
+        if (numColPerArray / (float)M > 1)
+            weightDupInArr = floor(numColPerArray / (float)M);
+
+        int weightDupAcrossArr = 1;
+        if (numArrayPerTile / (float)C > 1)
+            weightDupAcrossArr = floor(numArrayPerTile / (float)C);
+
+        int input_dup_factor = numColPerArray/weightDupInArr;
+
+        int input_volume = H_p * W_p * C * input_dup_factor;
+        // int input_volume = H_p * W_p * C;
         request = new Request(Request::Type::RowLoad);
         request->addOperand(sys->getAddress(ef_,0,0), input_volume, precision_input); //cram addr
         request->addOperand(sys->DRAM_ADDR, input_volume, precision_input); //dram addr

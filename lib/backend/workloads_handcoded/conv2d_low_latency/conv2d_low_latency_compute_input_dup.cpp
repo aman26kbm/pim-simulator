@@ -61,9 +61,9 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,
                         { // serial
                             for (int s = 0; s < S; s++)
                             { // serial
-                                request = new Request(Request::Type::ColBroadcast);
-                                request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input); // src
-                                requests.push_back(*request);
+                                // request = new Request(Request::Type::ColBroadcast);
+                                // request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input); // src
+                                // requests.push_back(*request);
 
                                 request = new Request(Request::Type::RowMul);
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input);    // src

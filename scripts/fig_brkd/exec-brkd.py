@@ -156,13 +156,13 @@ def sum_microbench():
 # bert_sum = sum_bert()
 # microbench_data = sum_microbench()
 # mlp_1_sum = sum_mlp_1()
-workloads = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18','bert', 'mlp_charm']
+workloads = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18','bert']
 num_workloads = len(workloads)
 data = np.zeros([num_workloads,4])
 data[0:5] = [normalize(row) for row in sum_microbench()]
 data[5] = normalize(sum_resnet())
 data[6] = normalize(sum_bert())
-data[7] = normalize(sum_mlp_2())
+# data[7] = normalize(sum_mlp_2())
 
 print(data)
 

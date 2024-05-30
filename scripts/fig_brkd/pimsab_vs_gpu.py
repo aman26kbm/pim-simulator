@@ -1,6 +1,8 @@
 import csv
 import copy
+import matplotlib
 import matplotlib.pyplot as plot
+import matplotlib.gridspec as gridspec
 import numpy as np
 import subprocess, os
 
@@ -154,10 +156,10 @@ data = data + get_data(resnet_workload_list, 'output_resnet')
 bert_workload_list = ['bert']
 data = data + get_data(bert_workload_list, 'output_bert')
 
-mlp_workload_list = ['mlp']
-data = data + get_data(mlp_workload_list, 'output_mlp_2')
+# mlp_workload_list = ['mlp']
+# data = data + get_data(mlp_workload_list, 'output_mlp_2')
 
-workload_list = kernels_workload_list + resnet_workload_list + bert_workload_list + mlp_workload_list
+workload_list = kernels_workload_list + resnet_workload_list + bert_workload_list
 with open('gpu.csv') as f_gpu:
     csv_reader = csv.reader(f_gpu)
     lines = list(csv_reader)
@@ -180,10 +182,18 @@ energy_improve = [[x[0], x[4]/x[2]] for x in data]
 
 print(energy_improve)
 
+matplotlib.rcParams['lines.linewidth'] = 2.5
+
+plot.style.use('bmh')
+binary = matplotlib.cm.get_cmap('binary')
 fig, axes = plot.subplots(1, 2)
-axes[0].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in exec_time_speedup], width=1, edgecolor='k', color='w', label='Execution Time Speedup')
+axes[0].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in exec_time_speedup], width=1, edgecolor='k', color='w', hatch = '', label='Execution Time Speedup')
 
 axes[0].set_ylim(0, 4)
+improves = [x[1] for x in exec_time_speedup]
+for i, improve in enumerate(improves):
+    if improve > 4:
+        axes[0].text(i*1.5, 4,  f'{improve:.2f}', rotation=90, ha='center', va='top', size='small')
 
 # axes.legend(bbox_to_anchor=(0.3, 1.25), handlelength=0.75, ncol=4, loc='upper center',
 #             labelspacing=0.2, handletextpad=0.5, columnspacing=0.5, frameon=False,
@@ -193,12 +203,15 @@ axes[0].set_ylim(0, 4)
 axes[0].set_xticks(np.arange(0, len(exec_time_speedup)) * 1.5)
 axes[0].set_xticklabels(workload_list, rotation=90)
 axes[0].set_ylabel('Exec. Time Speedup')
-# axes.xaxis.grid(False)
-# axes.set_axisbelow(True)
+axes[0].xaxis.grid(False)
+axes[0].set_axisbelow(True)
 
 axes[1].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in energy_improve], width=1, edgecolor='k', color='w', label='Execution Time Speedup')
-
-axes[1].set_ylim(0, 8)
+improves = [x[1] for x in energy_improve]
+for i, improve in enumerate(improves):
+    if improve > 4:
+        axes[1].text(i*1.5, 4,  f'{improve:.2f}', rotation=90, ha='center', va='top', size='small')
+axes[1].set_ylim(0, 4)
 
 # axes.legend(bbox_to_anchor=(0.3, 1.25), handlelength=0.75, ncol=4, loc='upper center',
 #             labelspacing=0.2, handletextpad=0.5, columnspacing=0.5, frameon=False,
@@ -208,8 +221,8 @@ axes[1].set_ylim(0, 8)
 axes[1].set_xticks(np.arange(0, len(exec_time_speedup)) * 1.5)
 axes[1].set_xticklabels(workload_list, rotation=90)
 axes[1].set_ylabel('Energy Improvement')
-# axes.xaxis.grid(False)
-# axes.set_axisbelow(True)
+axes[1].xaxis.grid(False)
+axes[1].set_axisbelow(True)
 fig.subplots_adjust(top=0.5, bottom=0.2, left=0.2, right=0.8, wspace=0.3)
 
 plot.show()
