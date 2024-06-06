@@ -13,11 +13,7 @@ EXEC_PATH = f"{ROOT_PATH}/build/PIM_simulator"
 OUTPUT_PATH = "output_all_kernels"
 pathlib.Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True) 
 
-# ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m gemm_systolic -l gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
-# ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m gemv_new -l gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
-# ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m fir_med_inp_256bit_loads -l fir_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
-# ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m vadd -l vecadd_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
-# ./PIM_simulator -c ../configs/DMesh12x10_TileSize256_CramSize256x256.cfg -m conv2d_ocvec -l conv2d_handcoded.DMesh12x10_TileSize256_CramSize256x256.log
+
 runs = [
 ("gemm_systolic", f"{OUTPUT_PATH}/gemm_handcoded.DMesh12x10_TileSize256_CramSize256x256"),
 ("gemv_new", f"{OUTPUT_PATH}/gemv_handcoded.DMesh12x10_TileSize256_CramSize256x256.log"),

@@ -77,6 +77,7 @@ void gemm_tiled( int M, int K, int N,\
         {
            
             for(int i=0; i<ceil(local_M/(float)120) * ceil(local_K/(float)256) * ceil(local_N/(float)256); i++){
+                precision_accumulate_temp = precision_multiply;
                 // Row load MAT A  ROW 0 (0-255) 256 Elements 
                 request = new Request(Request::Type::RowLoad);
                 request->addOperand(sys->getAddress(tile,0,0),256,precision_input); //cram addr

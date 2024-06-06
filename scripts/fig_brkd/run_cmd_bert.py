@@ -24,6 +24,5 @@ list=[
 ]
 
 for task in list:
-# for task in ["conv2d_low_latency_only_load_weight"]:
     print(f"Running {task}")
     subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-l", f"{OUTPUT_PATH}/{task}.log"])
