@@ -72,60 +72,65 @@ void gemm_tiled( int M, int K, int N,\
         std::iota (std::begin(v), std::end(v), 1); // Fill with 0, 1, ...
         sys->broadcast_p2p(0,precision_input,v, 256, requests,0,0,0,0);
     
-        PrecisionT::Precision precision_accumulate_temp = precision_multiply;
+        
         for(int tile = 0; tile < 120; tile++)
         {
            
-            for(int i=0; i<ceil(local_M/(float)120) * ceil(local_K/(float)256) * ceil(local_N/(float)256); i++){
-                precision_accumulate_temp = precision_multiply;
-                // Row load MAT A  ROW 0 (0-255) 256 Elements 
-                request = new Request(Request::Type::RowLoad);
-                request->addOperand(sys->getAddress(tile,0,0),256,precision_input); //cram addr
-                request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
-                request->setShuffle(0, 1, 0, 1);
-                requests.push_back(*request);
+            for(int i=0; i<ceil(local_M/(float)120)  * ceil(local_N/(float)256); i++){
+                int increase_precision_index = 0;
+                int two_to_n = 1;
+                int curr_iter = 0;
+                PrecisionT::Precision precision_accumulate_temp = precision_multiply;
+                for(int k=0; k<ceil(local_K/(float)256); k++){
+                    // Row load MAT A  ROW 0 (0-255) 256 Elements 
+                    request = new Request(Request::Type::RowLoad);
+                    request->addOperand(sys->getAddress(tile,0,0),256,precision_input); //cram addr
+                    request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
+                    request->setShuffle(0, 1, 0, 1);
+                    requests.push_back(*request);
 
-                request = new Request(Request::Type::RowMul);
-                request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
-                request->addOperand(sys->getAddress(tile,0,8), 0, precision_input); //src
-                request->addOperand(sys->getAddress(tile,0,16), 0, precision_multiply); //dst
-                requests.push_back(*request); 
-
-                precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+(int)log2(256),0};
-                request = new Request(Request::Type::RowReduce_WithinTile);
-                request->addOperand(sys->getAddress(tile,0,16), (int)log2(256), precision_multiply); //src
-                request->addOperand(sys->getAddress(tile,0,24), (int)log2(256), precision_accumulate_temp); //dst
-                requests.push_back(*request);
-
-                
-                request = new Request(Request::Type::RowAdd);
-                request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate_temp); //src
-                request->addOperand(sys->getAddress(tile,0,10), 0, precision_accumulate_temp); //src
-                if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
-                    precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+                    request = new Request(Request::Type::RowMul);
+                    request->addOperand(sys->getAddress(tile,0,0), 0, precision_input); //src
+                    request->addOperand(sys->getAddress(tile,0,8), 0, precision_input); //src
+                    request->addOperand(sys->getAddress(tile,0,16), 0, precision_multiply); //dst
+                    requests.push_back(*request); 
+                    
+                    request = new Request(Request::Type::RowAdd);
+                    request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate_temp); //src
+                    request->addOperand(sys->getAddress(tile,0,10), 0, precision_accumulate_temp); //src
+                    if(curr_iter == increase_precision_index){
+                        precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,precision_accumulate.bits()),0};
+                        increase_precision_index += two_to_n;
+                        two_to_n *= 2;
+                    }
+                    curr_iter++;
+                    request->addOperand(sys->getAddress(tile,0,30), 0, precision_accumulate_temp); //dst
+                    requests.push_back(*request); 
                 }
-                request->addOperand(sys->getAddress(tile,0,30), 0, precision_accumulate_temp); //dst
-                requests.push_back(*request); 
+                request = new Request(Request::Type::RowReduce_WithinTile);
+                request->addOperand(sys->getAddress(tile,0,16), (int)log2(256), precision_accumulate_temp); //src
+                request->addOperand(sys->getAddress(tile,0,24), (int)log2(256), precision_accumulate); //dst
+                requests.push_back(*request);
             }
         }
 
         // Reduction across the K axix
         // If K = 768 and M = 240 
         // Considering the local calculation size of 120x256x256 do the reduction 12 times from the 18 tiles 
-        if ( compute_tile < (Total_Tiles - (Mat_A_rows_tiles * Mat_Reduction_tiles)))
-        {
-            for(int tile = 0; tile < 120; tile++)
-            {
-                request = new Request(Request::Type::RowAdd);
-                request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate_temp); //src
-                request->addOperand(sys->getAddress(0,0,10), 0, precision_accumulate_temp); //src
-                if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
-                    precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
-                }
-                request->addOperand(sys->getAddress(0,0,30), 0, precision_accumulate_temp); //dst
-                requests.push_back(*request); 
-            }
-        }
+        // if ( compute_tile < (Total_Tiles - (Mat_A_rows_tiles * Mat_Reduction_tiles)))
+        // {
+        //     for(int tile = 0; tile < 120; tile++)
+        //     {
+        //         request = new Request(Request::Type::RowAdd);
+        //         request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate_temp); //src
+        //         request->addOperand(sys->getAddress(0,0,10), 0, precision_accumulate_temp); //src
+        //         if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
+        //             precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+        //         }
+        //         request->addOperand(sys->getAddress(0,0,30), 0, precision_accumulate_temp); //dst
+        //         requests.push_back(*request); 
+        //     }
+        // }
 
         // Send back resutls after every 3 times for K = 768 / 256 ( K reduction dimention tile size )
         if ( (compute_tile % Mat_Reduction_tiles) ==  (Mat_Reduction_tiles-1))

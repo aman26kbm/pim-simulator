@@ -53,6 +53,9 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,
             { // parallel on tiles
                 for (int ef__ = 0; ef__ < ceil(EF / (float)(weightDupInArr * weightDupAcrossArr)); ef__++)
                 { // serial
+                    int increase_precision_index = 0;
+                    int two_to_n = 1;
+                    int curr_iter = 0;
                     PrecisionT::Precision precision_accumulate_temp = PrecisionT::Precision{0,precision_multiply.bits(),0};
                     for (int c_ = 0; c_ < ceil(C / (float)numArrayPerTile); c_++)
                     { // serial, for reduction
@@ -73,13 +76,20 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,
                                 
                                 
                                 
+                                
                                 request = new Request(Request::Type::RowAdd);
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_multiply);   // src
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_accumulate_temp); // src_
-                                if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
-                                    precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+                                if(curr_iter == increase_precision_index){
+                                    precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,precision_accumulate.bits()),0};
+                                    increase_precision_index += two_to_n;
+                                    two_to_n *= 2;
                                 }
-                                std::cout<<precision_accumulate_temp.bits()<<std::endl;
+                                curr_iter++;
+                                // if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
+                                //     precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+                                // }
+                                // std::cout<<precision_accumulate_temp.bits()<<std::endl;
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_accumulate_temp); // dst
                                 requests.push_back(*request);
                             }
