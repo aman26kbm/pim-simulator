@@ -40,8 +40,8 @@ void conv2d_low_latency_load_input_dup(Conv_layer_params conv_layer_params,
 
     int input_dup_factor = numColPerArray/weightDupInArr;
     std::cout<<"input_dup_factor: "<<input_dup_factor<<std::endl;
-    int input_volume = H * W * C * input_dup_factor;
-    // int input_volume = H * W * C;
+    // int input_volume = H * W * C * input_dup_factor;
+    int input_volume = H * W * C;
     request = new Request(Request::Type::RowLoad);
     request->addOperand(sys->getAddress(0,0,0), input_volume, precision_input); //cram addr
     request->addOperand(sys->DRAM_ADDR, input_volume, precision_input); //dram addr

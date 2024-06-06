@@ -81,6 +81,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                     if(req.precision_list[0].isfloat) dtype="float";
                     else dtype = "int";
                     PrecisionT::Precision p = req.precision_list[0];//take operand 0 (src)
+                    PrecisionT::Precision p1 = req.precision_list[1];//take operand 1, should be the max precision of reduction
                     int mantissa = p.mantissa;
                     int exponent = p.exponent;
                     int bits = p.bits();
@@ -98,7 +99,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                     else {
                         for (int i=1; i<=levels; i++) {
                             int powi2 = pow(i-1,2);
-                            int cycles_to_add = mantissa + i;
+                            int cycles_to_add = std::min(mantissa + i, p1.mantissa);
                             cycles += cycles_to_add; //add
                             // int distance = (i%2)?(i+1):i;
                             //cycles += distance + bits - 1; //move bits through distance in htree
@@ -115,6 +116,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                 if(req.precision_list[0].isfloat) dtype="float";
                 else dtype = "int";
                 PrecisionT::Precision p = req.precision_list[0];//take operand 0 (src)
+                PrecisionT::Precision p1 = req.precision_list[1];//take operand 1, should be the max precision of reduction
                 int mantissa = p.mantissa;
                 int exponent = p.exponent;
                 int bits = p.bits();
@@ -135,7 +137,7 @@ double MemoryCharacteristics::getTiming(Request req) {
                     int sending_blocks=config->_nblocks / 2;
                     for (int i=1; i<=req.size_list[0]; i++) {
                         int powi2 = pow(i-1,2);
-                        int cycles_to_add = mantissa + i;
+                        int cycles_to_add = std::min(mantissa + i, p1.mantissa);
                         clocks += cycles_to_add; //add
                         clocks += sending_blocks * req.precision_list[0].bits(); // bus time for tilesend_receive
                         sending_blocks = sending_blocks/2;; // tilesend_receive

@@ -53,7 +53,7 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,
             { // parallel on tiles
                 for (int ef__ = 0; ef__ < ceil(EF / (float)(weightDupInArr * weightDupAcrossArr)); ef__++)
                 { // serial
-
+                    PrecisionT::Precision precision_accumulate_temp = PrecisionT::Precision{0,precision_multiply.bits(),0};
                     for (int c_ = 0; c_ < ceil(C / (float)numArrayPerTile); c_++)
                     { // serial, for reduction
 
@@ -61,20 +61,26 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,
                         { // serial
                             for (int s = 0; s < S; s++)
                             { // serial
-                                // request = new Request(Request::Type::ColBroadcast);
-                                // request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input); // src
-                                // requests.push_back(*request);
+                                request = new Request(Request::Type::ColBroadcast);
+                                request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input); // src
+                                requests.push_back(*request);
 
                                 request = new Request(Request::Type::RowMul);
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input);    // src
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_input);    // src_
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_multiply); // dst
                                 requests.push_back(*request);
-
+                                
+                                
+                                
                                 request = new Request(Request::Type::RowAdd);
                                 request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_multiply);   // src
-                                request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_accumulate); // src_
-                                request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_accumulate); // dst
+                                request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_accumulate_temp); // src_
+                                if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
+                                    precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+                                }
+                                std::cout<<precision_accumulate_temp.bits()<<std::endl;
+                                request->addOperand(sys->getAddress(tile, 0, 0), 0, precision_accumulate_temp); // dst
                                 requests.push_back(*request);
                             }
                         }
@@ -82,7 +88,7 @@ void conv2d_low_latency_compute_input_dup(Conv_layer_params conv_layer_params,
                     // reduce can be delayed until all c_ are done
                     int RowReduce_WithinTile_count = log2(std::min(C, numArrayPerTile));
                     request = new Request(Request::Type::RowReduce_WithinTile);
-                    request->addOperand(sys->getAddress(tile, 0, 0), RowReduce_WithinTile_count, precision_accumulate); // src
+                    request->addOperand(sys->getAddress(tile, 0, 0), RowReduce_WithinTile_count, precision_accumulate_temp); // src
                     request->addOperand(sys->getAddress(tile, 0, 0), RowReduce_WithinTile_count, precision_accumulate); // dst
                     requests.push_back(*request);
                 }

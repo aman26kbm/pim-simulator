@@ -34,6 +34,7 @@ int hTreeTile::getCycles(Request req, Config* cfg){
         if(req.precision_list[0].isfloat) dtype="float";
         else dtype = "int";
         PrecisionT::Precision p = req.precision_list[0];//take operand 0 (src)
+        PrecisionT::Precision p1 = req.precision_list[1];//take operand 1, should be the max precision of reduction
         int mantissa = p.mantissa;
         int exponent = p.exponent;
         int bits = p.bits();
@@ -50,7 +51,7 @@ int hTreeTile::getCycles(Request req, Config* cfg){
         else {
             for (int i=1; i<=levels; i++) {
                 int powi2 = pow(i-1,2);
-                int cycles_to_add = mantissa + i;
+                int cycles_to_add = std::min(mantissa + i, p1.mantissa);
                 cycles += cycles_to_add; //add
                 int distance = (i%2)?(i+1):i;
                 //cycles += distance + bits - 1; //move bits through distance in htree

@@ -72,9 +72,10 @@ void gemm_tiled( int M, int K, int N,\
         std::iota (std::begin(v), std::end(v), 1); // Fill with 0, 1, ...
         sys->broadcast_p2p(0,precision_input,v, 256, requests,0,0,0,0);
     
-
+        PrecisionT::Precision precision_accumulate_temp = precision_multiply;
         for(int tile = 0; tile < 120; tile++)
         {
+           
             for(int i=0; i<ceil(local_M/(float)120) * ceil(local_K/(float)256) * ceil(local_N/(float)256); i++){
                 // Row load MAT A  ROW 0 (0-255) 256 Elements 
                 request = new Request(Request::Type::RowLoad);
@@ -89,15 +90,20 @@ void gemm_tiled( int M, int K, int N,\
                 request->addOperand(sys->getAddress(tile,0,16), 0, precision_multiply); //dst
                 requests.push_back(*request); 
 
+                precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+(int)log2(256),0};
                 request = new Request(Request::Type::RowReduce_WithinTile);
                 request->addOperand(sys->getAddress(tile,0,16), (int)log2(256), precision_multiply); //src
-                request->addOperand(sys->getAddress(tile,0,24), (int)log2(256), precision_accumulate); //dst
+                request->addOperand(sys->getAddress(tile,0,24), (int)log2(256), precision_accumulate_temp); //dst
                 requests.push_back(*request);
 
+                
                 request = new Request(Request::Type::RowAdd);
-                request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate); //src
-                request->addOperand(sys->getAddress(0,0,10), 0, precision_accumulate); //src
-                request->addOperand(sys->getAddress(0,0,30), 0, precision_accumulate); //dst
+                request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate_temp); //src
+                request->addOperand(sys->getAddress(tile,0,10), 0, precision_accumulate_temp); //src
+                if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
+                    precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+                }
+                request->addOperand(sys->getAddress(tile,0,30), 0, precision_accumulate_temp); //dst
                 requests.push_back(*request); 
             }
         }
@@ -110,9 +116,12 @@ void gemm_tiled( int M, int K, int N,\
             for(int tile = 0; tile < 120; tile++)
             {
                 request = new Request(Request::Type::RowAdd);
-                request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate); //src
-                request->addOperand(sys->getAddress(0,0,10), 0, precision_accumulate); //src
-                request->addOperand(sys->getAddress(0,0,30), 0, precision_accumulate); //dst
+                request->addOperand(sys->getAddress(tile,0,0), 0, precision_accumulate_temp); //src
+                request->addOperand(sys->getAddress(0,0,10), 0, precision_accumulate_temp); //src
+                if(precision_accumulate_temp.bits()<precision_accumulate.bits()){
+                    precision_accumulate_temp = PrecisionT::Precision{0,precision_accumulate_temp.bits()+1,0};
+                }
+                request->addOperand(sys->getAddress(0,0,30), 0, precision_accumulate_temp); //dst
                 requests.push_back(*request); 
             }
         }
