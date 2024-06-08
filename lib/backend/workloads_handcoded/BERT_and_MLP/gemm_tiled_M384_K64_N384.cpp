@@ -20,7 +20,7 @@ int32_t gemm_tiled_M384_K64_N384(System* sys, std::string param_file){
     PrecisionT::Precision precision_accumulate = PrecisionT::INT32;
     PrecisionT::Precision precision_result = PrecisionT::INT8;
 
-    gemm_tiled(384, 64, 384, precision_input, precision_multiply, precision_accumulate, precision_result, requests, sys);
+    func_gemm_tiled(384, 64, 384, precision_input, precision_multiply, precision_accumulate, precision_result, requests, sys);
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
 
