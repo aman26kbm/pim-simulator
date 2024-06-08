@@ -15,7 +15,7 @@ int32_t gemm_tiled_M3072_K4096_N1024(System* sys, std::string param_file){
     int matrixBRowNum = matrixAColNum;
     int matrixBColNum = 1024;
 
-    gemm_tiled(3072, 4096, 1024, PrecisionT::INT8, PrecisionT::INT16, PrecisionT::INT32, PrecisionT::INT8, requests, sys);
+    func_gemm_tiled(3072, 4096, 1024, PrecisionT::INT8, PrecisionT::INT16, PrecisionT::INT32, PrecisionT::INT8, requests, sys);
     for (unsigned int i = 0; i < requests.size(); i++)
         sys->sendRequest(requests[i]);
 

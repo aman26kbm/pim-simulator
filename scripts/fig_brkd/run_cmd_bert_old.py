@@ -22,7 +22,7 @@ list=[
     'gemm_tiled_M384_K768_N3072',
     'gemm_tiled_M384_K3072_N768',
 ]
-task = 'gemm_tiled'
-for param in list:
-    print(f"Running {task} with {param}")
-    subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-p", f"{ROOT_PATH}/params/gemm/{param}.param", "-l", f"{OUTPUT_PATH}/{param}.log"])
+
+for task in list:
+    print(f"Running {task}")
+    subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-l", f"{OUTPUT_PATH}/{task}.log"])
