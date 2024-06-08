@@ -63,8 +63,8 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
             }
         }
     }
-    for(int meshCol=0; meshCol<cfg->_meshWidth; meshCol++){
-        for(int meshRow=0; meshRow<use_height; meshRow++){
+   for(int meshCol=0; meshCol<cfg->_meshWidth; meshCol++){
+       for(int meshRow=0; meshRow<use_height; meshRow++){
             for(int iter=0; iter<sub_A_row/slice_A_rows; iter++){
                 //get data
                 if(meshRow==0){
@@ -100,7 +100,6 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
                     int curr_iter = 0;
                     PrecisionT::Precision precision_accumulate_temp = precision_multiply;
 
-
                     if(meshRow*sub_B_col_loaded + j <matrixBColNum){
                         for(int i=0; i<A_col_partition; i++){
                             request = new Request(Request::Type::RowMul);
@@ -111,7 +110,7 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
 
                             request = new Request(Request::Type::RowAdd);
                             request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_accumulate_temp); //src
-                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //src
                             
                             if(curr_iter == increase_precision_index){
                                 precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,precision_accumulate.bits()),0};
