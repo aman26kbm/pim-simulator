@@ -1,5 +1,5 @@
 #include "gemm_tiled.h"
-void gemm_tiled_nap( int M, int K, int N,\
+void func_gemm_tiled_nap( int M, int K, int N,\
                 PrecisionT::Precision precision_input, PrecisionT::Precision precision_multiply, PrecisionT::Precision precision_accumulate, PrecisionT::Precision precision_result, \
                 std::vector<Request> &requests, System* sys){
 
@@ -13,7 +13,7 @@ void gemm_tiled_nap( int M, int K, int N,\
     //     std::swap(M, N);
     // }
 
-    int tile_capacity = cfg->_nrows * cfg->_ncols * cfg->_nblocks;
+    int tile_capacity = (cfg->_nrows-precision_accumulate.bits()) * cfg->_ncols * cfg->_nblocks;
     int matrixBSize = K * N * precision_input.bits();
     
 

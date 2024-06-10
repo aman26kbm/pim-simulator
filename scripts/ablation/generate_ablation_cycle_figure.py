@@ -40,7 +40,7 @@ with open(os.path.join(os.getcwd(), all_kernels_input_file_dir, '03_chart_breakd
     rows = list(csv_reader)[1:]
     for row in rows:
         workload_name = row[0]
-        print(row[5])
+        # print(row[5])
         total_cycle = float(row[5])
         # col=0
         # if('bus' in workload_name): col = 2
@@ -72,14 +72,14 @@ with open(os.path.join(os.getcwd(), all_kernels_input_file_dir, '03_chart_breakd
         else: continue
         fig_data_list[row][col]=total_cycle
 
-
+# print(fig_data_list)
 
 def fill_data(fig_data_list, workload_name, input_file_dir, row):
     fig_data_list[row][ablations.index('bus')]=sum_network.get_time(workload_name, input_file_dir, 'bus')
     fig_data_list[row][ablations.index('constOpOff')]=(sum_network.get_time(workload_name, input_file_dir,'constOpOff')+sum_network.get_time(workload_name, input_file_dir,'kickoutRow'))/2
     # print(sum_network.get_time(workload_name, input_file_dir,'constOpOff'))
-    # print(sum_network.get_time(workload_name, input_file_dir,'constOpOff_kickoutRow'))
-    # print((sum_network.get_time(workload_name, input_file_dir,'constOpOff')+sum_network.get_time(workload_name, input_file_dir,'constOpOff_kickoutRow'))/2)
+    # print(sum_network.get_time(workload_name, input_file_dir,'kickoutRow'))
+    # print((sum_network.get_time(workload_name, input_file_dir,'constOpOff')+sum_network.get_time(workload_name, input_file_dir,'kickoutRow'))/2)
     fig_data_list[row][ablations.index('crossCramShiftOff')]=(sum_network.get_time(workload_name, input_file_dir,'crossCramShiftOff')+sum_network.get_time(workload_name, input_file_dir,'bypassDram'))/2
     fig_data_list[row][ablations.index('oneToAllBroadcast')]=sum_network.get_time(workload_name, input_file_dir,'oneToAllBroadcast')
     fig_data_list[row][ablations.index('shuffleOff')]=sum_network.get_time(workload_name, input_file_dir,'shuffleOff')
@@ -87,6 +87,7 @@ def fill_data(fig_data_list, workload_name, input_file_dir, row):
     fig_data_list[row][ablations.index('intraCRAM')]=sum_network.get_time(workload_name, input_file_dir,'intraCRAM')
     fig_data_list[row][ablations.index('everythingOff')]=sum_network.get_time(workload_name, input_file_dir,'everythingOff')
     fig_data_list[row][ablations.index('all')]=sum_network.get_time(workload_name, input_file_dir,'all')
+    print(sum_network.get_time(workload_name, input_file_dir,'all'))
     # print(fig_data_list[row])
 
 
@@ -95,7 +96,7 @@ assert os.path.isfile(os.path.join(os.getcwd(),'output_resnet', '00_stats.csv'))
 fill_data(fig_data_list, 'resnet', 'output_resnet', 5)
 fill_data(fig_data_list, 'bert', 'output_bert', 6)
 
-
+print(fig_data_list)
 
 
 for row in fig_data_list:
@@ -103,7 +104,7 @@ for row in fig_data_list:
 
 # Plot
 data = np.array([ele[1:] for ele in fig_data_list])
-print(data)
+# print(data)
 
 matplotlib.rcParams['lines.linewidth'] = 2.5
 
@@ -118,7 +119,7 @@ fig, axes = plot.subplots(1,8,figsize=(18,4.5))
 #                     [30944,	30944,	30944,	30944,	30944,	30944,	30944,30944]])
 # print(data)
 data = data.transpose()
-print(data)
+# print(data)
 # (a) shuffle disabled
 # (b) Const Ops disabled
 # (c) H-Tree disabled
@@ -137,7 +138,7 @@ hatches = ['', '', '////','\\\\\\\\','----']
 
 for i, ty in enumerate(['(a) Shuffle\n disabled', '(b) Const Ops\n disabled', '(c) H-Tree\n disabled', '(d) Cross-CRAM \n Shift disabled', '(e) Systolic Bcast \n disabled','(f) Mesh disabled', '(g) InterCRAM\n Reduction\n disabled', '(h) All disabled']):
     b=data[0]/data[i+1]
-    print(b)
+    # print(b)
     axs = axes[i]
     #axes.bar(np.arange(0, 5) * 2.5 + 0, a, bottom=a_acc, width=1, edgecolor='k', color=binary(0.3 * i + 0.1), label=ty)
     axs.bar(np.arange(0, 7) * 1.3, b, bottom=0, width=1, edgecolor='k', color=colors, hatch=hatches[0])

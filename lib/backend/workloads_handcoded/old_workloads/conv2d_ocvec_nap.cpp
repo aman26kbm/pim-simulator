@@ -9,7 +9,7 @@
 // Conv2d microbenchmark
 /////////////////////////////////////////////////////////////
 
-void broadcast_conv2d_AP(System* sys, Config* cfg, PrecisionT::Precision precision_input){
+void broadcast_conv2d_nap(System* sys, Config* cfg, PrecisionT::Precision precision_input){
     std::vector<Request> requests;
     Request *request;
     for(int col=1; col<cfg->_meshWidth; col++){
@@ -41,7 +41,7 @@ void broadcast_conv2d_AP(System* sys, Config* cfg, PrecisionT::Precision precisi
         sys->sendRequest(requests[i]);
 }
 
-int32_t conv2d_ocvec_AP(System* sys, std::string param_file)
+int32_t conv2d_ocvec_nap(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -161,7 +161,7 @@ int32_t conv2d_ocvec_AP(System* sys, std::string param_file)
             //Now, reduction within a tile. Results come to first array of the core.
             int RowReduce_WithinTile_count = log2(cfg->_nblocks);
             request = new Request(Request::Type::RowReduce_WithinTile);
-            request->addOperand(sys->getAddress(tile,0,8), RowReduce_WithinTile_count, precision_multiply); //src
+            request->addOperand(sys->getAddress(tile,0,8), RowReduce_WithinTile_count, precision_accumulate); //src
             request->addOperand(sys->getAddress(tile,0,12), RowReduce_WithinTile_count, precision_accumulate); //dst
             requests.push_back(*request);
 
@@ -195,4 +195,4 @@ int32_t conv2d_ocvec_AP(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__conv2d_ocvec_AP__ = pimsim::registerFunc("conv2d_ocvec_AP", conv2d_ocvec_AP);
+static __attribute__((unused)) Registry::Entry &__conv2d_ocvec_nap__ = pimsim::registerFunc("conv2d_ocvec_nap", conv2d_ocvec_nap);

@@ -106,6 +106,11 @@ int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
             //Loop over the following set of instructions N times,
             //where N is the number of filter coefficients
             for (int i=0; i < cfg->_num_regs_per_rf; i++) {
+                int increase_precision_index = 0;
+                int two_to_n = 1;
+                int curr_iter = 0;
+                PrecisionT::Precision precision_accumulate_temp = precision_multiply;
+
                 if(iter_load_rf*cfg->_num_regs_per_rf + i < size_filter){
 
                 //Read the coefficient we want to multiply with from the RF.
@@ -127,8 +132,16 @@ int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
                 //Now, add the product generated above into the accumulator rows
                 request = new Request(Request::Type::RowAdd);
                 request->addOperand(sys->getAddress(tile,0,precision_input.bits()), 0, precision_multiply); //src
-                request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
-                request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
+                request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //src
+                
+                if(curr_iter == increase_precision_index){
+                    precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,precision_accumulate.bits()),0};
+                    increase_precision_index += two_to_n;
+                    two_to_n *= 2;
+                }
+                curr_iter++;
+                
+                request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //dst
                 requests.push_back(*request);
 
                 //Shift the inputs by 1 column to the left.

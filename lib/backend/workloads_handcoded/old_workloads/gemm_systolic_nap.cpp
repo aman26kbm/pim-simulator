@@ -5,7 +5,7 @@
 
 #include "backend/System.h"
 
-int32_t gemm_systolic_AP(System* sys, std::string params){
+int32_t gemm_systolic_nap(System* sys, std::string params){
     std::vector<Request> requests;
     Request *request;
     Config* cfg = sys->_config;
@@ -63,8 +63,8 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
             }
         }
     }
-   for(int meshCol=0; meshCol<cfg->_meshWidth; meshCol++){
-       for(int meshRow=0; meshRow<use_height; meshRow++){
+    for(int meshCol=0; meshCol<cfg->_meshWidth; meshCol++){
+        for(int meshRow=0; meshRow<use_height; meshRow++){
             for(int iter=0; iter<sub_A_row/slice_A_rows; iter++){
                 //get data
                 if(meshRow==0){
@@ -95,41 +95,28 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
 
                 //compute
                 for(int j=0; j<sub_B_col_loaded; j++){
-                    int increase_precision_index = 0;
-                    int two_to_n = 1;
-                    int curr_iter = 0;
-                    PrecisionT::Precision precision_accumulate_temp = precision_multiply;
-
                     if(meshRow*sub_B_col_loaded + j <matrixBColNum){
                         for(int i=0; i<A_col_partition; i++){
                             request = new Request(Request::Type::RowMul);
                             request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,i*precision_input.bits()), 0, precision_input); //src
                             request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(j*A_col_partition+i)*precision_input.bits()), 0, precision_input); //src
-                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_accumulate_temp); //dst
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //dst
                             requests.push_back(*request);  
 
                             request = new Request(Request::Type::RowAdd);
-                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_accumulate_temp); //src
-                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //src
-                            
-                            if(curr_iter == increase_precision_index){
-                                precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,precision_accumulate.bits()),0};
-                                increase_precision_index += two_to_n;
-                                two_to_n *= 2;
-                            }
-                            curr_iter++;
-                            
-                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //dst
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
+                            request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
                             requests.push_back(*request);  
                         }
                     
                         request = new Request(Request::Type::RowReduce_WithinTile);
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate_temp); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //src
                         request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //dst
                         requests.push_back(*request);
 
                         request = new Request(Request::Type::RowStore);
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()),cfg->_ncols, precision_accumulate_temp); //cram addr
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()),cfg->_ncols, precision_accumulate); //cram addr
                         request->addOperand(sys->DRAM_ADDR, 0, precision_accumulate); //dram addr
                         requests.push_back(*request);
                             
@@ -160,14 +147,7 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
                     //     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(j*A_col_partition)*precision_input.bits()), 256, precision_composed);  //cram addr
                     //     request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
                     //     requests.push_back(*request);
-
-                    int increase_precision_index = 0;
-                    int two_to_n = 1;
-                    int curr_iter = 0;
-                    PrecisionT::Precision precision_accumulate_temp = precision_multiply;
-
                     for(int i=0; i<A_col_partition; i++){
-
                         //this brings too many loads when there are too many extra cols
                         request = new Request(Request::Type::RowLoad);
                         request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(j*A_col_partition+i)*precision_input.bits()), 256, precision_input);  //cram addr
@@ -181,22 +161,14 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
                         requests.push_back(*request);  
 
                         request = new Request(Request::Type::RowAdd);
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_accumulate_temp); //src
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //src
-
-                        if(curr_iter == increase_precision_index){
-                            precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,precision_accumulate.bits()),0};
-                            increase_precision_index += two_to_n;
-                            two_to_n *= 2;
-                        }
-                        curr_iter++;
-
-                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate_temp); //dst
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()), 0, precision_multiply); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //src
+                        request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), 0, precision_accumulate); //dst
                         requests.push_back(*request);  
                     }
                 
                     request = new Request(Request::Type::RowReduce_WithinTile);
-                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate_temp); //src
+                    request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //src
                     request->addOperand(sys->getAddress((meshRow)*cfg->_meshWidth + meshCol,0,A_col_partition*precision_input.bits()+(A_col_partition*sub_B_col_loaded)*precision_input.bits()+precision_multiply.bits()), (int)log2(cfg->_nblocks), precision_accumulate); //dst
                     requests.push_back(*request);
 
@@ -235,4 +207,4 @@ int32_t gemm_systolic_AP(System* sys, std::string params){
 
 
 
-static __attribute__((unused)) Registry::Entry &__gemm_systolic_AP__ = pimsim::registerFunc("gemm_systolic_AP", gemm_systolic_AP);
+static __attribute__((unused)) Registry::Entry &__gemm_systolic_nap__ = pimsim::registerFunc("gemm_systolic_nap", gemm_systolic_nap);

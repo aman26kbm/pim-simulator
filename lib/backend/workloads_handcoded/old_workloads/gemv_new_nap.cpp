@@ -9,7 +9,7 @@
 // Simple program to perform a matrix-vector mul 
 /////////////////////////////////////////////////////////////
 
-int32_t gemv_new_AP(System* sys, std::string param)
+int32_t gemv_new_nap(System* sys, std::string param)
 {
     //int matrix_row = 32768*1;//32768 * X
     //int matrix_col = 4096 *1;// 4096 * Y
@@ -36,11 +36,6 @@ int32_t gemv_new_AP(System* sys, std::string param)
     cout<<numColPerCore<<endl;
     cout<<iterPerCol<<endl;
     for(int i=0; i<matrix_col; i+=numColPerCore){
-        int increase_precision_index = 0;
-        int two_to_n = 1;
-        int curr_iter = 0;
-        PrecisionT::Precision precision_accumulate_temp = multiply_precision;
-
         int tile=i/ceil(matrix_col/(float)use_tiles);
         for(int j=0; j<iterPerCol; j++){
             request = new Request(Request::Type::RowLoad);
@@ -56,17 +51,9 @@ int32_t gemv_new_AP(System* sys, std::string param)
 
             //Add the result of multiplication into the accumulator
             request = new Request(Request::Type::RowAdd);
-            request->addOperand(sys->getAddress(tile,0,input_precision.bits()), 0, precision_accumulate_temp); //src
-            request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, precision_accumulate_temp);//src2
-            
-            if(curr_iter == increase_precision_index){
-                precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,accumulate_precision.bits()),0};
-                increase_precision_index += two_to_n;
-                two_to_n *= 2;
-            }
-            curr_iter++;
-
-            request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, precision_accumulate_temp); //dst
+            request->addOperand(sys->getAddress(tile,0,input_precision.bits()), 0, multiply_precision); //src
+            request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, accumulate_precision);//src2
+            request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, accumulate_precision); //dst
             requests.push_back(*request);
         }
     }
@@ -75,11 +62,6 @@ int32_t gemv_new_AP(System* sys, std::string param)
     int round = 0;
     if(use_tiles>1){                
         for(int gap =1; gap<use_tiles; gap = gap*2){
-            int increase_precision_index = 0;
-            int two_to_n = 1;
-            int curr_iter = 0;
-            PrecisionT::Precision precision_accumulate_temp = multiply_precision;
-
             for(int iter_tile=0; iter_tile+gap<use_tiles; iter_tile=iter_tile+2*gap){
                 int tile = iter_tile % cfg->_ntiles;
                 //receive partial results from tile that is gap away
@@ -95,17 +77,9 @@ int32_t gemv_new_AP(System* sys, std::string param)
 
                 //add
                 request = new Request(Request::Type::RowAdd);
-                request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, precision_accumulate_temp); //src
+                request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, accumulate_precision); //src
                 request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()+accumulate_precision.bits()), 0, accumulate_precision); //src2
-                
-                if(curr_iter == increase_precision_index){
-                    precision_accumulate_temp = PrecisionT::Precision{0,std::min(precision_accumulate_temp.bits()+1,accumulate_precision.bits()),0};
-                    increase_precision_index += two_to_n;
-                    two_to_n *= 2;
-                }
-                curr_iter++;
-                
-                request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, precision_accumulate_temp); //dst
+                request->addOperand(sys->getAddress(tile,0,input_precision.bits()+multiply_precision.bits()), 0, accumulate_precision); //dst
                 requests.push_back(*request);
             }
             round++;
@@ -127,4 +101,4 @@ int32_t gemv_new_AP(System* sys, std::string param)
     return 0;
 }
 
-static __attribute__((unused)) Registry::Entry &__gemv_new_AP__ = pimsim::registerFunc("gemv_new_AP", gemv_new_AP);
+static __attribute__((unused)) Registry::Entry &__gemv_new_nap__ = pimsim::registerFunc("gemv_new_nap", gemv_new_nap);

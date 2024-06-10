@@ -13,7 +13,7 @@ void func_gemm_tiled( int M, int K, int N,\
     //     std::swap(M, N);
     // }
 
-    int tile_capacity = cfg->_nrows * cfg->_ncols * cfg->_nblocks;
+    int tile_capacity = (cfg->_nrows-precision_accumulate.bits()) * cfg->_ncols * cfg->_nblocks;
     int matrixBSize = K * N * precision_input.bits();
     
 

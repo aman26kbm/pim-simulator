@@ -161,7 +161,7 @@ int32_t conv2d_ocvec(System* sys, std::string param_file)
             //Now, reduction within a tile. Results come to first array of the core.
             int RowReduce_WithinTile_count = log2(cfg->_nblocks);
             request = new Request(Request::Type::RowReduce_WithinTile);
-            request->addOperand(sys->getAddress(tile,0,8), RowReduce_WithinTile_count, precision_accumulate); //src
+            request->addOperand(sys->getAddress(tile,0,8), RowReduce_WithinTile_count, precision_multiply); //src
             request->addOperand(sys->getAddress(tile,0,12), RowReduce_WithinTile_count, precision_accumulate); //dst
             requests.push_back(*request);
 

@@ -1,0 +1,1 @@
+workload_name,All,minus shuffle units,minus constant ops,"minus Htree, plus Bus",minus cross cram shift,"minus systolic broadcast, plus one-to-all broadcast","minus mesh, plus ring","minus inter-CRAM reduction, plus intra-CRAM reduction","minus Htree, constant ops, cross cram shift, sys-bcast, shuffle, mesh"

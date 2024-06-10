@@ -35,10 +35,11 @@ ablations = [
     "intraCRAM",
     "everythingOff"
 ]
-for task in list:
+task = "gemm_tiled"
+for param in list:
     print(f"Running {task}")
-    subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-l", f"{OUTPUT_PATH}/{task}.log"])
+    subprocess.run([EXEC_PATH, "-c", CFG_PATH, "-m", task, "-p", f"{ROOT_PATH}/params/gemm/{param}.param", "-l", f"{OUTPUT_PATH}/{param}_all.log"])
     for ablation in ablations:
         print(f"Running {task} with {ablation}")
-        subprocess.run([EXEC_PATH, "-c", f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256_{ablation}.cfg", "-m", task, "-l", f"{OUTPUT_PATH}/{task}_{ablation}.log"])
+        subprocess.run([EXEC_PATH, "-c", f"{ROOT_PATH}/configs/DMesh12x10_TileSize256_CramSize256x256_{ablation}.cfg", "-m", task, "-p", f"{ROOT_PATH}/params/gemm/{param}.param", "-l", f"{OUTPUT_PATH}/{param}_{ablation}.log"])
 
