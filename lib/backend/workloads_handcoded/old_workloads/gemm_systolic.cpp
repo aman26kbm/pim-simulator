@@ -48,7 +48,7 @@ int32_t gemm_systolic(System* sys, std::string params){
         for(int k=0; k<sub_B_col_loaded; k++){
             for(int j=0; j<A_col_partition; j++){
                 request = new Request(Request::Type::RowLoad);
-                request->addOperand(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()),cfg->_nblocks, precision_input); //cram addr
+                request->addOperand(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()),cfg->_ncols, precision_input); //cram addr
                 request->addOperand(sys->DRAM_ADDR, 0, precision_input); //dram addr
                 request->setShuffle(0, 1, 0, 1);
                 requests.push_back(*request);
@@ -59,7 +59,7 @@ int32_t gemm_systolic(System* sys, std::string params){
                 //     std::cout<<i<<" ";
                 // }
                 // std::cout<<std::endl;
-                sys->broadcast_p2p(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()), precision_input, v, cfg->_nblocks, requests,0,1,0,1);
+                sys->broadcast_p2p(sys->getAddress(i,0,A_col_partition*precision_input.bits()+(k*A_col_partition+ j)*precision_input.bits()), precision_input, v, cfg->_ncols, requests,0,1,0,1);
             }
         }
     }
