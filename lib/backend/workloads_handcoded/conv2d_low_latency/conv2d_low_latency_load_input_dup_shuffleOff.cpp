@@ -42,22 +42,23 @@ void conv2d_low_latency_load_input_dup_shuffleOff(Conv_layer_params conv_layer_p
     std::cout<<"input_dup_factor: "<<input_dup_factor<<std::endl;
     int input_volume = H * W * C * input_dup_factor;
     // int input_volume = H * W * C;
-    request = new Request(Request::Type::RowLoad);
-    request->addOperand(sys->getAddress(0,0,0), input_volume, precision_input); //cram addr
-    request->addOperand(sys->DRAM_ADDR, input_volume, precision_input); //dram addr
-    request->setShuffle(0,0, 0, 0);
-    requests.push_back(*request);  
+    for(int n_=0; n_<N; n_++){
+        request = new Request(Request::Type::RowLoad);
+        request->addOperand(sys->getAddress(0,0,0), input_volume, precision_input); //cram addr
+        request->addOperand(sys->DRAM_ADDR, input_volume, precision_input); //dram addr
+        request->setShuffle(0,0, 0, 0);
+        requests.push_back(*request);  
 
-    std::vector<int> v;
-    for(int tile_=0; tile_<numTileInvolved; tile_++){//parallel on tiles
-        v.push_back(tile_);
-    }
-    // int data_volume = ceil(M_p/(float)numColPerArray) * ceil(C/(float)numArrayPerTile) * R * S * numArrayPerTile * numColPerArray;
+        std::vector<int> v;
+        for(int tile_=0; tile_<numTileInvolved; tile_++){//parallel on tiles
+            v.push_back(tile_);
+        }
+        // int data_volume = ceil(M_p/(float)numColPerArray) * ceil(C/(float)numArrayPerTile) * R * S * numArrayPerTile * numColPerArray;
 
-    
+        
 
-    sys->app_param_file<<"data_volume: "<<input_volume<<std::endl;
-    sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, input_volume, requests);
-            
+        sys->app_param_file<<"data_volume: "<<input_volume<<std::endl;
+        sys->broadcast_p2p(sys->getAddress(0,0,0),precision_input, v, input_volume, requests);
+    }  
                        
 }

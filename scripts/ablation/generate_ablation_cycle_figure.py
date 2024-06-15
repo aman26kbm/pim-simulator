@@ -24,11 +24,11 @@ writer = csv.writer(f_fig)
 writer.writerow(header)
 ablations = ['workload_name', 'all', 'shuffleOff', 'constOpOff', 'bus', 'crossCramShiftOff', 'oneToAllBroadcast', 'ring', 'intraCRAM', 'everythingOff']
 
-fig_data_list = [['conv', 0, 0, 0, 0, 0, 0, 0, 0, 0],
+fig_data_list = [['vecadd', 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     ['fir', 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    ['gemm', 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     ['gemv', 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    ['vadd', 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    ['gemm', 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    ['conv2d', 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     ['resnet18', 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     ['bert', 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ]
@@ -64,11 +64,11 @@ with open(os.path.join(os.getcwd(), all_kernels_input_file_dir, '03_chart_breakd
         else: col=ablations.index('all')
 
         row=0
-        if('conv2d' in workload_name): row=0
+        if('conv2d' in workload_name): row=4
         elif('fir' in workload_name): row=1
-        elif('gemm' in workload_name): row=2
-        elif('gemv' in workload_name): row=3
-        elif('vecadd' in workload_name): row=4
+        elif('gemm' in workload_name): row=3
+        elif('gemv' in workload_name): row=2
+        elif('vecadd' in workload_name): row=0
         else: continue
         fig_data_list[row][col]=total_cycle
 
@@ -109,7 +109,7 @@ data = np.array([ele[1:] for ele in fig_data_list])
 matplotlib.rcParams['lines.linewidth'] = 2.5
 
 plot.style.use('bmh')
-binary = matplotlib.cm.get_cmap('binary')
+binary = matplotlib.colormaps.get_cmap('binary')
 
 fig, axes = plot.subplots(1,8,figsize=(18,4.5))
 # data = np.array([[20713,	58112,	20713,	20713,	105211,	58138,	156003,48828],\
@@ -154,7 +154,7 @@ for i, ty in enumerate(['(a) Shuffle\n disabled', '(b) Const Ops\n disabled', '(
     if(i!=0): axs.tick_params(left = False, right = False , labelleft = False , labelright = False)
     #axes.set_yticks([0.1 * i for i in range(12)])
     #axes.set_yticklabels([str(10 * i) + '%' for i in range(12)])
-    axs.set_xticklabels(['conv2d', 'fir', 'gemm', 'gemv', 'vadd','resnet','bert'], rotation=90,fontsize=15)
+    axs.set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d','resnet18','bert'], rotation=90,fontsize=15)
     axs.xaxis.grid(False)
     axs.set_axisbelow(True)
     axs.set_title(ty, fontsize=11, wrap=True)

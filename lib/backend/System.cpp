@@ -886,6 +886,7 @@ void System::broadcast_p2p(int addr,
                            std::vector<Request>& requests,
                            bool ben, bool men, int samt, int bcnt){
     if(_config->_broadcast_type == "one_to_all"){
+        std::cout<<"Using one-to-all broadcast"<<std::endl;
         broadcast(addr, precision_input, receivers, size, requests, ben, men, samt, bcnt);
         return;
     }
@@ -893,6 +894,7 @@ void System::broadcast_p2p(int addr,
     else{
         std::cout<<"broadcast type not set. using p2p systolic broadcast by default"<<std::endl;
     }
+    std::cout<<"Using p2p systolic broadcast"<<std::endl;
     Request *request;
     int tile = addr/(_config->_nblocks*_config->_nrows*_config->_ncols);
     assert(tile<_config->_meshWidth * _config->_meshHeight);

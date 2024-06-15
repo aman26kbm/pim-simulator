@@ -174,20 +174,23 @@ with open('pimsav-vs-gpu.csv', 'w', newline='') as f:
     writer.writerow(['Workload', 'PIMSAB Time', 'PIMSAB Energy', 'GPU Time', 'GPU Energy'])
     writer.writerows(data)
 
+from statistics import geometric_mean
 exec_time_speedup = [[x[0], x[3]/x[1]] for x in data]
-
+exec_time_speedup = exec_time_speedup + [['geomean',geometric_mean([x[1] for x in exec_time_speedup])]]
 print(exec_time_speedup)
 
 energy_improve = [[x[0], x[4]/x[2]] for x in data]
-
+energy_improve = energy_improve + [['geomean',geometric_mean([x[1] for x in energy_improve])]]
 print(energy_improve)
 
 matplotlib.rcParams['lines.linewidth'] = 2.5
 
 plot.style.use('bmh')
-binary = matplotlib.cm.get_cmap('binary')
+binary = matplotlib.colormaps.get_cmap('binary')
 fig, axes = plot.subplots(1, 2)
-axes[0].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in exec_time_speedup], width=1, edgecolor='k', color='w', hatch = '', label='Execution Time Speedup')
+
+colors = ['w', 'w', 'w', 'w', 'w', 'w', 'w','0.8']
+axes[0].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in exec_time_speedup], width=1, edgecolor='k', color=colors, hatch = '', label='Execution Time Speedup')
 
 axes[0].set_ylim(0, 4)
 improves = [x[1] for x in exec_time_speedup]
@@ -201,25 +204,25 @@ for i, improve in enumerate(improves):
 
 # axes.bar(np.arange(0, len(exec_time_speedup)) * 1.5, exec_time_speedup[:][1], width=1, edgecolor='k', color='b', label='Execution Time Speedup')
 axes[0].set_xticks(np.arange(0, len(exec_time_speedup)) * 1.5)
-axes[0].set_xticklabels(workload_list, rotation=90)
+axes[0].set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert', 'geomean'], rotation=90)
 axes[0].set_ylabel('Exec. Time Speedup')
 axes[0].xaxis.grid(False)
 axes[0].set_axisbelow(True)
 
-axes[1].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in energy_improve], width=1, edgecolor='k', color='w', label='Execution Time Speedup')
+axes[1].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in energy_improve], width=1, edgecolor='k', color=colors, label='Execution Time Speedup')
 improves = [x[1] for x in energy_improve]
 for i, improve in enumerate(improves):
     if improve > 4:
         axes[1].text(i*1.5, 4,  f'{improve:.2f}', rotation=90, ha='center', va='top', size='small')
 axes[1].set_ylim(0, 4)
 
-# axes.legend(bbox_to_anchor=(0.3, 1.25), handlelength=0.75, ncol=4, loc='upper center',
-#             labelspacing=0.2, handletextpad=0.5, columnspacing=0.5, frameon=False,
-#             fontsize=10)
+# # axes.legend(bbox_to_anchor=(0.3, 1.25), handlelength=0.75, ncol=4, loc='upper center',
+# #             labelspacing=0.2, handletextpad=0.5, columnspacing=0.5, frameon=False,
+# #             fontsize=10)
 
 # axes.bar(np.arange(0, len(exec_time_speedup)) * 1.5, exec_time_speedup[:][1], width=1, edgecolor='k', color='b', label='Execution Time Speedup')
 axes[1].set_xticks(np.arange(0, len(exec_time_speedup)) * 1.5)
-axes[1].set_xticklabels(workload_list, rotation=90)
+axes[1].set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert','geomean'], rotation=90)
 axes[1].set_ylabel('Energy Improvement')
 axes[1].xaxis.grid(False)
 axes[1].set_axisbelow(True)
