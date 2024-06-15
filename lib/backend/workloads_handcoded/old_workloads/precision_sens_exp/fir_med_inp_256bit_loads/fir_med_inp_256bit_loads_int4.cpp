@@ -9,7 +9,7 @@
 // FIR filter micro benchmark
 /////////////////////////////////////////////////////////////
 
-int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
+int32_t fir_med_inp_256bit_loads_int4(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
@@ -34,9 +34,13 @@ int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
     //Then we do the {mult, add shift} sequence 32 times, in each tile.
     //Then store results (256*255 elements) from each core to DRAM. 
 
-    PrecisionT::Precision precision_input = PrecisionT::INT16;
-    PrecisionT::Precision precision_multiply = PrecisionT::INT16;
-    PrecisionT::Precision precision_accumulate = PrecisionT::INT16;
+    // PrecisionT::Precision precision_input = PrecisionT::INT16;
+    // PrecisionT::Precision precision_multiply = PrecisionT::INT16;
+    // PrecisionT::Precision precision_accumulate = PrecisionT::INT16;
+
+    PrecisionT::Precision precision_input = PrecisionT::Precision{0, 4, 0};
+    PrecisionT::Precision precision_multiply = PrecisionT::Precision{0, 8, 0};
+    PrecisionT::Precision precision_accumulate = PrecisionT::Precision{0, 16, 0};
 
     int use_tiles = cfg->_ntiles_used;
 
@@ -176,7 +180,7 @@ int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
                 //So, just 1 RowStore instruction is enough.
                 request = new Request(Request::Type::RowStore);
                 request->addOperand(sys->getAddress(tile,0,precision_input.bits()+precision_multiply.bits()), param * cfg->_ncols, precision_accumulate); //src
-                request->addOperand(sys->DRAM_ADDR, param * cfg->_ncols, PrecisionT::INT16); //dst
+                request->addOperand(sys->DRAM_ADDR, param * cfg->_ncols, precision_accumulate); //dst
 
                 requests.push_back(*request);
             }
@@ -194,4 +198,4 @@ int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads__ = pimsim::registerFunc("fir_med_inp_256bit_loads", fir_med_inp_256bit_loads);
+static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads_int4__ = pimsim::registerFunc("fir_med_inp_256bit_loads_int4", fir_med_inp_256bit_loads_int4);

@@ -9,14 +9,14 @@
 // FIR filter micro benchmark
 /////////////////////////////////////////////////////////////
 
-int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
+int32_t fir_med_inp_256bit_loads_half(System* sys, std::string param_file)
 {
     std::vector<Request> requests;
     Request *request;
     Config* cfg = sys->_config;
 
     // The workload size is fixed as given below
-    int size_input = 256*256*120;
+    int size_input = 256*256*120/2;
 
     // Filter size gives the size of the elements in the FIR filter
     int size_filter = 32;
@@ -194,4 +194,4 @@ int32_t fir_med_inp_256bit_loads(System* sys, std::string param_file)
 /////////////////////////////////////////////////////////////
 
 
-static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads__ = pimsim::registerFunc("fir_med_inp_256bit_loads", fir_med_inp_256bit_loads);
+static __attribute__((unused)) Registry::Entry &__fir_med_inp_256bit_loads_half__ = pimsim::registerFunc("fir_med_inp_256bit_loads_half", fir_med_inp_256bit_loads_half);

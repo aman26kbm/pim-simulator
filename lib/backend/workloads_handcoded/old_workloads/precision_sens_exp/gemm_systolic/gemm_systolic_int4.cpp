@@ -5,7 +5,7 @@
 
 #include "backend/System.h"
 
-int32_t gemm_systolic(System* sys, std::string params){
+int32_t gemm_systolic_int4(System* sys, std::string params){
     std::vector<Request> requests;
     Request *request;
     Config* cfg = sys->_config;
@@ -21,9 +21,13 @@ int32_t gemm_systolic(System* sys, std::string params){
     int matrixBColNum = 32;
 
     int use_tiles = cfg->_ntiles_used;
-    PrecisionT::Precision precision_input = PrecisionT::INT4;
-    PrecisionT::Precision precision_multiply = PrecisionT::INT8;
-    PrecisionT::Precision precision_accumulate = PrecisionT::INT16;
+    // PrecisionT::Precision precision_input = PrecisionT::INT4;
+    // PrecisionT::Precision precision_multiply = PrecisionT::INT8;
+    // PrecisionT::Precision precision_accumulate = PrecisionT::INT16;
+
+    PrecisionT::Precision precision_input = PrecisionT::Precision{0, 4, 0};
+    PrecisionT::Precision precision_multiply = PrecisionT::Precision{0, 8, 0};
+    PrecisionT::Precision precision_accumulate = PrecisionT::Precision{0, 16, 0};
 
     int sub_A_row = (int)ceil(matrixARowNum/(float)cfg->_meshWidth);
     int sub_B_col = (int)ceil(matrixBColNum/(float)cfg->_meshHeight);
@@ -235,4 +239,4 @@ int32_t gemm_systolic(System* sys, std::string params){
 
 
 
-static __attribute__((unused)) Registry::Entry &__gemm_systolic__ = pimsim::registerFunc("gemm_systolic", gemm_systolic);
+static __attribute__((unused)) Registry::Entry &__gemm_systolic_int4__ = pimsim::registerFunc("gemm_systolic_int4", gemm_systolic_int4);

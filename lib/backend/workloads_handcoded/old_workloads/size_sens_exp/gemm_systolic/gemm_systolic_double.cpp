@@ -5,7 +5,7 @@
 
 #include "backend/System.h"
 
-int32_t gemm_systolic(System* sys, std::string params){
+int32_t gemm_systolic_double(System* sys, std::string params){
     std::vector<Request> requests;
     Request *request;
     Config* cfg = sys->_config;
@@ -15,7 +15,7 @@ int32_t gemm_systolic(System* sys, std::string params){
     //int matrixBRowNum = matrixAColNum;//256*8
     //int matrixBColNum = cfg->_num_regs_per_rf;//32
 
-    int matrixARowNum = 120*512;
+    int matrixARowNum = 120*512*2;
     int matrixAColNum = 256*8;
     int matrixBRowNum = matrixAColNum;
     int matrixBColNum = 32;
@@ -235,4 +235,4 @@ int32_t gemm_systolic(System* sys, std::string params){
 
 
 
-static __attribute__((unused)) Registry::Entry &__gemm_systolic__ = pimsim::registerFunc("gemm_systolic", gemm_systolic);
+static __attribute__((unused)) Registry::Entry &__gemm_systolic_double__ = pimsim::registerFunc("gemm_systolic_double", gemm_systolic_double);
