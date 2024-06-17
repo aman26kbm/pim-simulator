@@ -6,7 +6,7 @@
 
 #include "./tvm_common.h"
 
-int32_t hotspot3d_512_8_a100(System *sys) {
+int32_t hotspot3d_512_8_a100(System *sys,std::string param_file) {
   void* _1 = nullptr;
   // float32 in_global[370080], 0
   for (int32_t x_outer_outer = 0; x_outer_outer < 32; ++x_outer_outer) {
