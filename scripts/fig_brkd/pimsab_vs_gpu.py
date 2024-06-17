@@ -147,32 +147,42 @@ def get_data(workload_list, dir):
             data.append([workload, get_time(workload, lines), get_energy(workload, lines)])
     return data
 
-kernels_workload_list = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d']
-data=data+get_data(kernels_workload_list, 'output_all_kernels')
+# kernels_workload_list = ['vecadd', 'fir', 'gemv', 'gemm', 'conv2d']
+# data=data+get_data(kernels_workload_list, 'output_all_kernels')
 
-resnet_workload_list = ['resnet']
-data = data + get_data(resnet_workload_list, 'output_resnet')
+# resnet_workload_list = ['resnet']
+# data = data + get_data(resnet_workload_list, 'output_resnet')
 
-bert_workload_list = ['bert']
-data = data + get_data(bert_workload_list, 'output_bert')
+# bert_workload_list = ['bert']
+# data = data + get_data(bert_workload_list, 'output_bert')
 
-# mlp_workload_list = ['mlp']
-# data = data + get_data(mlp_workload_list, 'output_mlp_2')
+# # mlp_workload_list = ['mlp']
+# # data = data + get_data(mlp_workload_list, 'output_mlp_2')
 
-workload_list = kernels_workload_list + resnet_workload_list + bert_workload_list
-with open('gpu.csv') as f_gpu:
-    csv_reader = csv.reader(f_gpu)
+# workload_list = kernels_workload_list + resnet_workload_list + bert_workload_list
+# with open('gpu.csv') as f_gpu:
+#     csv_reader = csv.reader(f_gpu)
+#     lines = list(csv_reader)
+#     for line in lines:
+#         for i in range(len(data)):
+#             if data[i][0] in line[0]:
+#                 data[i]+=[float(line[1]), float(line[2])]
+#     print(data)
+
+with open('pimsav-vs-gpu.csv') as f_data:
+    csv_reader = csv.reader(f_data)
     lines = list(csv_reader)
     for line in lines:
-        for i in range(len(data)):
-            if data[i][0] in line[0]:
-                data[i]+=[float(line[1]), float(line[2])]
-    print(data)
+        if 'Workload' in line:
+            pass
+        else:
+            data.append([str(line[0]),float(line[1]), float(line[2]),float(line[3]), float(line[4])])
+    # print(data)
 
-with open('pimsav-vs-gpu.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['Workload', 'PIMSAB Time', 'PIMSAB Energy', 'GPU Time', 'GPU Energy'])
-    writer.writerows(data)
+# with open('pimsav-vs-gpu.csv', 'w', newline='') as f:
+#     writer = csv.writer(f)
+#     writer.writerow(['Workload', 'PIMSAB Time', 'PIMSAB Energy', 'GPU Time', 'GPU Energy'])
+#     writer.writerows(data)
 
 from statistics import geometric_mean
 exec_time_speedup = [[x[0], x[3]/x[1]] for x in data]
@@ -187,13 +197,14 @@ matplotlib.rcParams['lines.linewidth'] = 2.5
 
 plot.style.use('bmh')
 binary = matplotlib.colormaps.get_cmap('binary')
-fig, axes = plot.subplots(1, 2)
+fig, axes = plot.subplots(2, 1,figsize=(3.2, 6.2))
 
 colors = ['w', 'w', 'w', 'w', 'w', 'w', 'w','0.8']
 axes[0].bar(np.arange(0, len(exec_time_speedup)) * 1.5, [x[1] for x in exec_time_speedup], width=1, edgecolor='k', color=colors, hatch = '', label='Execution Time Speedup')
 
 axes[0].set_ylim(0, 4)
 improves = [x[1] for x in exec_time_speedup]
+print(improves)
 for i, improve in enumerate(improves):
     if improve > 4:
         axes[0].text(i*1.5, 4,  f'{improve:.2f}', rotation=90, ha='center', va='top', size='small')
@@ -204,8 +215,8 @@ for i, improve in enumerate(improves):
 
 # axes.bar(np.arange(0, len(exec_time_speedup)) * 1.5, exec_time_speedup[:][1], width=1, edgecolor='k', color='b', label='Execution Time Speedup')
 axes[0].set_xticks(np.arange(0, len(exec_time_speedup)) * 1.5)
-axes[0].set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert', 'geomean'], rotation=90)
-axes[0].set_ylabel('Exec. Time Speedup')
+axes[0].set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert', 'geomean'], rotation=90, fontsize=13)
+axes[0].set_ylabel('Exec. Time Speedup',fontsize=15)
 axes[0].xaxis.grid(False)
 axes[0].set_axisbelow(True)
 
@@ -222,11 +233,11 @@ axes[1].set_ylim(0, 4)
 
 # axes.bar(np.arange(0, len(exec_time_speedup)) * 1.5, exec_time_speedup[:][1], width=1, edgecolor='k', color='b', label='Execution Time Speedup')
 axes[1].set_xticks(np.arange(0, len(exec_time_speedup)) * 1.5)
-axes[1].set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert','geomean'], rotation=90)
-axes[1].set_ylabel('Energy Improvement')
+axes[1].set_xticklabels(['vecadd', 'fir', 'gemv', 'gemm', 'conv2d', 'resnet18', 'bert','geomean'], rotation=90, fontsize=13)
+axes[1].set_ylabel('Energy Improvement',fontsize=15)
 axes[1].xaxis.grid(False)
 axes[1].set_axisbelow(True)
-fig.subplots_adjust(top=0.5, bottom=0.2, left=0.2, right=0.8, wspace=0.3)
+fig.subplots_adjust(hspace=0.55,bottom=0.2)
 
 plot.show()
 
